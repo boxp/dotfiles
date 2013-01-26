@@ -34,6 +34,8 @@ nnoremap um :<C-u>Unite mpc:listall2<CR>
 nnoremap ud :<C-u>Unite mpc:ls<CR>
 "インサートモードで開始
 let g:unite_enable_start_insert = 1
+" Execute help.
+nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
 " Vimplenote
 nnoremap vnl :<C-u>VimpleNote -l<CR>tiyotiyouda@gmail.com<CR>
 nnoremap vnn :<C-u>VimpleNote -n<CR>tiyotiyouda@gmail.com<CR>
