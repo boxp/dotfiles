@@ -32,6 +32,7 @@ nmap <silent> <C-9> :<C-u>tabmove 9<CR>
 nnoremap yr :<C-u>YRShow<CR>
 
 " vimfiler
+nmap <silent> 
 nnoremap vf :<C-u>VimFilerCurrentDir<CR>
 nnoremap vfs :<C-u>VimFilerSplit<CR>
 nnoremap vt  :<C-u>VimFilerTab<CR>
@@ -118,7 +119,6 @@ NeoBundle "Shougo/neocomplcache"
 NeoBundle "Shougo/unite.vim"
 NeoBundle "Shougo/vimfiler"
 NeoBundle "Shougo/vimshell"
-NeoBundle "danchoi/vmail"
 NeoBundle "Solarized"
 NeoBundle 'Shougo/vimproc'
 NeoBundle 'sudo.vim'
@@ -136,7 +136,6 @@ NeoBundle 'basyura/TweetVim'
 NeoBundle 'mfumi/unite-mpc'
 NeoBundle 'mfumi/mpc.vim'
 NeoBundle 'ujihisa/blogger.vim'
-NeoBundle 'tpope/vim-pathogen'
 NeoBundle 'thinca/vim-quickrun'
 NeoBundle 'thinca/vim-logcat'
 NeoBundle 'ujihisa/vimshell-ssh'
@@ -147,7 +146,6 @@ NeoBundle 'kakkyz81/evervim'
 NeoBundle 'textutil.vim'
 NeoBundle 'Smooth-Scroll'
 NeoBundle 'nathanaelkane/vim-indent-guides'
-NeoBundle 'motemen/hatena-vim'
 NeoBundle 'tyru/eskk.vim'
 NeoBundle 'gre/play2vim'
 NeoBundle 'taglist.vim'
@@ -158,7 +156,6 @@ NeoBundle 'tsukkee/unite-help'
 NeoBundle 'kana/vim-metarw' " Vim plugin: A framework to read/write fake:path
 NeoBundle 'mattn/vim-metarw-simplenote' " metarw scheme for simplenote
 NeoBundle 'mattn/unite-source-simplenote' " unite source for vim-metarw-simplenote.
-NeoBundle 'TwitVim'
 
 " vimshell setting
  let g:vimshell_interactive_update_tiME = 10
@@ -193,11 +190,6 @@ endif
 let neco_dic = g:neocomplcache_dictionary_filetype_lists
 let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 
-" pathogen設定
-call pathogen#infect()
-syntax on
-filetype plugin indent on
-
 " solarized設定
 "let g:solarized_termtrans=1
  syntax enable
@@ -223,41 +215,6 @@ set clipboard+=unnamedplus
 
 " ステータスライン
 set laststatus=2   " Always show the statusline
-
-" Vim-LaTeX
-filetype plugin on
-filetype indent on
-set shellslash
-set grepprg=grep\ -nH\ $*
-let g:tex_flavor='latex'
-let g:Imap_UsePlaceHolders = 1
-let g:Imap_DeleteEmptyPlaceHolders = 1
-let g:Imap_StickyPlaceHolders = 0
-let g:Tex_DefaultTargetFormat = 'pdf'
-let g:Tex_FormatDependency_ps = 'dvi,ps'
-let g:Tex_FormatDependency_pdf = 'dvi,pdf'
-let g:Tex_CompileRule_dvi = 'platex -interaction=nonstopmode $*'
-"let g:Tex_CompileRule_dvi = 'uplatex -synctex=1 -interaction=nonstopmode $*'
-let g:Tex_CompileRule_ps = 'dvips -Ppdf -t a4 -o $*.ps $*.dvi'
-let g:Tex_CompileRule_pdf = 'dvipdfmx $*.dvi'
-let g:Tex_BibtexFlavor = 'pbibtex'
-"let g:Tex_BibtexFlavor = 'upbibtex'
-let g:Tex_MakeIndexFlavor = 'mendex $*.idx'
-let g:Tex_UseEditorSettingInDVIViewer = 1
-let g:Tex_ViewRule_dvi = 'xdvi'
-"let g:Tex_ViewRule_dvi = 'advi -watch-file 1'
-"let g:Tex_ViewRule_dvi = 'evince'
-"let g:Tex_ViewRule_dvi = 'okular --unique'
-"let g:Tex_ViewRule_dvi = 'wine ~/.wine/drive_c/w32tex/dviout/dviout.exe -1'
-let g:Tex_ViewRule_ps = 'gv --watch'
-"let g:Tex_ViewRule_ps = 'evince'
-"let g:Tex_ViewRule_ps = 'okular --unique'
-"let g:Tex_ViewRule_ps = 'zathura'
-let g:Tex_ViewRule_pdf = 'xpdf'
-"let g:Tex_ViewRule_pdf = 'gv --watch'
-"let g:Tex_ViewRule_pdf = 'evince'
-"let g:Tex_ViewRule_pdf = 'okular --unique'
-"let g:Tex_ViewRule_pdf = 'zathura'
 
 " Chalice設定
 set fencs=usc-bom,usc-21e,usc-2,iso-2022-jp-3,utf-8
@@ -367,23 +324,6 @@ command! -bar -bang -nargs=? -complete=file GScouter
 
 "backspace"
 set backspace=indent,eol,start
-
-" eskk.vim
-" let g:eskk#directory = "~/Dropbox/.eskk"
-" let g:eskk#dictionary = { 'path': "~/Dropbox/.skk-jisyo", 'sorted': 0, 'encoding': 'utf-8', }
-" let g:eskk#large_dictionary = { 'path': "~/Dropbox/.eskk/SKK-JISYO.L", 'sorted': 1, 'encoding': 'euc-jp', }
-" set imdisable
-" eskk.vim 句読点をカンマ、ピリオドに
-" function! s:eskk_initial_pre()
-" let t = eskk#table#new('rom_to_hira*', 'rom_to_hira')
-" call t.add_map(',', ', ')
-" call t.add_map('.', '.') 
-" call eskk#register_mode_table('hira', t)
-" let t = eskk#table#new('rom_to_kata*', 'rom_to_kata')
-" call t.add_map(',', ', ')
-" call t.add_map('.', '.')
-" call eskk#register_mode_table('kata', t)
-" endfunction
 
 " vim-python setting
 autocmd FileType python set omnifunc=pythoncomplete#Complete
