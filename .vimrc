@@ -149,11 +149,6 @@ let g:tweetvim_display_icon = 0
 let g:tweetvim_open_buffer_cmd = 'split!'
 " 1ページあたりの表示ツイート数
 let g:tweetvim_tweet_per_page = 20
-" ツイートする度に自動更新
-augroup tweetvim_group
-    autocmd!
-	autocmd BufEnter \[tweetvim\] :TweetVimHomeTimeline
-augroup END
 
 "16色に設定
 set t_Co=16
