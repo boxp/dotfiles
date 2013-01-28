@@ -18,28 +18,15 @@ nnoremap <silent> <C-w><C-w> :<C-u>q!<CR>
 
 " tab mapping
 nnoremap <silent> <C-t> :<C-u>tabnew<CR>
-nmap <silent> <C-1> :<C-u>tabmove 1<CR>
-nmap <silent> <C-2> :<C-u>tabmove 2<CR>
-nmap <silent> <C-3> :<C-u>tabmove 3<CR>
-nmap <silent> <C-4> :<C-u>tabmove 4<CR>
-nmap <silent> <C-5> :<C-u>tabmove 5<CR>
-nmap <silent> <C-6> :<C-u>tabmove 6<CR>
-nmap <silent> <C-7> :<C-u>tabmove 7<CR>
-nmap <silent> <C-8> :<C-u>tabmove 8<CR>
-nmap <silent> <C-9> :<C-u>tabmove 9<CR>
 
 " YankRing
 nnoremap yr :<C-u>YRShow<CR>
 
 " vimfiler
-nmap <silent> 
 nnoremap vf :<C-u>VimFilerCurrentDir<CR>
 nnoremap vfs :<C-u>VimFilerSplit<CR>
 nnoremap vt  :<C-u>VimFilerTab<CR>
 nnoremap vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
-
-" Vim-latex
-nnoremap ttea :<C-u>TTemplate article<CR>
 
 " Unite
 nmap , [unite]
@@ -54,8 +41,7 @@ nnoremap [unite]p :<C-u>Unite mpc:playlist2<CR>
 nnoremap [unite]m :<C-u>Unite mpc:listall2<CR>
 nnoremap [unite]d :<C-u>Unite mpc:ls<CR>
 nnoremap [unite]o :<C-u>Unite outline<CR>
-nnoremap [unite]ta :<C-u>Unite tab<CR>
-nnoremap [unite]n :Unite neobundle/
+nnoremap [unite]g :<C-u>Unite tab<CR>
 
 "インサートモードで開始
 let g:unite_enable_start_insert = 1
@@ -76,20 +62,6 @@ let $PATH = $PATH . ':~/bin:~/MaTX/bin:/opt/android-sdk/platform-tools'
 
 ""行番号を表示
 set number
-
-"autoload設定
-"function! s:load_optional_rtp(loc)
-"  let loc = expand(a:loc)
-"  exe "set rtp+=".loc
-"  let files = split(globpath(loc, '**/*.vim'), "\n")
-"  for i in reverse(filter(files, 'filereadable(v:val)'))
-"    if i !~ '/tests\?/'
-"     source `=i`
-"   endif
-" endfor
-"endfunction
-"call s:load_optional_rtp("~/Dropbox/.vim/bundle/eskk.vim/autoload/eskk.vim")
-
 
 " インクリメンタル検索を有効化
 set incsearch
@@ -119,13 +91,13 @@ NeoBundle "Shougo/neocomplcache"
 NeoBundle "Shougo/unite.vim"
 NeoBundle "Shougo/vimfiler"
 NeoBundle "Shougo/vimshell"
+NeoBundle "danchoi/vmail"
 NeoBundle "Solarized"
 NeoBundle 'Shougo/vimproc'
 NeoBundle 'sudo.vim'
 NeoBundle 'Shougo/neobundle.vim'
 NeoBundle 'Shougo/echodoc'
 NeoBundle 'koron/chalice'
-NeoBundle 'micheljansen/vim-latex'
 NeoBundle 'yuratomo/w3m.vim'
 NeoBundle 'YankRing.vim'
 NeoBundle 'tyru/open-browser.vim'
@@ -136,6 +108,7 @@ NeoBundle 'basyura/TweetVim'
 NeoBundle 'mfumi/unite-mpc'
 NeoBundle 'mfumi/mpc.vim'
 NeoBundle 'ujihisa/blogger.vim'
+NeoBundle 'tpope/vim-pathogen'
 NeoBundle 'thinca/vim-quickrun'
 NeoBundle 'thinca/vim-logcat'
 NeoBundle 'ujihisa/vimshell-ssh'
@@ -146,19 +119,16 @@ NeoBundle 'kakkyz81/evervim'
 NeoBundle 'textutil.vim'
 NeoBundle 'Smooth-Scroll'
 NeoBundle 'nathanaelkane/vim-indent-guides'
-NeoBundle 'tyru/eskk.vim'
+NeoBundle 'motemen/hatena-vim'
 NeoBundle 'gre/play2vim'
 NeoBundle 'taglist.vim'
 NeoBundle 'Shougo/neosnippet'
 NeoBundle 'osyo-manga/unite-quickfix'
 NeoBundle 'tsukkee/lingr-vim'
 NeoBundle 'tsukkee/unite-help'
-NeoBundle 'kana/vim-metarw' " Vim plugin: A framework to read/write fake:path
-NeoBundle 'mattn/vim-metarw-simplenote' " metarw scheme for simplenote
-NeoBundle 'mattn/unite-source-simplenote' " unite source for vim-metarw-simplenote.
 
 " vimshell setting
- let g:vimshell_interactive_update_tiME = 10
+ let g:vimshell_interactive_update_time = 10
  let g:vimshell_prompt = $USERNAME."% "
 
 " vimshell map
@@ -179,6 +149,11 @@ let g:tweetvim_display_icon = 0
 let g:tweetvim_open_buffer_cmd = 'split!'
 " 1ページあたりの表示ツイート数
 let g:tweetvim_tweet_per_page = 20
+" ツイートする度に自動更新
+augroup tweetvim_group
+    autocmd!
+	autocmd BufEnter \[tweetvim\] :TweetVimHomeTimeline
+augroup END
 
 "16色に設定
 set t_Co=16
@@ -189,6 +164,7 @@ if !exists('g:neocomplcache_dictionary_filetype_lists')
 endif
 let neco_dic = g:neocomplcache_dictionary_filetype_lists
 let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
+
 
 " solarized設定
 "let g:solarized_termtrans=1
@@ -327,6 +303,3 @@ set backspace=indent,eol,start
 
 " vim-python setting
 autocmd FileType python set omnifunc=pythoncomplete#Complete
-
-" disable buzzer
-set visualbell
