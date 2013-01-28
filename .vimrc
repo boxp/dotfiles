@@ -14,7 +14,8 @@ nnoremap su :<C-u>e sudo:%<CR>
 
 " window mapping
 nmap <Space>w <C-w>
-nnoremap <silent> <C-w><C-w> :<C-u>q!<CR>
+inoremap <silent> <C-w><C-w> :<C-u>q!<CR>
+nnoremap <silent> <C-w><C-w> <C-[>:<C-u>q!<CR>
 
 " tab mapping
 nnoremap <silent> <C-t> :<C-u>tabnew<CR>
@@ -91,7 +92,6 @@ NeoBundle "Shougo/neocomplcache"
 NeoBundle "Shougo/unite.vim"
 NeoBundle "Shougo/vimfiler"
 NeoBundle "Shougo/vimshell"
-NeoBundle "danchoi/vmail"
 NeoBundle "Solarized"
 NeoBundle 'Shougo/vimproc'
 NeoBundle 'sudo.vim'
@@ -115,9 +115,7 @@ NeoBundle 'ujihisa/vimshell-ssh'
 NeoBundle 'Markdown'
 NeoBundle 'scala.vim'
 NeoBundle 'derekwyatt/vim-scala'
-NeoBundle 'kakkyz81/evervim'
 NeoBundle 'textutil.vim'
-NeoBundle 'Smooth-Scroll'
 NeoBundle 'nathanaelkane/vim-indent-guides'
 NeoBundle 'motemen/hatena-vim'
 NeoBundle 'gre/play2vim'
@@ -126,6 +124,7 @@ NeoBundle 'Shougo/neosnippet'
 NeoBundle 'osyo-manga/unite-quickfix'
 NeoBundle 'tsukkee/lingr-vim'
 NeoBundle 'tsukkee/unite-help'
+NeoBundle 'kmnk/vim-unite-giti'
 
 " vimshell setting
  let g:vimshell_interactive_update_time = 10
@@ -298,3 +297,9 @@ set backspace=indent,eol,start
 
 " vim-python setting
 autocmd FileType python set omnifunc=pythoncomplete#Complete
+
+" disable buzzer
+set visualbell
+
+" statusline
+set statusline+=\ %{strftime('%c')}  " ŽžŠÔ
