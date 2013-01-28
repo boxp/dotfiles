@@ -1,37 +1,61 @@
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"""""""""""""""""""""""""""""""""BOXP vimrc"""""""""""""""""""""""""""""""""""""""
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"--------------------------------------------------------------------------------"
+"                                BOXP vimrc                                      "
+"--------------------------------------------------------------------------------"
 
 " キーマップ的な何か
 inoremap <C-@> <C-[>
 inoremap <C-h> <Home>
-nnoremap <C-h> <Home>
 inoremap <C-e> <End>
-imap <C-k>     <Plug>(neosnippet_expand_or_jump)
-smap <C-k>     <Plug>(neosnippet_expand_or_jump)
+imap <C-k>	<Plug>(neosnippet_expand_or_jump)
+smap <C-k>	<Plug>(neosnippet_expand_or_jump)
 inoremap <S-Space> <C-[>
-nnoremap <Space>w <C-w>
 nnoremap r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR>
 nnoremap su :<C-u>e sudo:%<CR>
+
+" window mapping
+nmap <Space>w <C-w>
+nnoremap <silent> <C-w><C-w> :<C-u>q!<CR>
+
+" tab mapping
+nnoremap <silent> <C-t> :<C-u>tabnew<CR>
+nmap <silent> <C-1> :<C-u>tabmove 1<CR>
+nmap <silent> <C-2> :<C-u>tabmove 2<CR>
+nmap <silent> <C-3> :<C-u>tabmove 3<CR>
+nmap <silent> <C-4> :<C-u>tabmove 4<CR>
+nmap <silent> <C-5> :<C-u>tabmove 5<CR>
+nmap <silent> <C-6> :<C-u>tabmove 6<CR>
+nmap <silent> <C-7> :<C-u>tabmove 7<CR>
+nmap <silent> <C-8> :<C-u>tabmove 8<CR>
+nmap <silent> <C-9> :<C-u>tabmove 9<CR>
+
 " YankRing
 nnoremap yr :<C-u>YRShow<CR>
+
 " vimfiler
 nnoremap vf :<C-u>VimFilerCurrentDir<CR>
 nnoremap vfs :<C-u>VimFilerSplit<CR>
 nnoremap vt  :<C-u>VimFilerTab<CR>
 nnoremap vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
+
 " Vim-latex
 nnoremap ttea :<C-u>TTemplate article<CR>
+
 " Unite
-nnoremap uf :<C-u>Unite file<CR>
-nnoremap ub :<C-u>Unite buffer<CR>
-nnoremap <Space>ub :<C-u>Unite bookmark<CR>
-nnoremap ur :<C-u>Unite file_mru<CR>
-nnoremap ua :<C-u>Unite file buffer file_mru<CR>
-nnoremap ut :<C-u>Unite tweetvim<CR>
-nnoremap up :<C-u>Unite mpc:playlist2<CR>
-nnoremap um :<C-u>Unite mpc:listall2<CR>
-nnoremap ud :<C-u>Unite mpc:ls<CR>
+nmap , [unite]
+
+nnoremap [unite]f :<C-u>Unite file<CR>
+nnoremap [unite]b :<C-u>Unite buffer<CR>
+nnoremap [unite]bk :<C-u>Unite bookmark<CR>
+nnoremap [unite]r :<C-u>Unite file_mru<CR>
+nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
+nnoremap [unite]t :<C-u>Unite tweetvim<CR>
+nnoremap [unite]p :<C-u>Unite mpc:playlist2<CR>
+nnoremap [unite]m :<C-u>Unite mpc:listall2<CR>
+nnoremap [unite]d :<C-u>Unite mpc:ls<CR>
+nnoremap [unite]o :<C-u>Unite outline<CR>
+nnoremap [unite]ta :<C-u>Unite tab<CR>
+nnoremap [unite]n :Unite neobundle/
+
 "インサートモードで開始
 let g:unite_enable_start_insert = 1
 " Execute help.
@@ -39,6 +63,7 @@ nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
 " Vimplenote
 nnoremap vnl :<C-u>VimpleNote -l<CR>tiyotiyouda@gmail.com<CR>
 nnoremap vnn :<C-u>VimpleNote -n<CR>tiyotiyouda@gmail.com<CR>
+
 " w3m
 nnoremap gks :<C-u>W3mSplit google 
 
@@ -78,7 +103,7 @@ runtime! userautoload/*.vim
 " neocomplcache設定
 let g:neocomplcache_enable_at_startup = 1
 
-" Bundleの設定
+" NeoBundleの設定
 set nocompatible               " be iMproved
 
 if has('vim_starting')
@@ -110,7 +135,6 @@ NeoBundle 'basyura/bitly.vim'
 NeoBundle 'basyura/TweetVim'
 NeoBundle 'mfumi/unite-mpc'
 NeoBundle 'mfumi/mpc.vim'
-NeoBundle 'jimsei/winresizer'
 NeoBundle 'ujihisa/blogger.vim'
 NeoBundle 'tpope/vim-pathogen'
 NeoBundle 'thinca/vim-quickrun'
@@ -121,7 +145,6 @@ NeoBundle 'scala.vim'
 NeoBundle 'derekwyatt/vim-scala'
 NeoBundle 'kakkyz81/evervim'
 NeoBundle 'textutil.vim'
-NeoBundle 'mattn/zencoding-vim'
 NeoBundle 'Smooth-Scroll'
 NeoBundle 'nathanaelkane/vim-indent-guides'
 NeoBundle 'motemen/hatena-vim'
@@ -130,6 +153,12 @@ NeoBundle 'gre/play2vim'
 NeoBundle 'taglist.vim'
 NeoBundle 'Shougo/neosnippet'
 NeoBundle 'osyo-manga/unite-quickfix'
+NeoBundle 'tsukkee/lingr-vim'
+NeoBundle 'tsukkee/unite-help'
+NeoBundle 'kana/vim-metarw' " Vim plugin: A framework to read/write fake:path
+NeoBundle 'mattn/vim-metarw-simplenote' " metarw scheme for simplenote
+NeoBundle 'mattn/unite-source-simplenote' " unite source for vim-metarw-simplenote.
+NeoBundle 'TwitVim'
 
 " vimshell setting
  let g:vimshell_interactive_update_tiME = 10
@@ -152,12 +181,7 @@ let g:tweetvim_display_icon = 0
 " spで開く
 let g:tweetvim_open_buffer_cmd = 'split!'
 " 1ページあたりの表示ツイート数
-let g:tweetvim_tweet_per_page = 50
-" ツイートする度に自動更新
-augroup tweetvim_group
-    autocmd!
-	autocmd BufEnter \[tweetvim\] :TweetVimHomeTimeline
-augroup END
+let g:tweetvim_tweet_per_page = 20
 
 "16色に設定
 set t_Co=16
@@ -312,10 +336,6 @@ endif
 "CD
 au   BufEnter *   execute ":lcd " . expand("%:p:h")
 
-"smooth scroll
-:map <C-U> <C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y><C-Y>
-:map <C-D> <C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E><C-E>
-
 " gvim setting
 :set guioptions-=T 
 
@@ -349,19 +369,24 @@ command! -bar -bang -nargs=? -complete=file GScouter
 set backspace=indent,eol,start
 
 " eskk.vim
-let g:eskk#directory = "~/Dropbox/.eskk"
-let g:eskk#dictionary = { 'path': "~/Dropbox/.skk-jisyo", 'sorted': 0, 'encoding': 'utf-8', }
-let g:eskk#large_dictionary = { 'path': "~/Dropbox/.eskk/SKK-JISYO.L", 'sorted': 1, 'encoding': 'euc-jp', }
-set imdisable
+" let g:eskk#directory = "~/Dropbox/.eskk"
+" let g:eskk#dictionary = { 'path': "~/Dropbox/.skk-jisyo", 'sorted': 0, 'encoding': 'utf-8', }
+" let g:eskk#large_dictionary = { 'path': "~/Dropbox/.eskk/SKK-JISYO.L", 'sorted': 1, 'encoding': 'euc-jp', }
+" set imdisable
 " eskk.vim 句読点をカンマ、ピリオドに
-function! s:eskk_initial_pre()
-let t = eskk#table#new('rom_to_hira*', 'rom_to_hira')
-call t.add_map(',', ', ')
-call t.add_map('.', '.') 
-call eskk#register_mode_table('hira', t)
-let t = eskk#table#new('rom_to_kata*', 'rom_to_kata')
-call t.add_map(',', ', ')
-call t.add_map('.', '.')
-call eskk#register_mode_table('kata', t)
-endfunction
+" function! s:eskk_initial_pre()
+" let t = eskk#table#new('rom_to_hira*', 'rom_to_hira')
+" call t.add_map(',', ', ')
+" call t.add_map('.', '.') 
+" call eskk#register_mode_table('hira', t)
+" let t = eskk#table#new('rom_to_kata*', 'rom_to_kata')
+" call t.add_map(',', ', ')
+" call t.add_map('.', '.')
+" call eskk#register_mode_table('kata', t)
+" endfunction
 
+" vim-python setting
+autocmd FileType python set omnifunc=pythoncomplete#Complete
+
+" disable buzzer
+set visualbell
