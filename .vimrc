@@ -31,7 +31,6 @@ nnoremap vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
 
 " Unite
 nmap , [unite]
-
 nnoremap [unite]f :<C-u>Unite file<CR>
 nnoremap [unite]b :<C-u>Unite buffer<CR>
 nnoremap [unite]bk :<C-u>Unite bookmark<CR>
@@ -158,7 +157,6 @@ if !exists('g:neocomplcache_dictionary_filetype_lists')
 endif
 let neco_dic = g:neocomplcache_dictionary_filetype_lists
 let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
-
 
 " solarizedê›íË
 "let g:solarized_termtrans=1
