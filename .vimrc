@@ -8,7 +8,7 @@ inoremap <C-h> <Home>
 inoremap <C-e> <End>
 imap <C-k>	<Plug>(neosnippet_expand_or_jump)
 smap <C-k>	<Plug>(neosnippet_expand_or_jump)
-inoremap <S-Space> <C-[>
+imap <S-Space> <C-[>
 nnoremap r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR>
 nnoremap su :<C-u>e sudo:%<CR>
 
@@ -43,6 +43,8 @@ nnoremap [unite]d :<C-u>Unite mpc:ls<CR>
 nnoremap [unite]o :<C-u>Unite outline<CR>
 nnoremap [unite]g :<C-u>Unite tab<CR>
 
+nnoremap <C-\> :<C-u>Unite mapping<CR>
+
 "インサートモードで開始
 let g:unite_enable_start_insert = 1
 " Execute help.
@@ -57,8 +59,8 @@ nnoremap gks :<C-u>W3mSplit google
 " パス設定
 let $PATH = $PATH . ':~/bin:~/MaTX/bin:/opt/android-sdk/platform-tools'
 
-""マウス機能有効化
-"set mouse=a
+" マウス機能有効化
+set mouse=a
 
 ""行番号を表示
 set number
@@ -124,6 +126,9 @@ NeoBundle 'osyo-manga/unite-quickfix'
 NeoBundle 'tsukkee/lingr-vim'
 NeoBundle 'tsukkee/unite-help'
 NeoBundle 'kmnk/vim-unite-giti'
+NeoBundle 'surround.vim'
+NeoBundle 'jdonaldson/vaxe'
+NeoBundle 'bartekd/vim-dart'
 
 " vimshell setting
  let g:vimshell_interactive_update_time = 10
@@ -147,7 +152,9 @@ let g:tweetvim_display_icon = 0
 let g:tweetvim_open_buffer_cmd = 'split!'
 " 1ページあたりの表示ツイート数
 let g:tweetvim_tweet_per_page = 20
-
+" 更新キーをマップ
+autocmd FileType tweetvim nmap <buffer> <C-r> <Plug>(tweetvim_action_reload)
+autocmd FileType tweetvim imap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 "16色に設定
 set t_Co=16
 
@@ -179,7 +186,7 @@ let g:vimfiler_safe_mode_by_default = 0
 let g:vimfiler_as_default_explorer = 1
 
 " yank to clipboard
-set clipboard+=unnamedplus
+set clipboard+=unnamed
 
 " ステータスライン
 set laststatus=2   " Always show the statusline
@@ -262,7 +269,8 @@ endif
 au   BufEnter *   execute ":lcd " . expand("%:p:h")
 
 " gvim setting
-:set guioptions-=T 
+set guioptions-=T 
+set guifont=Ricty\ 11
 
 "im_control.vim
 " 「日本語入力固定モード」切替キー
@@ -273,6 +281,7 @@ let IM_CtrlIBusPython = 1
 " vim-quickrun設定
 let g:quickrun_config = {}
 let g:quickrun_config.scala = {'command' : 'scala'}
+let g:quickrun_config.hxml = {'command' : 'haxe'}
 let g:quickrun_config.c = {
 	\ 'cmdopt' : '-lm' }
 
@@ -300,4 +309,15 @@ autocmd FileType python set omnifunc=pythoncomplete#Complete
 set visualbell
 
 " statusline
-set statusline+=\ %{strftime('%c')}  " 時間
+set statusline=%{strftime('%c')}  " 時間
+
+" surround.vim settings
+nmap <C-s> ysW"
+nmap " cs'"
+nmap ' cs"'
+
+" haxe settings
+if !exists('g:neocomplcache_omni_patterns')
+    let g:neocomplcache_omni_patterns = {}
+endif
+let g:neocomplcache_omni_patterns.haxe = '\v([\]''"]|\w)(\.|\()'
