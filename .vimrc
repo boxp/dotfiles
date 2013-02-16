@@ -2,82 +2,6 @@
 "                                BOXP vimrc                                      "
 "--------------------------------------------------------------------------------"
 
-" キーマップ的な何か
-inoremap <C-@> <C-[>
-inoremap <C-h> <Home>
-inoremap <C-e> <End>
-imap <C-k>	<Plug>(neosnippet_expand_or_jump)
-smap <C-k>	<Plug>(neosnippet_expand_or_jump)
-imap <S-Space> <C-[>
-nnoremap r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR>
-nnoremap su :<C-u>e sudo:%<CR>
-
-" window mapping
-nmap <Space>w <C-w>
-inoremap <silent> <C-w><C-w> :<C-u>q!<CR>
-nnoremap <silent> <C-w><C-w> <C-[>:<C-u>q!<CR>
-
-" tab mapping
-nnoremap <silent> <C-t> :<C-u>tabnew<CR>
-
-" YankRing
-nnoremap yr :<C-u>YRShow<CR>
-
-" vimfiler
-nnoremap vf :<C-u>VimFilerCurrentDir<CR>
-nnoremap vfs :<C-u>VimFilerSplit<CR>
-nnoremap vt  :<C-u>VimFilerTab<CR>
-nnoremap vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
-
-" Unite
-nmap , [unite]
-nnoremap [unite]f :<C-u>Unite file<CR>
-nnoremap [unite]b :<C-u>Unite buffer<CR>
-nnoremap [unite]bk :<C-u>Unite bookmark<CR>
-nnoremap [unite]r :<C-u>Unite file_mru<CR>
-nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
-nnoremap [unite]t :<C-u>Unite tweetvim<CR>
-nnoremap [unite]p :<C-u>Unite mpc:playlist2<CR>
-nnoremap [unite]m :<C-u>Unite mpc:listall2<CR>
-nnoremap [unite]d :<C-u>Unite mpc:ls<CR>
-nnoremap [unite]o :<C-u>Unite outline<CR>
-nnoremap [unite]g :<C-u>Unite tab<CR>
-
-nnoremap <C-\> :<C-u>Unite mapping<CR>
-
-"インサートモードで開始
-let g:unite_enable_start_insert = 1
-" Execute help.
-nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
-" Vimplenote
-nnoremap vnl :<C-u>VimpleNote -l<CR>tiyotiyouda@gmail.com<CR>
-nnoremap vnn :<C-u>VimpleNote -n<CR>tiyotiyouda@gmail.com<CR>
-
-" w3m
-nnoremap gks :<C-u>W3mSplit google 
-
-" パス設定
-let $PATH = $PATH . ':~/bin:~/MaTX/bin:/opt/android-sdk/platform-tools'
-
-" マウス機能有効化
-set mouse=a
-
-""行番号を表示
-set number
-
-" インクリメンタル検索を有効化
-set incsearch
-
-" 補完時の一覧表示機能有効化
-set wildmenu wildmode=list:full
-
-" 自動的にファイルを読み込むパスを設定 ~/.vim/userautoload/*vim
-set runtimepath+=~/.vim/
-runtime! userautoload/*.vim
-
-" neocomplcache設定
-let g:neocomplcache_enable_at_startup = 1
-
 " NeoBundleの設定
 set nocompatible               " be iMproved
 
@@ -114,10 +38,8 @@ NeoBundle 'thinca/vim-quickrun'
 NeoBundle 'thinca/vim-logcat'
 NeoBundle 'ujihisa/vimshell-ssh'
 NeoBundle 'Markdown'
-NeoBundle 'scala.vim'
 NeoBundle 'derekwyatt/vim-scala'
 NeoBundle 'textutil.vim'
-NeoBundle 'nathanaelkane/vim-indent-guides'
 NeoBundle 'motemen/hatena-vim'
 NeoBundle 'gre/play2vim'
 NeoBundle 'taglist.vim'
@@ -129,6 +51,99 @@ NeoBundle 'kmnk/vim-unite-giti'
 NeoBundle 'surround.vim'
 NeoBundle 'jdonaldson/vaxe'
 NeoBundle 'bartekd/vim-dart'
+NeoBundle 'Shougo/unite-ssh'
+NeoBundle 'VimIRC.vim'
+
+" キーマップ的な何か
+inoremap <silent> <C-@> <C-[>
+inoremap <C-h> <Home>
+inoremap <C-e> <End>
+imap <C-k>	<Plug>(neosnippet_expand_or_jump)
+smap <C-k>	<Plug>(neosnippet_expand_or_jump)
+imap <S-Space> <C-[>
+nnoremap <silent> r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR>
+nnoremap <silent> su :<C-u>e sudo:%<CR>
+
+" window mapping
+nmap <Space>w <C-w>
+nnoremap <silent> <C-w><C-w> :<C-u>q!<CR>
+inoremap <silent> <C-w><C-w> <C-[>:<C-u>q!<CR>
+
+" tab mapping
+if has("gui_running")
+  nnoremap <silent> <C-t> :tabnew<CR>
+else
+  nnoremap <silent> <C-t> :<C-u>tabnew<CR>
+endif
+
+" YankRing
+nnoremap <silent> yr :<C-u>YRShow<CR>
+
+" vimfiler
+nnoremap <silent> vf :<C-u>VimFilerCurrentDir<CR>
+nnoremap <silent> vfs :<C-u>VimFilerSplit<CR>
+nnoremap <silent> vt  :<C-u>VimFilerTab<CR>
+nnoremap <silent> vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
+
+" Unite
+nmap , [unite]
+
+nnoremap [unite]f :<C-u>Unite file<CR>
+nnoremap [unite]b :<C-u>Unite buffer<CR>
+nnoremap [unite]bk :<C-u>Unite bookmark<CR>
+nnoremap [unite]r :<C-u>Unite file_mru<CR>
+nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
+nnoremap [unite]t :<C-u>Unite tweetvim<CR>
+nnoremap [unite]p :<C-u>Unite mpc:playlist<CR>
+nnoremap [unite]m :<C-u>Unite mpc:listall<CR>
+nnoremap [unite]d :<C-u>Unite mpc:ls<CR>
+nnoremap [unite]o :<C-u>Unite outline<CR>
+nnoremap [unite]g :<C-u>Unite tab<CR>
+nnoremap <C-\> :<C-u>Unite mapping<CR>
+
+"インサートモードで開始
+let g:unite_enable_start_insert = 1
+" Execute help.
+nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
+" Vimplenote
+nnoremap vnl :<C-u>VimpleNote -l<CR>tiyotiyouda@gmail.com<CR>
+nnoremap vnn :<C-u>VimpleNote -n<CR>tiyotiyouda@gmail.com<CR>
+
+" w3m
+nnoremap gks :<C-u>W3mSplit google 
+
+" パス設定
+let $PATH = $PATH . ':~/bin:~/MaTX/bin:/opt/android-sdk/platform-tools'
+
+" マウス機能有効化
+"set mouse=a
+
+""行番号を表示
+set number
+
+" インクリメンタル検索を有効化
+set incsearch
+
+" 補完時の一覧表示機能有効化
+set wildmenu wildmode=list:full
+
+" 自動的にファイルを読み込むパスを設定 ~/.vim/userautoload/*vim
+set runtimepath+=~/.vim/
+runtime! userautoload/*.vim
+
+" neocomplcache設定
+let g:neocomplcache_enable_at_startup = 1
+if has("gui_running")
+  let g:NeoComplCache_DictionaryFileTypeLists = {
+              \ 'scala' : $HOME.'\Dropbox\dict\scala.dict',
+              \ 'java' : $HOME.'\Dropbox\dict\java.dict'
+              \ }
+else
+  let g:NeoComplCache_DictionaryFileTypeLists = {
+              \ 'scala' : $HOME.'/Dropbox/dict/scala.dict',
+              \ 'java' : $HOME.'/Dropbox/dict/java.dict'
+              \ }
+endif
 
 " vimshell setting
  let g:vimshell_interactive_update_time = 10
@@ -268,10 +283,6 @@ endif
 "CD
 au   BufEnter *   execute ":lcd " . expand("%:p:h")
 
-" gvim setting
-set guioptions-=T 
-set guifont=Ricty\ 11
-
 "im_control.vim
 " 「日本語入力固定モード」切替キー
 inoremap <silent> <C-f> <C-r>=IMState('FixMode')<CR>
@@ -306,10 +317,7 @@ set backspace=indent,eol,start
 autocmd FileType python set omnifunc=pythoncomplete#Complete
 
 " disable buzzer
-set visualbell
-
-" statusline
-set statusline=%{strftime('%c')}  " 時間
+set vb t_vb=
 
 " surround.vim settings
 nmap <C-s> ysW"
@@ -321,3 +329,45 @@ if !exists('g:neocomplcache_omni_patterns')
     let g:neocomplcache_omni_patterns = {}
 endif
 let g:neocomplcache_omni_patterns.haxe = '\v([\]''"]|\w)(\.|\()'
+
+" indent settings
+set tabstop=2
+set shiftwidth=2
+set expandtab
+
+" GUI font setting
+if has("gui_running") 
+  set guifont=Meiryoke_Console:h13
+endif
+
+"GUI settings
+set guioptions-=T "ツールバーなし
+set guioptions-=r "右スクロールバーなし
+set guioptions-=R
+set guioptions-=l "左スクロールバーなし
+set guioptions-=L
+set guioptions-=b "下スクロールバーな
+
+" fullscreen
+"-----------------------------------------------------------
+nnoremap <F11> :call ToggleFullScreen()<CR>
+function! ToggleFullScreen()
+  if &guioptions =~# 'C'
+    set guioptions-=C
+    if exists('s:go_temp')
+      if s:go_temp =~# 'm'
+        set guioptions+=m
+      endif
+      if s:go_temp =~# 'T'
+        set guioptions+=T
+      endif
+    endif
+    simalt ~r
+  else
+    let s:go_temp = &guioptions
+    set guioptions+=C
+    set guioptions-=m
+    set guioptions-=T
+    simalt ~x
+  endif
+endfunction
