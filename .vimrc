@@ -36,6 +36,7 @@ NeoBundle 'ujihisa/blogger.vim'
 NeoBundle 'tpope/vim-pathogen'
 NeoBundle 'thinca/vim-quickrun'
 NeoBundle 'thinca/vim-logcat'
+NeoBundle 'thinca/vim-ref'
 NeoBundle 'ujihisa/vimshell-ssh'
 NeoBundle 'Markdown'
 NeoBundle 'derekwyatt/vim-scala'
@@ -53,6 +54,7 @@ NeoBundle 'jdonaldson/vaxe'
 NeoBundle 'bartekd/vim-dart'
 NeoBundle 'Shougo/unite-ssh'
 NeoBundle 'VimIRC.vim'
+NeoBundle '2GMon/mikutter_mode.vim'
 
 " キーマップ的な何か
 inoremap <silent> <C-@> <C-[>
@@ -63,6 +65,8 @@ smap <C-k>	<Plug>(neosnippet_expand_or_jump)
 imap <S-Space> <C-[>
 nnoremap <silent> r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR>
 nnoremap <silent> su :<C-u>e sudo:%<CR>
+nmap <F12> yyp<C-a>
+nmap <C-J> @a
 
 " window mapping
 nmap <Space>w <C-w>
@@ -70,11 +74,7 @@ nnoremap <silent> <C-w><C-w> :<C-u>q!<CR>
 inoremap <silent> <C-w><C-w> <C-[>:<C-u>q!<CR>
 
 " tab mapping
-if has("gui_running")
-  nnoremap <silent> <C-t> :tabnew<CR>
-else
-  nnoremap <silent> <C-t> :<C-u>tabnew<CR>
-endif
+nnoremap <silent> <C-t> :<C-u>tabnew<CR>
 
 " YankRing
 nnoremap <silent> yr :<C-u>YRShow<CR>
@@ -116,7 +116,7 @@ nnoremap gks :<C-u>W3mSplit google
 let $PATH = $PATH . ':~/bin:~/MaTX/bin:/opt/android-sdk/platform-tools'
 
 " マウス機能有効化
-"set mouse=a
+set mouse=a
 
 ""行番号を表示
 set number
@@ -332,12 +332,17 @@ let g:neocomplcache_omni_patterns.haxe = '\v([\]''"]|\w)(\.|\()'
 
 " indent settings
 set tabstop=2
+set autoindent
 set shiftwidth=2
 set expandtab
 
 " GUI font setting
-if has("gui_running") 
-  set guifont=Meiryoke_Console:h13
+"if has("gui_running") 
+"  set guifont=MS ゴシック:h13
+"endif
+
+if has(hostname() == "Ooedo")
+  set guifont = Ricty\ 12
 endif
 
 "GUI settings
@@ -371,3 +376,35 @@ function! ToggleFullScreen()
     simalt ~x
   endif
 endfunction
+
+" vim-ref
+"webdictサイトの設定
+let g:ref_source_webdict_sites = {
+\   'je': {
+\     'url': 'http://dictionary.infoseek.ne.jp/jeword/%s',
+\   },
+\   'ej': {
+\     'url': 'http://dictionary.infoseek.ne.jp/ejword/%s',
+\   },
+\   'wiki': {
+\     'url': 'http://ja.wikipedia.org/wiki/%s',
+\   },
+\ }
+
+"デフォルトサイト
+let g:ref_source_webdict_sites.default = 'ej'
+
+"出力に対するフィルタ。最初の数行を削除
+function! g:ref_source_webdict_sites.je.filter(output)
+  return join(split(a:output, "\n")[15 :], "\n")
+endfunction
+function! g:ref_source_webdict_sites.ej.filter(output)
+  return join(split(a:output, "\n")[15 :], "\n")
+endfunction
+function! g:ref_source_webdict_sites.wiki.filter(output)
+  return join(split(a:output, "\n")[17 :], "\n")
+endfunction
+
+nmap <Leader>rj :<C-u>Ref webdict je<Space>
+nmap <Leader>re :<C-u>Ref webdict ej<Space>
+nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
