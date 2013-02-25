@@ -13,23 +13,22 @@ endif
 NeoBundle "mattn/vimplenote-vim"
 NeoBundle "mattn/webapi-vim"
 NeoBundle "mattn/mkdpreview-vim"
+NeoBundle "Solarized"
+NeoBundle 'sudo.vim'
 NeoBundle "Shougo/neocomplcache"
 NeoBundle "Shougo/unite.vim"
 NeoBundle "Shougo/vimfiler"
 NeoBundle "Shougo/vimshell"
-NeoBundle "Solarized"
 NeoBundle 'Shougo/vimproc'
-NeoBundle 'sudo.vim'
 NeoBundle 'Shougo/neobundle.vim'
 NeoBundle 'Shougo/echodoc'
-NeoBundle 'koron/chalice'
-NeoBundle 'yuratomo/w3m.vim'
+NeoBundle 'Shougo/neosnippet'
+NeoBundle 'Shougo/unite-ssh'
+NeoBundle 'Shougo/unite-session'
 NeoBundle 'YankRing.vim'
 NeoBundle 'tyru/open-browser.vim'
 NeoBundle 'basyura/twibill.vim'
 NeoBundle 'h1mesuke/unite-outline'
-NeoBundle 'basyura/bitly.vim'
-NeoBundle 'basyura/TweetVim'
 NeoBundle 'mfumi/unite-mpc'
 NeoBundle 'mfumi/mpc.vim'
 NeoBundle 'ujihisa/blogger.vim'
@@ -41,20 +40,27 @@ NeoBundle 'ujihisa/vimshell-ssh'
 NeoBundle 'Markdown'
 NeoBundle 'derekwyatt/vim-scala'
 NeoBundle 'textutil.vim'
-NeoBundle 'motemen/hatena-vim'
 NeoBundle 'gre/play2vim'
 NeoBundle 'taglist.vim'
-NeoBundle 'Shougo/neosnippet'
 NeoBundle 'osyo-manga/unite-quickfix'
-NeoBundle 'tsukkee/lingr-vim'
 NeoBundle 'tsukkee/unite-help'
 NeoBundle 'kmnk/vim-unite-giti'
 NeoBundle 'surround.vim'
 NeoBundle 'jdonaldson/vaxe'
 NeoBundle 'bartekd/vim-dart'
-NeoBundle 'Shougo/unite-ssh'
 NeoBundle 'VimIRC.vim'
 NeoBundle '2GMon/mikutter_mode.vim'
+
+" メガネケースで起動しちゃだーめ
+NeoBundleLazy 'basyura/bitly.vim'
+NeoBundleLazy 'basyura/TweetVim'
+NeoBundleLazy 'tsukkee/lingr-vim'
+NeoBundleLazy 'motemen/hatena-vim'
+NeoBundleLazy 'yuratomo/w3m.vim'
+
+if (hostname() != "meganecase")
+  NeoBundleSource
+endif
 
 " キーマップ的な何か
 inoremap <silent> <C-@> <C-[>
@@ -99,10 +105,12 @@ nnoremap [unite]m :<C-u>Unite mpc:listall<CR>
 nnoremap [unite]d :<C-u>Unite mpc:ls<CR>
 nnoremap [unite]o :<C-u>Unite outline<CR>
 nnoremap [unite]g :<C-u>Unite tab<CR>
+nnoremap [unite]s :<C-u>Unite session<CR>
 nnoremap <C-\> :<C-u>Unite mapping<CR>
 
 "インサートモードで開始
 let g:unite_enable_start_insert = 1
+
 " Execute help.
 nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
 " Vimplenote
@@ -341,8 +349,8 @@ set expandtab
 "  set guifont=MS ゴシック:h13
 "endif
 
-if has(hostname() == "Ooedo")
-  set guifont = Ricty\ 12
+if (hostname() == "Ooedo")
+  set guifont =Ricty\ 11
 endif
 
 "GUI settings
