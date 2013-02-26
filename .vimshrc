@@ -2,3 +2,5 @@ alias vim = 'vim --split=tabedit $$args'
 alias e = vim
 alias la = 'ls -a'
 alias ll = 'ls -l'
+alias sl = 'ls'
+alias emacs = 'vim'
