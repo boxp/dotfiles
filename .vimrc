@@ -31,7 +31,6 @@ NeoBundle 'basyura/twibill.vim'
 NeoBundle 'h1mesuke/unite-outline'
 NeoBundle 'mfumi/unite-mpc'
 NeoBundle 'mfumi/mpc.vim'
-NeoBundle 'ujihisa/blogger.vim'
 NeoBundle 'tpope/vim-pathogen'
 NeoBundle 'thinca/vim-quickrun'
 NeoBundle 'thinca/vim-logcat'
@@ -57,6 +56,7 @@ NeoBundleLazy 'basyura/TweetVim'
 NeoBundleLazy 'tsukkee/lingr-vim'
 NeoBundleLazy 'motemen/hatena-vim'
 NeoBundleLazy 'yuratomo/w3m.vim'
+NeoBundleLazy 'ujihisa/blogger.vim'
 
 if (hostname() != "meganecase")
   NeoBundleSource
@@ -81,6 +81,10 @@ inoremap <silent> <C-w><C-w> <C-[>:<C-u>q!<CR>
 
 " tab mapping
 nnoremap <silent> <C-t> :<C-u>tabnew<CR>
+nmap <C-Tab> gt
+nmap <C-S-Tab> gT
+imap <C-Tab> <ESC>gt
+imap <C-S-Tab> <ESC>gT
 
 " YankRing
 nnoremap <silent> yr :<C-u>YRShow<CR>
