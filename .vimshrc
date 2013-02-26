@@ -1,0 +1,4 @@
+alias vim = 'vim --split=tabedit $$args'
+alias e = vim
+alias la = 'ls -a'
+alias ll = 'ls -l'
