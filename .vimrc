@@ -353,8 +353,8 @@ set expandtab
 "  set guifont=MS ゴシック:h13
 "endif
 
-if (hostname() == "Ooedo")
-  set guifont =Ricty\ 11
+if (has("gui_running") && (hostname() == "Ooedo" || hostname() == "Grimoire"))
+  set guifont =Ricty\ 10
 endif
 
 "GUI settings
@@ -363,7 +363,7 @@ set guioptions-=r "右スクロールバーなし
 set guioptions-=R
 set guioptions-=l "左スクロールバーなし
 set guioptions-=L
-set guioptions-=b "下スクロールバーな
+set guioptions-=b "下スクロールバーなし
 
 " fullscreen
 "-----------------------------------------------------------
