@@ -2,6 +2,8 @@
 "                                BOXP vimrc                                      "
 "--------------------------------------------------------------------------------"
 
+" Last modified 2013/02/27 21:48
+
 " NeoBundleの設定
 set nocompatible               " be iMproved
 
@@ -68,7 +70,7 @@ inoremap <C-h> <Home>
 inoremap <C-e> <End>
 imap <C-k>	<Plug>(neosnippet_expand_or_jump)
 smap <C-k>	<Plug>(neosnippet_expand_or_jump)
-imap <S-Space> <C-[>
+imap ;; <C-[>
 nnoremap <silent> r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR>
 nnoremap <silent> su :<C-u>e sudo:%<CR>
 nmap <F12> yyp<C-a>
@@ -117,6 +119,7 @@ let g:unite_enable_start_insert = 1
 
 " Execute help.
 nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
+
 " Vimplenote
 nnoremap vnl :<C-u>VimpleNote -l<CR>tiyotiyouda@gmail.com<CR>
 nnoremap vnn :<C-u>VimpleNote -n<CR>tiyotiyouda@gmail.com<CR>
@@ -349,12 +352,13 @@ set shiftwidth=2
 set expandtab
 
 " GUI font setting
-"if has("gui_running") 
-"  set guifont=MS ゴシック:h13
-"endif
-
-if (has("gui_running") && (hostname() == "Ooedo" || hostname() == "Grimoire"))
-  set guifont =Ricty\ 10
+if (has("gui_running") )
+  if (hostname() == "Ooedo" || hostname() == "Grimoire")
+    set guifont =Ricty\ 10
+  endif 
+  if (hostname() == "GRIMOIRE")
+    set guifont=MeiryoKe_Console:h10
+  endif
 endif
 
 "GUI settings
@@ -364,30 +368,33 @@ set guioptions-=R
 set guioptions-=l "左スクロールバーなし
 set guioptions-=L
 set guioptions-=b "下スクロールバーなし
+set guioptions-=m "メニューバー無し
 
 " fullscreen
 "-----------------------------------------------------------
-nnoremap <F11> :call ToggleFullScreen()<CR>
-function! ToggleFullScreen()
-  if &guioptions =~# 'C'
-    set guioptions-=C
-    if exists('s:go_temp')
-      if s:go_temp =~# 'm'
-        set guioptions+=m
+if (has("gui_running") && (hostname() == "GRIMOIRE"))
+  nnoremap <F11> :call ToggleFullScreen()<CR>
+  function! ToggleFullScreen()
+    if &guioptions =~# 'C'
+      set guioptions-=C
+      if exists('s:go_temp')
+        if s:go_temp =~# 'm'
+          set guioptions+=m
+        endif
+        if s:go_temp =~# 'T'
+          set guioptions+=T
+        endif
       endif
-      if s:go_temp =~# 'T'
-        set guioptions+=T
-      endif
+      simalt ~r
+    else
+      let s:go_temp = &guioptions
+      set guioptions+=C
+      set guioptions-=m
+      set guioptions-=T
+      simalt ~x
     endif
-    simalt ~r
-  else
-    let s:go_temp = &guioptions
-    set guioptions+=C
-    set guioptions-=m
-    set guioptions-=T
-    simalt ~x
-  endif
-endfunction
+  endfunction
+endif
 
 " vim-ref
 "webdictサイトの設定
