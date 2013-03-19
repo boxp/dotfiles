@@ -51,6 +51,7 @@ NeoBundle 'jdonaldson/vaxe'
 NeoBundle 'bartekd/vim-dart'
 NeoBundle 'VimIRC.vim'
 NeoBundle '2GMon/mikutter_mode.vim'
+NeoBundle 'VimClojure'
 
 " メガネケースで起動しちゃだーめ
 NeoBundleLazy 'basyura/bitly.vim'
@@ -66,7 +67,6 @@ endif
 
 " キーマップ的な何か
 inoremap <silent> <C-@> <C-[>
-inoremap <C-h> <Home>
 inoremap <C-e> <End>
 imap <C-k>	<Plug>(neosnippet_expand_or_jump)
 smap <C-k>	<Plug>(neosnippet_expand_or_jump)
@@ -87,6 +87,10 @@ nmap <C-Tab> gt
 nmap <C-S-Tab> gT
 imap <C-Tab> <ESC>gt
 imap <C-S-Tab> <ESC>gT
+nmap <C-1> :tabfirst
+nmap <C-9> :tablast
+imap <C-1> <ESC>:tabfirst
+imap <C-9> <ESC>:tablast
 
 " YankRing
 nnoremap <silent> yr :<C-u>YRShow<CR>
@@ -110,7 +114,8 @@ nnoremap [unite]p :<C-u>Unite mpc:playlist<CR>
 nnoremap [unite]m :<C-u>Unite mpc:listall<CR>
 nnoremap [unite]d :<C-u>Unite mpc:ls<CR>
 nnoremap [unite]o :<C-u>Unite outline<CR>
-nnoremap [unite]g :<C-u>Unite tab<CR>
+nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
+nnoremap [unite]g :<C-u>Unite giti<CR>
 nnoremap [unite]s :<C-u>Unite session<CR>
 nnoremap <C-\> :<C-u>Unite mapping<CR>
 
@@ -187,6 +192,10 @@ autocmd FileType tweetvim nmap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 autocmd FileType tweetvim imap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 "16色に設定
 set t_Co=16
+"meganecase設定
+if(hostname() == "meganecase")
+   set t_Co=256
+endif
 
 " スクリーン名のキャッシュを利用して、neocomplcache で補完する
 if !exists('g:neocomplcache_dictionary_filetype_lists')
@@ -202,7 +211,7 @@ let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 " let g:solarized_visibility = "high"
 " コントラストを高くする
 " let g:solarized_contrast = "high"
- set background=dark
+ set background=light
  colorscheme solarized
 " カレント行ハイライトON
 set cursorline
@@ -427,3 +436,6 @@ endfunction
 nmap <Leader>rj :<C-u>Ref webdict je<Space>
 nmap <Leader>re :<C-u>Ref webdict ej<Space>
 nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
+
+"cljs設定
+autocmd BufRead,BufNewFile *.cljs set filetype=clojure
