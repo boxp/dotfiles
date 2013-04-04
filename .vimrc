@@ -211,7 +211,7 @@ let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 " let g:solarized_visibility = "high"
 " コントラストを高くする
 " let g:solarized_contrast = "high"
- set background=light
+ set background=dark
  colorscheme solarized
 " カレント行ハイライトON
 set cursorline
