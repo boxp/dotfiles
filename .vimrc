@@ -26,6 +26,7 @@ NeoBundle 'Shougo/neobundle.vim'
 NeoBundle 'Shougo/echodoc'
 NeoBundle 'Shougo/neosnippet'
 NeoBundle 'Shougo/unite-ssh'
+NeoBundle 'Shougo/vinarise'
 NeoBundle 'Shougo/unite-session'
 NeoBundle 'YankRing.vim'
 NeoBundle 'tyru/open-browser.vim'
@@ -186,7 +187,7 @@ let g:tweetvim_display_icon = 0
 " spで開く
 let g:tweetvim_open_buffer_cmd = 'split!'
 " 1ページあたりの表示ツイート数
-let g:tweetvim_tweet_per_page = 20
+let g:tweetvim_tweet_per_page = 100
 " 更新キーをマップ
 autocmd FileType tweetvim nmap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 autocmd FileType tweetvim imap <buffer> <C-r> <Plug>(tweetvim_action_reload)
@@ -439,3 +440,23 @@ nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
 
 "cljs設定
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
+
+"neosnippet設定
+" Tell Neosnippet about the other snippets
+let g:neosnippet#snippets_directory='~/Dropbox/mysnippets'
+
+" 自動保存
+function! _CompileTexDocument()
+  :w
+  exe ":!texcomp.sh"
+endfunction
+function! _CompileMarkdown()
+  :w
+  exe ":!markdown *.md > index.html"
+endfunction
+
+command! CompileTexDocument call _CompileTexDocument()
+command! CompileMarkdown call _CompileMarkdown()
+
+autocmd BufWrite *.{tex} :CompileMarkdown
+autocmd BufWrite *.{md} :CompileMarkdown
