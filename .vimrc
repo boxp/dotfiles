@@ -53,6 +53,7 @@ NeoBundle 'bartekd/vim-dart'
 NeoBundle 'VimIRC.vim'
 NeoBundle '2GMon/mikutter_mode.vim'
 NeoBundle 'VimClojure'
+NeoBundle 'tpope/vim-fireplace'
 
 " メガネケースで起動しちゃだーめ
 NeoBundleLazy 'basyura/bitly.vim'
@@ -71,7 +72,6 @@ inoremap <silent> <C-@> <C-[>
 inoremap <C-e> <End>
 imap <C-k>	<Plug>(neosnippet_expand_or_jump)
 smap <C-k>	<Plug>(neosnippet_expand_or_jump)
-imap ;; <C-[>
 nnoremap <silent> r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR>
 nnoremap <silent> su :<C-u>e sudo:%<CR>
 nmap <F12> yyp<C-a>
@@ -448,7 +448,7 @@ let g:neosnippet#snippets_directory='~/Dropbox/mysnippets'
 " 自動保存
 function! _CompileTexDocument()
   :w
-  exe ":!texcomp.sh"
+  exe ":!~/Dropbox/bin/texcomp.sh"
 endfunction
 function! _CompileMarkdown()
   :w
@@ -458,5 +458,8 @@ endfunction
 command! CompileTexDocument call _CompileTexDocument()
 command! CompileMarkdown call _CompileMarkdown()
 
-autocmd BufWrite *.{tex} :CompileMarkdown
+autocmd BufWrite *.{tex} :CompileTexDocument
 autocmd BufWrite *.{md} :CompileMarkdown
+
+"powerline
+let g:Powerline_symbols= 'fancy'
