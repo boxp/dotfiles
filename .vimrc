@@ -54,6 +54,7 @@ NeoBundle 'VimIRC.vim'
 NeoBundle '2GMon/mikutter_mode.vim'
 NeoBundle 'VimClojure'
 NeoBundle 'tpope/vim-fireplace'
+NeoBundle 'kakkyz81/evervim'
 
 " メガネケースで起動しちゃだーめ
 NeoBundleLazy 'basyura/bitly.vim'
@@ -119,6 +120,9 @@ nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
 nnoremap [unite]g :<C-u>Unite giti<CR>
 nnoremap [unite]s :<C-u>Unite session<CR>
 nnoremap <C-\> :<C-u>Unite mapping<CR>
+
+" quickrun
+nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR>
 
 "インサートモードで開始
 let g:unite_enable_start_insert = 1
@@ -318,6 +322,7 @@ let IM_CtrlIBusPython = 1
 let g:quickrun_config = {}
 let g:quickrun_config.scala = {'command' : 'scala'}
 let g:quickrun_config.hxml = {'command' : 'haxe'}
+let g:quickrun_config.mm = {'command' : 'matx'}
 let g:quickrun_config.c = {
 	\ 'cmdopt' : '-lm' }
 
@@ -441,6 +446,9 @@ nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
 "cljs設定
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
 
+" matx
+autocmd BufRead,BufNewFile *.mm set filetype=C
+
 "neosnippet設定
 " Tell Neosnippet about the other snippets
 let g:neosnippet#snippets_directory='~/Dropbox/mysnippets'
@@ -452,7 +460,7 @@ function! _CompileTexDocument()
 endfunction
 function! _CompileMarkdown()
   :w
-  exe ":!markdown *.md > index.html"
+  exe ":!markdown *.md > output.html"
 endfunction
 
 command! CompileTexDocument call _CompileTexDocument()
@@ -461,5 +469,5 @@ command! CompileMarkdown call _CompileMarkdown()
 autocmd BufWrite *.{tex} :CompileTexDocument
 autocmd BufWrite *.{md} :CompileMarkdown
 
-"powerline
-let g:Powerline_symbols= 'fancy'
+" evervim
+let g:evervim_devtoken='S=s66:U=734804:E=146dbacbe49:C=13f83fb924d:P=1cd:A=en-devtoken:V=2:H=88d428022e1d8c509d6aa1b3e08a33f1'
