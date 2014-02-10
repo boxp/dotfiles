@@ -16,6 +16,7 @@ NeoBundle "mattn/vimplenote-vim"
 NeoBundle "mattn/webapi-vim"
 NeoBundle "mattn/mkdpreview-vim"
 NeoBundle "Solarized"
+NeoBundle 'synic.vim'
 NeoBundle 'sudo.vim'
 NeoBundle "Shougo/neocomplcache"
 NeoBundle "Shougo/unite.vim"
@@ -49,12 +50,16 @@ NeoBundle 'tsukkee/unite-help'
 NeoBundle 'kmnk/vim-unite-giti'
 NeoBundle 'surround.vim'
 NeoBundle 'jdonaldson/vaxe'
-NeoBundle 'bartekd/vim-dart'
 NeoBundle 'VimIRC.vim'
 NeoBundle '2GMon/mikutter_mode.vim'
 NeoBundle 'VimClojure'
 NeoBundle 'tpope/vim-fireplace'
+NeoBundle 'ctford/vim-fireplace-easy'
+NeoBundle 'tpope/vim-classpath'
+NeoBundle 'guns/vim-clojure-static'
 NeoBundle 'kakkyz81/evervim'
+NeoBundle 'kannokanno/unite-todo'
+NeoBundle 'aharisu/vim_goshrepl'
 
 " メガネケースで起動しちゃだーめ
 NeoBundleLazy 'basyura/bitly.vim'
@@ -107,11 +112,11 @@ nnoremap <silent> vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
 nmap , [unite]
 
 nnoremap [unite]f :<C-u>Unite file<CR>
-nnoremap [unite]b :<C-u>Unite buffer<CR>
+nnoremap [unite]bf :<C-u>Unite buffer<CR>
 nnoremap [unite]bk :<C-u>Unite bookmark<CR>
 nnoremap [unite]r :<C-u>Unite file_mru<CR>
 nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
-nnoremap [unite]t :<C-u>Unite tweetvim<CR>
+nnoremap [unite]tt :<C-u>Unite tweetvim<CR>
 nnoremap [unite]p :<C-u>Unite mpc:playlist<CR>
 nnoremap [unite]m :<C-u>Unite mpc:listall<CR>
 nnoremap [unite]d :<C-u>Unite mpc:ls<CR>
@@ -119,10 +124,23 @@ nnoremap [unite]o :<C-u>Unite outline<CR>
 nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
 nnoremap [unite]g :<C-u>Unite giti<CR>
 nnoremap [unite]s :<C-u>Unite session<CR>
+nnoremap [unite]to :<C-u>Unite todo<CR>
 nnoremap <C-\> :<C-u>Unite mapping<CR>
 
 " quickrun
 nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR>
+
+" gauche keymap
+vmap <CR> <Plug>(gosh_repl_send_block)
+
+"" runner/vimproc/updatetime で出力バッファの更新間隔をミリ秒で設定できます
+"" updatetime が一時的に書き換えられてしまうので注意して下さい
+let g:quickrun_config = {
+\   "_" : {
+\       "runner" : "vimproc",
+\       "runner/vimproc/updatetime" : 60
+\   },
+\}
 
 "インサートモードで開始
 let g:unite_enable_start_insert = 1
@@ -196,7 +214,7 @@ let g:tweetvim_tweet_per_page = 100
 autocmd FileType tweetvim nmap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 autocmd FileType tweetvim imap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 "16色に設定
-set t_Co=16
+set t_Co=256
 "meganecase設定
 if(hostname() == "meganecase")
    set t_Co=256
@@ -216,8 +234,14 @@ let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 " let g:solarized_visibility = "high"
 " コントラストを高くする
 " let g:solarized_contrast = "high"
- set background=dark
- colorscheme solarized
+if (hostname() == "Grimoire" || hostname() == "Ooedo")
+  colorscheme synic
+endif
+if (hostname() == "BOXP-PC")
+  set t_Co=16
+  set background=dark
+  colorscheme solarized
+endif
 " カレント行ハイライトON
 set cursorline
 " アンダーラインを引く(color terminal)
@@ -347,7 +371,7 @@ set backspace=indent,eol,start
 autocmd FileType python set omnifunc=pythoncomplete#Complete
 
 " disable buzzer
-set vb t_vb=
+set visualbell t_vb=
 
 " surround.vim settings
 nmap <C-s> ysW"
@@ -371,7 +395,7 @@ if (has("gui_running") )
   if (hostname() == "Ooedo" || hostname() == "Grimoire")
     set guifont =Ricty\ 10
   endif 
-  if (hostname() == "GRIMOIRE")
+  if (hostname() == "BOXP-PC")
     set guifont=MeiryoKe_Console:h10
   endif
 endif
@@ -387,7 +411,7 @@ set guioptions-=m "メニューバー無し
 
 " fullscreen
 "-----------------------------------------------------------
-if (has("gui_running") && (hostname() == "GRIMOIRE"))
+if (has("gui_running") && (hostname() == "BOXP-PC"))
   nnoremap <F11> :call ToggleFullScreen()<CR>
   function! ToggleFullScreen()
     if &guioptions =~# 'C'
@@ -448,6 +472,10 @@ autocmd BufRead,BufNewFile *.cljs set filetype=clojure
 
 " matx
 autocmd BufRead,BufNewFile *.mm set filetype=C
+
+" fxml
+autocmd BufRead,BufNewFile *.fxml set filetype=xml
+
 
 "neosnippet設定
 " Tell Neosnippet about the other snippets
