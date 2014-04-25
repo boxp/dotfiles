@@ -12,6 +12,7 @@ if has('vim_starting')
 	call neobundle#rc(expand('~/.vim/bundle/'))
 endif
 
+NeoBundle "rbtnn/puyo.vim"
 NeoBundle "mattn/vimplenote-vim"
 NeoBundle "mattn/webapi-vim"
 NeoBundle "mattn/mkdpreview-vim"
@@ -20,6 +21,7 @@ NeoBundle 'synic.vim'
 NeoBundle 'sudo.vim'
 NeoBundle "Shougo/neocomplcache"
 NeoBundle "Shougo/unite.vim"
+NeoBundle "Shougo/neomru.vim"
 NeoBundle "Shougo/vimfiler"
 NeoBundle "Shougo/vimshell"
 NeoBundle 'Shougo/vimproc'
@@ -105,7 +107,7 @@ nnoremap <silent> yr :<C-u>YRShow<CR>
 " vimfiler
 nnoremap <silent> vf :<C-u>VimFilerCurrentDir<CR>
 nnoremap <silent> vfs :<C-u>VimFilerSplit<CR>
-nnoremap <silent> vt  :<C-u>VimFilerTab<CR>
+nnoremap <silent> vt  :<C-u>VimShellTab<CR>
 nnoremap <silent> vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
 
 " Unite
@@ -467,8 +469,10 @@ nmap <Leader>rj :<C-u>Ref webdict je<Space>
 nmap <Leader>re :<C-u>Ref webdict ej<Space>
 nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
 
+" autocmdê›íË
 "cljsê›íË
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
+autocmd BufRead,BufNewFile *.cljx set filetype=clojure
 
 " matx
 autocmd BufRead,BufNewFile *.mm set filetype=C
@@ -476,6 +480,9 @@ autocmd BufRead,BufNewFile *.mm set filetype=C
 " fxml
 autocmd BufRead,BufNewFile *.fxml set filetype=xml
 
+" html
+autocmd BufRead,BufNewFile *.html 
+  \ nnoremap \p exe "!firefox ./index.html"
 
 "neosnippetê›íË
 " Tell Neosnippet about the other snippets

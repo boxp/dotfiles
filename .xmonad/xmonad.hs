@@ -12,7 +12,7 @@
                           { ppOutput = hPutStrLn xmproc
                           , ppTitle = xmobarColor "green" "" . shorten 50
                           }
-          , terminal           = "urxvt"
+          , terminal           = "sakura"
           , borderWidth        = 2
           , normalBorderColor  = "#333333"
           , focusedBorderColor = "#cd8b00"

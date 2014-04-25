@@ -3,7 +3,7 @@
 
 ; theme settings
 ; solarized_dark
-;(reset! theme "solarized_dark")
+(set-theme! "solarized_dark")
 ; set tweet text size
 (reset! tweets-size 13)
 
