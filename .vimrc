@@ -12,7 +12,6 @@ if has('vim_starting')
 	call neobundle#rc(expand('~/.vim/bundle/'))
 endif
 
-NeoBundle "rbtnn/puyo.vim"
 NeoBundle "mattn/vimplenote-vim"
 NeoBundle "mattn/webapi-vim"
 NeoBundle "mattn/mkdpreview-vim"
@@ -22,12 +21,13 @@ NeoBundle 'sudo.vim'
 NeoBundle "Shougo/neocomplcache"
 NeoBundle "Shougo/unite.vim"
 NeoBundle "Shougo/neomru.vim"
-NeoBundle "Shougo/vimfiler"
 NeoBundle "Shougo/vimshell"
+NeoBundle "Shougo/vimfiler"
 NeoBundle 'Shougo/vimproc'
 NeoBundle 'Shougo/neobundle.vim'
 NeoBundle 'Shougo/echodoc'
 NeoBundle 'Shougo/neosnippet'
+NeoBundle 'Shougo/neosnippet-snippets'
 NeoBundle 'Shougo/unite-ssh'
 NeoBundle 'Shougo/vinarise'
 NeoBundle 'Shougo/unite-session'
@@ -35,40 +35,30 @@ NeoBundle 'YankRing.vim'
 NeoBundle 'tyru/open-browser.vim'
 NeoBundle 'basyura/twibill.vim'
 NeoBundle 'h1mesuke/unite-outline'
-NeoBundle 'mfumi/unite-mpc'
-NeoBundle 'mfumi/mpc.vim'
 NeoBundle 'tpope/vim-pathogen'
 NeoBundle 'thinca/vim-quickrun'
 NeoBundle 'thinca/vim-logcat'
 NeoBundle 'thinca/vim-ref'
 NeoBundle 'ujihisa/vimshell-ssh'
 NeoBundle 'Markdown'
-NeoBundle 'derekwyatt/vim-scala'
 NeoBundle 'textutil.vim'
-NeoBundle 'gre/play2vim'
-NeoBundle 'taglist.vim'
 NeoBundle 'osyo-manga/unite-quickfix'
 NeoBundle 'tsukkee/unite-help'
 NeoBundle 'kmnk/vim-unite-giti'
+NeoBundle 'tpope/vim-fugitive'
 NeoBundle 'surround.vim'
-NeoBundle 'jdonaldson/vaxe'
-NeoBundle 'VimIRC.vim'
-NeoBundle '2GMon/mikutter_mode.vim'
 NeoBundle 'VimClojure'
 NeoBundle 'tpope/vim-fireplace'
-NeoBundle 'ctford/vim-fireplace-easy'
 NeoBundle 'tpope/vim-classpath'
 NeoBundle 'guns/vim-clojure-static'
 NeoBundle 'kakkyz81/evervim'
 NeoBundle 'kannokanno/unite-todo'
-NeoBundle 'aharisu/vim_goshrepl'
 
 " メガネケースで起動しちゃだーめ
 NeoBundleLazy 'basyura/bitly.vim'
 NeoBundleLazy 'basyura/TweetVim'
 NeoBundleLazy 'tsukkee/lingr-vim'
 NeoBundleLazy 'motemen/hatena-vim'
-NeoBundleLazy 'yuratomo/w3m.vim'
 NeoBundleLazy 'ujihisa/blogger.vim'
 
 if (hostname() != "meganecase")
@@ -107,14 +97,14 @@ nnoremap <silent> yr :<C-u>YRShow<CR>
 " vimfiler
 nnoremap <silent> vf :<C-u>VimFilerCurrentDir<CR>
 nnoremap <silent> vfs :<C-u>VimFilerSplit<CR>
-nnoremap <silent> vt  :<C-u>VimShellTab<CR>
+nnoremap <silent> vt  :<C-u>VimFilerTab<CR>
 nnoremap <silent> vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
 
 " Unite
 nmap , [unite]
 
 nnoremap [unite]f :<C-u>Unite file<CR>
-nnoremap [unite]bf :<C-u>Unite buffer<CR>
+nnoremap [unite]bb :<C-u>Unite buffer<CR>
 nnoremap [unite]bk :<C-u>Unite bookmark<CR>
 nnoremap [unite]r :<C-u>Unite file_mru<CR>
 nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
@@ -131,9 +121,6 @@ nnoremap <C-\> :<C-u>Unite mapping<CR>
 
 " quickrun
 nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR>
-
-" gauche keymap
-vmap <CR> <Plug>(gosh_repl_send_block)
 
 "" runner/vimproc/updatetime で出力バッファの更新間隔をミリ秒で設定できます
 "" updatetime が一時的に書き換えられてしまうので注意して下さい
@@ -469,10 +456,8 @@ nmap <Leader>rj :<C-u>Ref webdict je<Space>
 nmap <Leader>re :<C-u>Ref webdict ej<Space>
 nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
 
-" autocmd設定
 "cljs設定
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
-autocmd BufRead,BufNewFile *.cljx set filetype=clojure
 
 " matx
 autocmd BufRead,BufNewFile *.mm set filetype=C
@@ -480,9 +465,6 @@ autocmd BufRead,BufNewFile *.mm set filetype=C
 " fxml
 autocmd BufRead,BufNewFile *.fxml set filetype=xml
 
-" html
-autocmd BufRead,BufNewFile *.html 
-  \ nnoremap \p exe "!firefox ./index.html"
 
 "neosnippet設定
 " Tell Neosnippet about the other snippets
@@ -506,3 +488,7 @@ autocmd BufWrite *.{md} :CompileMarkdown
 
 " evervim
 let g:evervim_devtoken='S=s66:U=734804:E=146dbacbe49:C=13f83fb924d:P=1cd:A=en-devtoken:V=2:H=88d428022e1d8c509d6aa1b3e08a33f1'
+
+" 透過設定
+autocmd FocusGained * set transparency=300
+autocmd FocusLost * set transparency=128
