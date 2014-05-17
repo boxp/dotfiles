@@ -12,6 +12,14 @@ if has('vim_starting')
 	call neobundle#rc(expand('~/.vim/bundle/'))
 endif
 
+NeoBundle 'Shougo/vimproc', {
+      \ 'build' : {
+      \     'windows' : 'make -f make_mingw32.mak',
+      \     'cygwin' : 'make -f make_cygwin.mak',
+      \     'mac' : 'make -f make_mac.mak',
+      \     'unix' : 'make -f make_unix.mak',
+      \    },
+      \ }
 NeoBundle "mattn/vimplenote-vim"
 NeoBundle "mattn/webapi-vim"
 NeoBundle "mattn/mkdpreview-vim"
@@ -23,7 +31,6 @@ NeoBundle "Shougo/unite.vim"
 NeoBundle "Shougo/neomru.vim"
 NeoBundle "Shougo/vimshell"
 NeoBundle "Shougo/vimfiler"
-NeoBundle 'Shougo/vimproc'
 NeoBundle 'Shougo/neobundle.vim'
 NeoBundle 'Shougo/echodoc'
 NeoBundle 'Shougo/neosnippet'
