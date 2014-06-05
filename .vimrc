@@ -60,6 +60,9 @@ NeoBundle 'tpope/vim-classpath'
 NeoBundle 'guns/vim-clojure-static'
 NeoBundle 'kakkyz81/evervim'
 NeoBundle 'kannokanno/unite-todo'
+NeoBundle 'aharisu/vim_goshrepl'
+NeoBundle 'aharisu/vim-gdev'
+NeoBundle 'https://bitbucket.org/kovisoft/slimv'
 
 " メガネケースで起動しちゃだーめ
 NeoBundleLazy 'basyura/bitly.vim'
@@ -499,3 +502,6 @@ let g:evervim_devtoken='S=s66:U=734804:E=146dbacbe49:C=13f83fb924d:P=1cd:A=en-de
 " 透過設定
 autocmd FocusGained * set transparency=300
 autocmd FocusLost * set transparency=128
+
+" gauche
+vmap <CR> <Plug>(gosh_repl_send_block)

@@ -36,7 +36,18 @@
   (-> twitters 
       vals 
       (#(doall 
-         (map 
+         (pmap 
            (fn [a] (.updateStatus a 
                      (str "@" username " " txt)))
             %)))))
+
+(defn dolls-war
+  "人形たちの戦争．次々と生み出される人形の，死を恐れぬ攻撃が敵を追い詰める．
+   (複数のアカウントから複数のツイートを全てお気に入りに登録する)"
+  [twitters tweets]
+  (doall
+    (for [x (vals twitters)
+          y tweets]
+      (try
+        (.createFavorite x (.getId y))
+        (catch Exception e nil)))))
