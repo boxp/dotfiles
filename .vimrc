@@ -114,7 +114,7 @@ nnoremap <silent> vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
 nmap , [unite]
 
 nnoremap [unite]f :<C-u>Unite file<CR>
-nnoremap [unite]bb :<C-u>Unite buffer<CR>
+nnoremap [unite]bf :<C-u>Unite buffer<CR>
 nnoremap [unite]bk :<C-u>Unite bookmark<CR>
 nnoremap [unite]r :<C-u>Unite file_mru<CR>
 nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
@@ -498,10 +498,6 @@ autocmd BufWrite *.{md} :CompileMarkdown
 
 " evervim
 let g:evervim_devtoken='S=s66:U=734804:E=146dbacbe49:C=13f83fb924d:P=1cd:A=en-devtoken:V=2:H=88d428022e1d8c509d6aa1b3e08a33f1'
-
-" ìßâﬂê›íË
-autocmd FocusGained * set transparency=300
-autocmd FocusLost * set transparency=128
 
 " gauche
 vmap <CR> <Plug>(gosh_repl_send_block)

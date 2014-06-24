@@ -43,11 +43,21 @@
 
 (defn dolls-war
   "人形たちの戦争．次々と生み出される人形の，死を恐れぬ攻撃が敵を追い詰める．
-   (複数のアカウントから複数のツイートを全てお気に入りに登録する)"
-  [twitters tweets]
-  (doall
-    (for [x (vals twitters)
-          y tweets]
-      (try
-        (.createFavorite x (.getId y))
-        (catch Exception e nil)))))
+   (複数のアカウントから特定のユーザーの複数のツイートを全てお気に入りに登録する)"
+  [twitters user-name]
+  (let [user-id (-> twitters vals first (.showUser user-name) .getId)
+        user-timeline (-> twitters vals first (.getUserTimeline user-id))]
+    (doall
+      (for [x (vals twitters)
+            y user-timeline]
+        (try
+          (.createFavorite x (.getId y))
+          (catch Exception e nil))))))
+
+(defn eval-twi
+  [cls]
+  (let [cls-str (str cls)
+        res (try
+              (eval cls)
+              (catch Exception e (. e getStackTrace)))]
+    (post (str cls-str " => " res))))
