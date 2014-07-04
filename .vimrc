@@ -410,7 +410,7 @@ set guioptions-=m "メニューバー無し
 
 " fullscreen
 "-----------------------------------------------------------
-if (has("gui_running") && (hostname() == "BOXP-PC"))
+if (has("gui_running"))
   nnoremap <F11> :call ToggleFullScreen()<CR>
   function! ToggleFullScreen()
     if &guioptions =~# 'C'
