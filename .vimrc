@@ -468,6 +468,8 @@ nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
 
 "cljsê›íË
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
+"cljxê›íË
+autocmd BufRead,BufNewFile *.cljx set filetype=clojure
 
 " matx
 autocmd BufRead,BufNewFile *.mm set filetype=C
