@@ -53,7 +53,6 @@ NeoBundle 'osyo-manga/unite-quickfix'
 NeoBundle 'tsukkee/unite-help'
 NeoBundle 'kmnk/vim-unite-giti'
 NeoBundle 'tpope/vim-fugitive'
-NeoBundle 'surround.vim'
 NeoBundle 'VimClojure'
 NeoBundle 'tpope/vim-fireplace'
 NeoBundle 'tpope/vim-classpath'
@@ -62,7 +61,6 @@ NeoBundle 'kakkyz81/evervim'
 NeoBundle 'kannokanno/unite-todo'
 NeoBundle 'aharisu/vim_goshrepl'
 NeoBundle 'aharisu/vim-gdev'
-NeoBundle 'https://bitbucket.org/kovisoft/slimv'
 
 " メガネケースで起動しちゃだーめ
 NeoBundleLazy 'basyura/bitly.vim'
@@ -233,12 +231,12 @@ let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 " let g:solarized_visibility = "high"
 " コントラストを高くする
 " let g:solarized_contrast = "high"
-if (hostname() == "Grimoire" || hostname() == "Ooedo")
+if (hostname() == "Ooedo")
   colorscheme synic
 endif
-if (hostname() == "BOXP-PC")
+if (hostname() == "BOXP-PC" || hostname() == "grimoire")
   set t_Co=16
-  set background=dark
+  set background=light
   colorscheme solarized
 endif
 " カレント行ハイライトON
