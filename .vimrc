@@ -63,6 +63,7 @@ NeoBundle 'kannokanno/unite-todo'
 NeoBundle 'aharisu/vim_goshrepl'
 NeoBundle 'aharisu/vim-gdev'
 NeoBundle 'https://bitbucket.org/kovisoft/slimv'
+NeoBundle 'ujihisa/neoclojure.vim'
 
 " メガネケースで起動しちゃだーめ
 NeoBundleLazy 'basyura/bitly.vim'
@@ -213,7 +214,7 @@ let g:tweetvim_tweet_per_page = 100
 autocmd FileType tweetvim nmap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 autocmd FileType tweetvim imap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 "16色に設定
-set t_Co=256
+set t_Co=16
 "meganecase設定
 if(hostname() == "meganecase")
    set t_Co=256
@@ -235,11 +236,9 @@ let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 " let g:solarized_contrast = "high"
 if (hostname() == "Grimoire" || hostname() == "Ooedo")
   colorscheme synic
-endif
-if (hostname() == "BOXP-PC")
-  set t_Co=16
-  set background=dark
+else 
   colorscheme solarized
+  set background=dark
 endif
 " カレント行ハイライトON
 set cursorline
@@ -469,6 +468,9 @@ nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
 "cljs設定
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
 
+"cljx設定
+autocmd BufRead,BufNewFile *.cljx set filetype=clojure
+
 " matx
 autocmd BufRead,BufNewFile *.mm set filetype=C
 
@@ -501,3 +503,14 @@ let g:evervim_devtoken='S=s66:U=734804:E=146dbacbe49:C=13f83fb924d:P=1cd:A=en-de
 
 " gauche
 vmap <CR> <Plug>(gosh_repl_send_block)
+
+" neoclojure
+augroup vimrc-neoclojure
+  autocmd!
+  autocmd FileType clojure setlocal omnifunc=neoclojure#complete
+augroup END
+
+let g:quickrun_config.clojure = {
+      \ 'runner': 'neoclojure', 'command': 'dummy',
+      \ 'tempfile'  : '%{tempname()}.clj'
+}
