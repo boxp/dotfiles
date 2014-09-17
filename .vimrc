@@ -511,6 +511,7 @@ augroup vimrc-neoclojure
 augroup END
 
 let g:quickrun_config.clojure = {
-      \ 'runner': 'neoclojure', 'command': 'dummy',
-      \ 'tempfile'  : '%{tempname()}.clj'
-}
+\       'runner': 'neoclojure', 
+\       'command': 'dummy',
+\       'tempfile': '%{tempname()}.clj'
+\ }
