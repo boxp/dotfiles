@@ -53,7 +53,6 @@ NeoBundle 'osyo-manga/unite-quickfix'
 NeoBundle 'tsukkee/unite-help'
 NeoBundle 'kmnk/vim-unite-giti'
 NeoBundle 'tpope/vim-fugitive'
-NeoBundle 'surround.vim'
 NeoBundle 'VimClojure'
 NeoBundle 'tpope/vim-fireplace'
 NeoBundle 'tpope/vim-classpath'
@@ -234,7 +233,7 @@ let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 " let g:solarized_visibility = "high"
 " コントラストを高くする
 " let g:solarized_contrast = "high"
-if (hostname() == "Grimoire" || hostname() == "Ooedo")
+if (hostname() == "Ooedo")
   colorscheme synic
 else 
   colorscheme solarized
@@ -467,6 +466,8 @@ nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
 
 "cljs設定
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
+"cljx設定
+autocmd BufRead,BufNewFile *.cljx set filetype=clojure
 
 "cljx設定
 autocmd BufRead,BufNewFile *.cljx set filetype=clojure
