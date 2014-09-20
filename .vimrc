@@ -2,7 +2,11 @@
 "                                BOXP vimrc                                      "
 "--------------------------------------------------------------------------------"
 
-" Last modified 2013/02/27 21:48
+" Last modified 2014/09/20
+
+" source privacy vars(githubに上げたくないパラメーター達)
+" g:evervim_devtoken, g:mail_address
+source .pri_vimrc
 
 " NeoBundleの設定
 set nocompatible               " be iMproved
@@ -63,6 +67,7 @@ NeoBundle 'aharisu/vim_goshrepl'
 NeoBundle 'aharisu/vim-gdev'
 NeoBundle 'https://bitbucket.org/kovisoft/slimv'
 NeoBundle 'ujihisa/neoclojure.vim'
+NeoBundle 'ujihisa/unite-colorscheme.vim'
 
 " メガネケースで起動しちゃだーめ
 NeoBundleLazy 'basyura/bitly.vim'
@@ -80,7 +85,7 @@ inoremap <silent> <C-@> <C-[>
 inoremap <C-e> <End>
 imap <C-k>	<Plug>(neosnippet_expand_or_jump)
 smap <C-k>	<Plug>(neosnippet_expand_or_jump)
-nnoremap <silent> r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR>
+nnoremap <silent> r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR> :<C-u>source ~/.gvimrc<CR> 
 nnoremap <silent> su :<C-u>e sudo:%<CR>
 nmap <F12> yyp<C-a>
 nmap <C-J> @a
@@ -130,7 +135,7 @@ nnoremap [unite]to :<C-u>Unite todo<CR>
 nnoremap <C-\> :<C-u>Unite mapping<CR>
 
 " quickrun
-nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR>
+nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
 
 "" runner/vimproc/updatetime で出力バッファの更新間隔をミリ秒で設定できます
 "" updatetime が一時的に書き換えられてしまうので注意して下さい
@@ -148,14 +153,12 @@ let g:unite_enable_start_insert = 1
 nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
 
 " Vimplenote
-nnoremap vnl :<C-u>VimpleNote -l<CR>tiyotiyouda@gmail.com<CR>
-nnoremap vnn :<C-u>VimpleNote -n<CR>tiyotiyouda@gmail.com<CR>
+" FIXME: feedkeysを用いるべきではない
+nnoremap vnl :call feedkeys("\<C-u>VimpleNote -l\<CR>" . g:mail_address . "\<CR>")
+nnoremap vnn :call feedkeys("\<C-u>VimpleNote -n\<CR> . g:mail_address . "\<CR>")
 
 " w3m
 nnoremap gks :<C-u>W3mSplit google 
-
-" パス設定
-let $PATH = $PATH . ':~/bin:~/MaTX/bin:/opt/android-sdk/platform-tools'
 
 " マウス機能有効化
 set mouse=a
@@ -234,6 +237,7 @@ let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 " コントラストを高くする
 " let g:solarized_contrast = "high"
 if (hostname() == "Ooedo")
+  " デスクトップの場合
   colorscheme synic
 else 
   colorscheme solarized
@@ -255,23 +259,6 @@ set clipboard+=unnamed
 
 " ステータスライン
 set laststatus=2   " Always show the statusline
-
-" Chalice設定
-set fencs=usc-bom,usc-21e,usc-2,iso-2022-jp-3,utf-8
-set fencs+=cp932
-" Chalice用設定
- let chalice_threadlist_lines = 22
- let chalice_preview = 0
- let chalice_titlestring = "Chalice"
-
- " 板デフォルトの名無しさんを使用
- let chalice_anonyname = ''
- let chalice_threadinfo = 1
- let chalice_foldmarks = '○●'
- let chalice_statusline = '%c,'
-
- " 起動時にスレの栞を表示
- let chalice_startupflags = 'bookmark'
 
 " 文字コードの自動認識
 if &encoding !=# 'utf-8'
@@ -464,10 +451,11 @@ nmap <Leader>rj :<C-u>Ref webdict je<Space>
 nmap <Leader>re :<C-u>Ref webdict ej<Space>
 nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
 
+"Lisp全般の設定
+let g:lisp_rainbow=1
+
 "cljs設定
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
-"cljx設定
-autocmd BufRead,BufNewFile *.cljx set filetype=clojure
 
 "cljx設定
 autocmd BufRead,BufNewFile *.cljx set filetype=clojure
@@ -477,7 +465,6 @@ autocmd BufRead,BufNewFile *.mm set filetype=C
 
 " fxml
 autocmd BufRead,BufNewFile *.fxml set filetype=xml
-
 
 "neosnippet設定
 " Tell Neosnippet about the other snippets
@@ -490,7 +477,7 @@ function! _CompileTexDocument()
 endfunction
 function! _CompileMarkdown()
   :w
-  exe ":!markdown *.md > output.html"
+  exe ":!markdown " . expand("%:p") . " >> output.html"
 endfunction
 
 command! CompileTexDocument call _CompileTexDocument()
@@ -498,9 +485,6 @@ command! CompileMarkdown call _CompileMarkdown()
 
 autocmd BufWrite *.{tex} :CompileTexDocument
 autocmd BufWrite *.{md} :CompileMarkdown
-
-" evervim
-let g:evervim_devtoken='S=s66:U=734804:E=146dbacbe49:C=13f83fb924d:P=1cd:A=en-devtoken:V=2:H=88d428022e1d8c509d6aa1b3e08a33f1'
 
 " gauche
 vmap <CR> <Plug>(gosh_repl_send_block)
