@@ -4,13 +4,13 @@
 
 " Last modified 2014/09/20
 
-" source privacy vars(github‚Éã‚°‚½‚­‚È‚¢ƒpƒ‰ƒ[ƒ^[’B)
+" source privacy vars(githubã«ä¸Šã’ãŸããªã„ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼é”)
 " g:evervim_devtoken, g:mail_address
 if filereadable(".pri_vimrc")
   source .pri_vimrc
 endif
 
-" NeoBundle‚Ìİ’è
+" NeoBundleã®è¨­å®š
 set nocompatible               " be iMproved
 
 if has('vim_starting')
@@ -71,7 +71,7 @@ NeoBundle 'aharisu/vim-gdev'
 NeoBundle 'ujihisa/neoclojure.vim'
 NeoBundle 'ujihisa/unite-colorscheme'
 
-" ƒƒKƒlƒP[ƒX‚Å‚Ì—áŠOİ’è
+" ãƒ¡ã‚¬ãƒã‚±ãƒ¼ã‚¹ã§ã®ä¾‹å¤–è¨­å®š
 if hostname() != 'meganecase'
   NeoBundle 'basyura/bitly.vim'
   NeoBundle 'basyura/TweetVim'
@@ -80,7 +80,7 @@ if hostname() != 'meganecase'
   NeoBundle 'ujihisa/blogger.vim'
 endif
 
-" ƒL[ƒ}ƒbƒv“I‚È‰½‚©
+" ã‚­ãƒ¼ãƒãƒƒãƒ—çš„ãªä½•ã‹
 inoremap <silent> <C-@> <C-[>
 inoremap <C-e> <End>
 imap <C-k> <Plug>(neosnippet_expand_or_jump)
@@ -148,37 +148,37 @@ let g:quickrun_config = {
 \   },
 \}
 
-"ƒCƒ“ƒT[ƒgƒ‚[ƒh‚ÅŠJn
+"ã‚¤ãƒ³ã‚µãƒ¼ãƒˆãƒ¢ãƒ¼ãƒ‰ã§é–‹å§‹
 let g:unite_enable_start_insert = 1
 
 " Execute help.
 nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
 
 " Vimplenote
-" FIXME: feedkeys‚ğ—p‚¢‚é‚×‚«‚Å‚Í‚È‚¢
+" FIXME: feedkeysã‚’ç”¨ã„ã‚‹ã¹ãã§ã¯ãªã„
 nnoremap vnl :call feedkeys("\<C-u>VimpleNote -l\<CR>" . g:mail_address . "\<CR>")
 nnoremap vnn :call feedkeys("\<C-u>VimpleNote -n\<CR> . g:mail_address . "\<CR>")
 
 " w3m
 nnoremap gks :<C-u>W3mSplit google
 
-" ƒ}ƒEƒX‹@”\—LŒø‰»
+" ãƒã‚¦ã‚¹æ©Ÿèƒ½æœ‰åŠ¹åŒ–
 set mouse=a
 
-""s”Ô†‚ğ•\¦
+""è¡Œç•ªå·ã‚’è¡¨ç¤º
 set number
 
-" ƒCƒ“ƒNƒŠƒƒ“ƒ^ƒ‹ŒŸõ‚ğ—LŒø‰»
+" ã‚¤ãƒ³ã‚¯ãƒªãƒ¡ãƒ³ã‚¿ãƒ«æ¤œç´¢ã‚’æœ‰åŠ¹åŒ–
 set incsearch
 
-" •âŠ®‚Ìˆê——•\¦‹@”\—LŒø‰»
+" è£œå®Œæ™‚ã®ä¸€è¦§è¡¨ç¤ºæ©Ÿèƒ½æœ‰åŠ¹åŒ–
 set wildmenu wildmode=list:full
 
-" ©“®“I‚Éƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚ŞƒpƒX‚ğİ’è ~/.vim/userautoload/*vim
+" è‡ªå‹•çš„ã«ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€ãƒ‘ã‚¹ã‚’è¨­å®š ~/.vim/userautoload/*vim
 set runtimepath+=~/.vim/
 runtime! userautoload/*.vim
 
-" neocomplcacheİ’è
+" neocomplcacheè¨­å®š
 let g:neocomplcache_enable_at_startup = 1
 let g:neocomplcache_dictionary_filetype_lists = {
             \ 'scala' : $HOME.'/Dropbox/dict/scala.dict',
@@ -194,52 +194,52 @@ nnoremap <silent> vs :VimShell<CR>
 nnoremap <silent> vsc :VimShellCreate<CR>
 nnoremap <silent> vp :VimShellPop<CR>
 
-" TweetVimİ’è
-" ƒ^ƒCƒ€ƒ‰ƒCƒ“•\¦
+" TweetVimè¨­å®š
+" ã‚¿ã‚¤ãƒ ãƒ©ã‚¤ãƒ³è¡¨ç¤º
 nnoremap <silent> <Space>tf	:<C-u>TweetVimHomeTimeline<CR>
-" ”­Œ¾—pƒoƒbƒtƒ@‚ğ•\¦‚·‚é
+" ç™ºè¨€ç”¨ãƒãƒƒãƒ•ã‚¡ã‚’è¡¨ç¤ºã™ã‚‹
 nnoremap <silent> <Space>tt     :<C-u>TweetVimSay<CR>
-" mentions ‚ğ•\¦‚·‚é
+" mentions ã‚’è¡¨ç¤ºã™ã‚‹
 nnoremap <silent> <Space>tr	:<C-u>TweetVimMentions<CR>
-" ƒAƒCƒRƒ“•\¦
+" ã‚¢ã‚¤ã‚³ãƒ³è¡¨ç¤º
 let g:tweetvim_display_icon = 0
-" sp‚ÅŠJ‚­
+" spã§é–‹ã
 let g:tweetvim_open_buffer_cmd = 'split!'
-" 1ƒy[ƒW‚ ‚½‚è‚Ì•\¦ƒcƒC[ƒg”
+" 1ãƒšãƒ¼ã‚¸ã‚ãŸã‚Šã®è¡¨ç¤ºãƒ„ã‚¤ãƒ¼ãƒˆæ•°
 let g:tweetvim_tweet_per_page = 100
-" XVƒL[‚ğƒ}ƒbƒv ¦augroup‚È‚µ
+" æ›´æ–°ã‚­ãƒ¼ã‚’ãƒãƒƒãƒ— â€»augroupãªã—
 autocmd FileType tweetvim nmap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 autocmd FileType tweetvim imap <buffer> <C-r> <Plug>(tweetvim_action_reload)
-"16F‚Éİ’è
+"16è‰²ã«è¨­å®š
 set t_Co=256
 
-" ƒXƒNƒŠ[ƒ“–¼‚ÌƒLƒƒƒbƒVƒ…‚ğ—˜—p‚µ‚ÄAneocomplcache ‚Å•âŠ®‚·‚é
+" ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åã®ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã‚’åˆ©ç”¨ã—ã¦ã€neocomplcache ã§è£œå®Œã™ã‚‹
 if !exists('g:neocomplcache_dictionary_filetype_lists')
   let g:neocomplcache_dictionary_filetype_lists = {}
 endif
 let s:neco_dic = g:neocomplcache_dictionary_filetype_lists
 let s:neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 
-" solarizedİ’è
+" solarizedè¨­å®š
 "let g:solarized_termtrans=1
 syntax enable
-" ‹P“x‚ğ‚‚­‚·‚é
+" è¼åº¦ã‚’é«˜ãã™ã‚‹
 " let g:solarized_visibility = "high"
-" ƒRƒ“ƒgƒ‰ƒXƒg‚ğ‚‚­‚·‚é
+" ã‚³ãƒ³ãƒˆãƒ©ã‚¹ãƒˆã‚’é«˜ãã™ã‚‹
 " let g:solarized_contrast = "high"
 if (hostname() == "Ooedo")
-  " ƒfƒXƒNƒgƒbƒv‚Ìê‡
+  " ãƒ‡ã‚¹ã‚¯ãƒˆãƒƒãƒ—ã®å ´åˆ
   colorscheme synic
 else
   colorscheme solarized
   set background=dark
 endif
-" ƒJƒŒƒ“ƒgsƒnƒCƒ‰ƒCƒgON
+" ã‚«ãƒ¬ãƒ³ãƒˆè¡Œãƒã‚¤ãƒ©ã‚¤ãƒˆON
 set cursorline
 autocmd ColorScheme
-  \  " ƒAƒ“ƒ_[ƒ‰ƒCƒ“‚ğˆø‚­(color terminal) ¦‚±‚Ì‚Ü‚Ü‚Å‚Ícolorscheme‚Éã‘‚«‚³‚ê‚é
+  \  " ã‚¢ãƒ³ãƒ€ãƒ¼ãƒ©ã‚¤ãƒ³ã‚’å¼•ã(color terminal) â€»ã“ã®ã¾ã¾ã§ã¯colorschemeã«ä¸Šæ›¸ãã•ã‚Œã‚‹
   \  highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
-  \  " ƒAƒ“ƒ_[ƒ‰ƒCƒ“‚ğˆø‚­(gui)
+  \  " ã‚¢ãƒ³ãƒ€ãƒ¼ãƒ©ã‚¤ãƒ³ã‚’å¼•ã(gui)
   \  highlight CursorLine gui=underline guifg=NONE guibg=NONE
 
 " vimfiler
@@ -249,10 +249,10 @@ let g:vimfiler_as_default_explorer = 1
 " yank to clipboard
 set clipboard+=unnamed
 
-" ƒXƒe[ƒ^ƒXƒ‰ƒCƒ“
+" ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒ©ã‚¤ãƒ³
 set laststatus=2   " Always show the statusline
 
-" •¶šƒR[ƒh‚Ì©“®”F¯
+" æ–‡å­—ã‚³ãƒ¼ãƒ‰ã®è‡ªå‹•èªè­˜
 if &encoding !=# 'utf-8'
   set encoding=japan
   set fileencoding=japan
@@ -260,16 +260,16 @@ endif
 if has('iconv')
   let s:enc_euc = 'euc-jp'
   let s:enc_jis = 'iso-2022-jp'
-  " iconv‚ªeucJP-ms‚É‘Î‰‚µ‚Ä‚¢‚é‚©‚ğƒ`ƒFƒbƒN
+  " iconvãŒeucJP-msã«å¯¾å¿œã—ã¦ã„ã‚‹ã‹ã‚’ãƒã‚§ãƒƒã‚¯
   if iconv("\x87\x64\x87\x6a", 'cp932', 'eucjp-ms') ==# "\xad\xc5\xad\xcb"
     let s:enc_euc = 'eucjp-ms'
     let s:enc_jis = 'iso-2022-jp-3'
-  " iconv‚ªJISX0213‚É‘Î‰‚µ‚Ä‚¢‚é‚©‚ğƒ`ƒFƒbƒN
+  " iconvãŒJISX0213ã«å¯¾å¿œã—ã¦ã„ã‚‹ã‹ã‚’ãƒã‚§ãƒƒã‚¯
   elseif iconv("\x87\x64\x87\x6a", 'cp932', 'euc-jisx0213') ==# "\xad\xc5\xad\xcb"
     let s:enc_euc = 'euc-jisx0213'
     let s:enc_jis = 'iso-2022-jp-3'
   endif
-  " fileencodings‚ğ\’z
+  " fileencodingsã‚’æ§‹ç¯‰
   if &encoding ==# 'utf-8'
     let s:fileencodings_default = &fileencodings
     let &fileencodings = s:enc_jis .','. s:enc_euc .',cp932'
@@ -289,11 +289,11 @@ if has('iconv')
       let &fileencodings = &fileencodings .','. s:enc_euc
     endif
   endif
-  " ’è”‚ğˆ•ª
+  " å®šæ•°ã‚’å‡¦åˆ†
   unlet s:enc_euc
   unlet s:enc_jis
 endif
-" “ú–{Œê‚ğŠÜ‚Ü‚È‚¢ê‡‚Í fileencoding ‚É encoding ‚ğg‚¤‚æ‚¤‚É‚·‚é
+" æ—¥æœ¬èªã‚’å«ã¾ãªã„å ´åˆã¯ fileencoding ã« encoding ã‚’ä½¿ã†ã‚ˆã†ã«ã™ã‚‹
 if has('autocmd')
   function! AU_ReCheck_FENC()
     if &fileencoding =~# 'iso-2022-jp' && search("[^\x01-\x7e]", 'n') == 0
@@ -302,9 +302,9 @@ if has('autocmd')
   endfunction
   autocmd BufReadPost * call AU_ReCheck_FENC()
 endif
-" ‰üsƒR[ƒh‚Ì©“®”F¯
+" æ”¹è¡Œã‚³ãƒ¼ãƒ‰ã®è‡ªå‹•èªè­˜
 set fileformats=unix,dos,mac
-"  ‚Æ‚©›‚Ì•¶š‚ª‚ ‚Á‚Ä‚àƒJ[ƒ\ƒ‹ˆÊ’u‚ª‚¸‚ê‚È‚¢‚æ‚¤‚É‚·‚é
+" â–¡ã¨ã‹â—‹ã®æ–‡å­—ãŒã‚ã£ã¦ã‚‚ã‚«ãƒ¼ã‚½ãƒ«ä½ç½®ãŒãšã‚Œãªã„ã‚ˆã†ã«ã™ã‚‹
 if exists('&ambiwidth')
   set ambiwidth=double
 endif
@@ -313,12 +313,12 @@ endif
 au   BufEnter *   execute ":lcd " . expand("%:p:h")
 
 "im_control.vim
-" u“ú–{Œê“ü—ÍŒÅ’èƒ‚[ƒhvØ‘ÖƒL[
+" ã€Œæ—¥æœ¬èªå…¥åŠ›å›ºå®šãƒ¢ãƒ¼ãƒ‰ã€åˆ‡æ›¿ã‚­ãƒ¼
 inoremap <silent> <C-f> <C-r>=IMState('FixMode')<CR>
-" Python‚É‚æ‚éIBus§Œäw’è
+" Pythonã«ã‚ˆã‚‹IBusåˆ¶å¾¡æŒ‡å®š
 let IM_CtrlIBusPython = 1
 
-" vim-quickrunİ’è
+" vim-quickrunè¨­å®š
 let g:quickrun_config.scala = {'command' : 'scala'}
 let g:quickrun_config.hxml = {'command' : 'haxe'}
 let g:quickrun_config.mm = {'command' : 'matx'}
@@ -347,7 +347,7 @@ set shiftwidth=2
 set expandtab
 
 " vim-ref
-"webdictƒTƒCƒg‚Ìİ’è
+"webdictã‚µã‚¤ãƒˆã®è¨­å®š
 let g:ref_source_webdict_sites = {
 \   'je': {
 \     'url': 'http://dictionary.infoseek.ne.jp/jeword/%s',
@@ -360,10 +360,10 @@ let g:ref_source_webdict_sites = {
 \   },
 \ }
 
-"ƒfƒtƒHƒ‹ƒgƒTƒCƒg
+"ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚µã‚¤ãƒˆ
 let g:ref_source_webdict_sites.default = 'ej'
 
-"o—Í‚É‘Î‚·‚éƒtƒBƒ‹ƒ^BÅ‰‚Ì”s‚ğíœ
+"å‡ºåŠ›ã«å¯¾ã™ã‚‹ãƒ•ã‚£ãƒ«ã‚¿ã€‚æœ€åˆã®æ•°è¡Œã‚’å‰Šé™¤
 function! g:ref_source_webdict_sites.je.filter(output)
   return join(split(a:output, "\n")[15 :], "\n")
 endfunction
@@ -378,13 +378,13 @@ nmap <Leader>rj :<C-u>Ref webdict je<Space>
 nmap <Leader>re :<C-u>Ref webdict ej<Space>
 nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
 
-"Lisp‘S”Ê‚Ìİ’è
+"Lispå…¨èˆ¬ã®è¨­å®š
 let g:lisp_rainbow=1
 
-"cljsİ’è
+"cljsè¨­å®š
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
 
-"cljxİ’è
+"cljxè¨­å®š
 autocmd BufRead,BufNewFile *.cljx set filetype=clojure
 
 " matx
@@ -393,11 +393,11 @@ autocmd BufRead,BufNewFile *.mm set filetype=C
 " fxml
 autocmd BufRead,BufNewFile *.fxml set filetype=xml
 
-"neosnippetİ’è
+"neosnippetè¨­å®š
 " Tell Neosnippet about the other snippets
 let g:neosnippet#snippets_directory='~/Dropbox/mysnippets'
 
-" ©“®•Û‘¶
+" è‡ªå‹•ä¿å­˜
 function! _CompileTexDocument()
   exe ":!~/Dropbox/bin/texcomp.sh"
 endfunction
