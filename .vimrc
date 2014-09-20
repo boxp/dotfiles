@@ -6,13 +6,15 @@
 
 " source privacy vars(githubに上げたくないパラメーター達)
 " g:evervim_devtoken, g:mail_address
-source .pri_vimrc
+if filereadable(".pri_vimrc")
+  source .pri_vimrc
+endif
 
 " NeoBundleの設定
 set nocompatible               " be iMproved
 
 if has('vim_starting')
-	set runtimepath+=~/.vim/bundle/neobundle.vim/
+	set runtimepath+=~/.vim/bundle/neobundle.vim/ ""FIXME: Tab
 	call neobundle#rc(expand('~/.vim/bundle/'))
 endif
 
@@ -42,19 +44,20 @@ NeoBundle 'Shougo/neosnippet-snippets'
 NeoBundle 'Shougo/unite-ssh'
 NeoBundle 'Shougo/vinarise'
 NeoBundle 'Shougo/unite-session'
+NeoBundle 'Shougo/unite-outline'
+NeoBundle 'Shougo/unite-help'
 NeoBundle 'YankRing.vim'
 NeoBundle 'tyru/open-browser.vim'
 NeoBundle 'basyura/twibill.vim'
-NeoBundle 'h1mesuke/unite-outline'
 NeoBundle 'tpope/vim-pathogen'
 NeoBundle 'thinca/vim-quickrun'
 NeoBundle 'thinca/vim-logcat'
 NeoBundle 'thinca/vim-ref'
+NeoBundle 'thinca/vim-scouter'
 NeoBundle 'ujihisa/vimshell-ssh'
 NeoBundle 'Markdown'
 NeoBundle 'textutil.vim'
 NeoBundle 'osyo-manga/unite-quickfix'
-NeoBundle 'tsukkee/unite-help'
 NeoBundle 'kmnk/vim-unite-giti'
 NeoBundle 'tpope/vim-fugitive'
 NeoBundle 'VimClojure'
@@ -65,27 +68,24 @@ NeoBundle 'kakkyz81/evervim'
 NeoBundle 'kannokanno/unite-todo'
 NeoBundle 'aharisu/vim_goshrepl'
 NeoBundle 'aharisu/vim-gdev'
-NeoBundle 'https://bitbucket.org/kovisoft/slimv'
 NeoBundle 'ujihisa/neoclojure.vim'
-NeoBundle 'ujihisa/unite-colorscheme.vim'
+NeoBundle 'ujihisa/unite-colorscheme'
 
-" メガネケースで起動しちゃだーめ
-NeoBundleLazy 'basyura/bitly.vim'
-NeoBundleLazy 'basyura/TweetVim'
-NeoBundleLazy 'tsukkee/lingr-vim'
-NeoBundleLazy 'motemen/hatena-vim'
-NeoBundleLazy 'ujihisa/blogger.vim'
-
-if (hostname() != "meganecase")
-  NeoBundleSource
+" メガネケースでの例外設定
+if hostname() != 'meganecase'
+  NeoBundle 'basyura/bitly.vim'
+  NeoBundle 'basyura/TweetVim'
+  NeoBundle 'tsukkee/lingr-vim'
+  NeoBundle 'motemen/hatena-vim'
+  NeoBundle 'ujihisa/blogger.vim'
 endif
 
 " キーマップ的な何か
 inoremap <silent> <C-@> <C-[>
 inoremap <C-e> <End>
-imap <C-k>	<Plug>(neosnippet_expand_or_jump)
-smap <C-k>	<Plug>(neosnippet_expand_or_jump)
-nnoremap <silent> r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR> :<C-u>source ~/.gvimrc<CR> 
+imap <C-k> <Plug>(neosnippet_expand_or_jump)
+smap <C-k> <Plug>(neosnippet_expand_or_jump)
+nnoremap <silent> r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR>:<C-u>source ~/.gvimrc<CR>
 nnoremap <silent> su :<C-u>e sudo:%<CR>
 nmap <F12> yyp<C-a>
 nmap <C-J> @a
@@ -110,10 +110,10 @@ imap <C-9> <ESC>:tablast
 nnoremap <silent> yr :<C-u>YRShow<CR>
 
 " vimfiler
-nnoremap <silent> vf :<C-u>VimFilerCurrentDir<CR>
-nnoremap <silent> vfs :<C-u>VimFilerSplit<CR>
-nnoremap <silent> vt  :<C-u>VimFilerTab<CR>
-nnoremap <silent> vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
+nnoremap <silent> <Leader>vf :<C-u>VimFilerCurrentDir<CR>
+nnoremap <silent> <Leader>vfs :<C-u>VimFilerSplit<CR>
+nnoremap <silent> <Leader>vt  :<C-u>VimFilerTab<CR>
+nnoremap <silent> <Leader>vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
 
 " Unite
 nmap , [unite]
@@ -135,10 +135,12 @@ nnoremap [unite]to :<C-u>Unite todo<CR>
 nnoremap <C-\> :<C-u>Unite mapping<CR>
 
 " quickrun
-nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
+autocmd BufRead,BufNewFile
+\  if filereadable("input.txt")
+\    nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
+\  endif
 
-"" runner/vimproc/updatetime で出力バッファの更新間隔をミリ秒で設定できます
-"" updatetime が一時的に書き換えられてしまうので注意して下さい
+
 let g:quickrun_config = {
 \   "_" : {
 \       "runner" : "vimproc",
@@ -158,7 +160,7 @@ nnoremap vnl :call feedkeys("\<C-u>VimpleNote -l\<CR>" . g:mail_address . "\<CR>
 nnoremap vnn :call feedkeys("\<C-u>VimpleNote -n\<CR> . g:mail_address . "\<CR>")
 
 " w3m
-nnoremap gks :<C-u>W3mSplit google 
+nnoremap gks :<C-u>W3mSplit google
 
 " マウス機能有効化
 set mouse=a
@@ -178,21 +180,14 @@ runtime! userautoload/*.vim
 
 " neocomplcache設定
 let g:neocomplcache_enable_at_startup = 1
-if has("gui_running")
-  let g:NeoComplCache_DictionaryFileTypeLists = {
-              \ 'scala' : $HOME.'\Dropbox\dict\scala.dict',
-              \ 'java' : $HOME.'\Dropbox\dict\java.dict'
-              \ }
-else
-  let g:NeoComplCache_DictionaryFileTypeLists = {
-              \ 'scala' : $HOME.'/Dropbox/dict/scala.dict',
-              \ 'java' : $HOME.'/Dropbox/dict/java.dict'
-              \ }
-endif
+let g:neocomplcache_dictionary_filetype_lists = {
+            \ 'scala' : $HOME.'/Dropbox/dict/scala.dict',
+            \ 'java' : $HOME.'/Dropbox/dict/java.dict'
+            \ }
 
 " vimshell setting
- let g:vimshell_interactive_update_time = 10
- let g:vimshell_prompt = $USERNAME."% "
+let g:vimshell_interactive_update_time = 10
+let g:vimshell_prompt = $USERNAME."% "
 
 " vimshell map
 nnoremap <silent> vs :VimShell<CR>
@@ -212,26 +207,22 @@ let g:tweetvim_display_icon = 0
 let g:tweetvim_open_buffer_cmd = 'split!'
 " 1ページあたりの表示ツイート数
 let g:tweetvim_tweet_per_page = 100
-" 更新キーをマップ
+" 更新キーをマップ ※augroupなし
 autocmd FileType tweetvim nmap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 autocmd FileType tweetvim imap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 "16色に設定
-set t_Co=16
-"meganecase設定
-if(hostname() == "meganecase")
-   set t_Co=256
-endif
+set t_Co=256
 
 " スクリーン名のキャッシュを利用して、neocomplcache で補完する
 if !exists('g:neocomplcache_dictionary_filetype_lists')
   let g:neocomplcache_dictionary_filetype_lists = {}
 endif
-let neco_dic = g:neocomplcache_dictionary_filetype_lists
-let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
+let s:neco_dic = g:neocomplcache_dictionary_filetype_lists
+let s:neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 
 " solarized設定
 "let g:solarized_termtrans=1
- syntax enable
+syntax enable
 " 輝度を高くする
 " let g:solarized_visibility = "high"
 " コントラストを高くする
@@ -239,16 +230,17 @@ let neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 if (hostname() == "Ooedo")
   " デスクトップの場合
   colorscheme synic
-else 
+else
   colorscheme solarized
   set background=dark
 endif
 " カレント行ハイライトON
 set cursorline
-" アンダーラインを引く(color terminal)
-highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
-" アンダーラインを引く(gui)
-highlight CursorLine gui=underline guifg=NONE guibg=NONE
+autocmd ColorScheme
+  \  " アンダーラインを引く(color terminal) ※このままではcolorschemeに上書きされる
+  \  highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
+  \  " アンダーラインを引く(gui)
+  \  highlight CursorLine gui=underline guifg=NONE guibg=NONE
 
 " vimfiler
 let g:vimfiler_safe_mode_by_default = 0
@@ -327,26 +319,11 @@ inoremap <silent> <C-f> <C-r>=IMState('FixMode')<CR>
 let IM_CtrlIBusPython = 1
 
 " vim-quickrun設定
-let g:quickrun_config = {}
 let g:quickrun_config.scala = {'command' : 'scala'}
 let g:quickrun_config.hxml = {'command' : 'haxe'}
 let g:quickrun_config.mm = {'command' : 'matx'}
 let g:quickrun_config.c = {
 	\ 'cmdopt' : '-lm' }
-
-" スカウター
-function! Scouter(file, ...)
-	let pat = '^\s*$\|^\s*"'
-	let lines = readfile(a:file)
-	if !a:0 || !a:1
-        let lines = split(substitute(join(lines, "\n"), '\n\s*\\', '', 'g'), "\n")
-	endif
-	return len(filter(lines,'v:val !~ pat'))
-endfunction
-command! -bar -bang -nargs=? -complete=file Scouter
-\ echo Scouter(empty(<q-args>) ? $MYVIMRC : expand(<q-args>), <bang>0)
-command! -bar -bang -nargs=? -complete=file GScouter
-\ echo Scouter(empty(<q-args>) ? $MYGVIMRC : expand(<q-args>), <bang>0)
 
 "backspace"
 set backspace=indent,eol,start
@@ -356,11 +333,6 @@ autocmd FileType python set omnifunc=pythoncomplete#Complete
 
 " disable buzzer
 set visualbell t_vb=
-
-" surround.vim settings
-nmap <C-s> ysW"
-nmap " cs'"
-nmap ' cs"'
 
 " haxe settings
 if !exists('g:neocomplcache_omni_patterns')
@@ -373,51 +345,6 @@ set tabstop=2
 set autoindent
 set shiftwidth=2
 set expandtab
-
-" GUI font setting
-if (has("gui_running") )
-  if (hostname() == "Ooedo" || hostname() == "Grimoire")
-    set guifont =Ricty\ 10
-  endif 
-  if (hostname() == "BOXP-PC")
-    set guifont=MeiryoKe_Console:h10
-  endif
-endif
-
-"GUI settings
-set guioptions-=T "ツールバーなし
-set guioptions-=r "右スクロールバーなし
-set guioptions-=R
-set guioptions-=l "左スクロールバーなし
-set guioptions-=L
-set guioptions-=b "下スクロールバーなし
-set guioptions-=m "メニューバー無し
-
-" fullscreen
-"-----------------------------------------------------------
-if (has("gui_running"))
-  nnoremap <F11> :call ToggleFullScreen()<CR>
-  function! ToggleFullScreen()
-    if &guioptions =~# 'C'
-      set guioptions-=C
-      if exists('s:go_temp')
-        if s:go_temp =~# 'm'
-          set guioptions+=m
-        endif
-        if s:go_temp =~# 'T'
-          set guioptions+=T
-        endif
-      endif
-      simalt ~r
-    else
-      let s:go_temp = &guioptions
-      set guioptions+=C
-      set guioptions-=m
-      set guioptions-=T
-      simalt ~x
-    endif
-  endfunction
-endif
 
 " vim-ref
 "webdictサイトの設定
@@ -472,19 +399,17 @@ let g:neosnippet#snippets_directory='~/Dropbox/mysnippets'
 
 " 自動保存
 function! _CompileTexDocument()
-  :w
   exe ":!~/Dropbox/bin/texcomp.sh"
 endfunction
 function! _CompileMarkdown()
-  :w
   exe ":!markdown " . expand("%:p") . " >> output.html"
 endfunction
 
 command! CompileTexDocument call _CompileTexDocument()
 command! CompileMarkdown call _CompileMarkdown()
 
-autocmd BufWrite *.{tex} :CompileTexDocument
-autocmd BufWrite *.{md} :CompileMarkdown
+autocmd BufWrite *.tex :CompileTexDocument
+autocmd BufWrite *.md :CompileMarkdown
 
 " gauche
 vmap <CR> <Plug>(gosh_repl_send_block)
@@ -496,7 +421,7 @@ augroup vimrc-neoclojure
 augroup END
 
 let g:quickrun_config.clojure = {
-\       'runner': 'neoclojure', 
+\       'runner': 'neoclojure',
 \       'command': 'dummy',
 \       'tempfile': '%{tempname()}.clj'
 \ }
