@@ -4,6 +4,8 @@
 
 " Last modified 2014/09/20
 
+set encoding=utf-8
+
 " source privacy vars(githubに上げたくないパラメーター達)
 " g:evervim_devtoken, g:mail_address
 if filereadable(".pri_vimrc")
@@ -54,6 +56,7 @@ NeoBundle 'thinca/vim-quickrun'
 NeoBundle 'thinca/vim-logcat'
 NeoBundle 'thinca/vim-ref'
 NeoBundle 'thinca/vim-scouter'
+NeoBundle 'thinca/vim-threes'
 NeoBundle 'ujihisa/vimshell-ssh'
 NeoBundle 'Markdown'
 NeoBundle 'textutil.vim'
@@ -227,13 +230,8 @@ syntax enable
 " let g:solarized_visibility = "high"
 " コントラストを高くする
 " let g:solarized_contrast = "high"
-if (hostname() == "Ooedo")
-  " デスクトップの場合
-  colorscheme synic
-else
-  colorscheme solarized
-  set background=dark
-endif
+colorscheme solarized
+set background=light
 " カレント行ハイライトON
 set cursorline
 autocmd ColorScheme
