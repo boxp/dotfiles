@@ -13,12 +13,25 @@ if filereadable(".pri_vimrc")
 endif
 
 " NeoBundleの設定
-set nocompatible               " be iMproved
+" Note: Skip initialization for vim-tiny or vim-small.
+ if !1 | finish | endif
 
-if has('vim_starting')
-	set runtimepath+=~/.vim/bundle/neobundle.vim/ ""FIXME: Tab
-	call neobundle#rc(expand('~/.vim/bundle/'))
-endif
+ if has('vim_starting')
+   set nocompatible               " Be iMproved
+
+" Required:
+   set runtimepath+=~/.vim/bundle/neobundle.vim/
+ endif
+
+" Required:
+ call neobundle#begin(expand('~/.vim/bundle/'))
+
+" My Bundles here:
+" Refer to |:NeoBundle-examples|.
+" Note: You don't set neobundle setting in .gvimrc!
+
+call neobundle#end()
+
 
 NeoBundle 'Shougo/vimproc', {
       \ 'build' : {
