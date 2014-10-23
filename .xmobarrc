@@ -1,27 +1,4 @@
-<<<<<<< HEAD
 -- Last modified 2013/02/28 11:37
-Config { font = "xft:Ricty-8:bold"
-       , bgColor = "black"
-       , fgColor = "grey"
-       , position = Top 
-       , lowerOnStart = True
-       , commands = [ Run Network "enp0s25" ["-L","0","-H","32","--normal","green","--high","red"] 10
-                    , Run Network "wls1" ["-L","0","-H","32","--normal","green","--high","red"] 10
-                    , Run Network "wlp0s29f7u1" ["-L","0","-H","32","--normal","green","--high","red"] 10
-                    , Run Cpu ["-L","3","-H","50","--normal","green","--high","red"] 10
-                    , Run Memory ["-t","Mem: <usedratio>%"] 10
-                    , Run Swap [] 10
-                    , Run Com "uname" ["-s","-r"] "" 36000
-                    , Run Date "%a %b %_d %Y %H:%M:%S" "date" 10
-                    , Run StdinReader
-                    , Run MPD ["-t", "<state>: ♪<artist> - <title> <track>"] 10
-                    , Run Battery ["-t","<left>% / <timeleft>","-L","50","-H","75","-h","green","-n","yell","-l","red"] 10
-                    ]
-       , sepChar = "%"
-       , alignSep = "}{"
-       , template = "<fc=#ee9a00>%date%</fc> | %uname% | %StdinReader% }{ %cpu% | %memory% * %swap% | %enp0s25% - %wls1% - %wlp0s29f7u1% | %mpd% | Battery: %battery%"
-       }
-=======
 Config { font = "xft:Ricty:size=8:antialias=true"
        , bgColor = "black"
        , fgColor = "grey"
@@ -43,4 +20,3 @@ Config { font = "xft:Ricty:size=8:antialias=true"
        , alignSep = "}{"
        , template = "%cpu% | %memory% * %swap% | %enp0s25% - %wlp0s29f7u1% | %battery% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %RJTI% | %uname%"
 }
->>>>>>> ad265c9ec573a6f50c862506d8ba2b247b9eff91
