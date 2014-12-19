@@ -44,7 +44,7 @@ NeoBundle 'Shougo/vimproc', {
 NeoBundle "mattn/vimplenote-vim"
 NeoBundle "mattn/webapi-vim"
 NeoBundle "mattn/mkdpreview-vim"
-NeoBundle "Solarized"
+NeoBundle "altercation/vim-colors-solarized"
 NeoBundle 'synic.vim'
 NeoBundle 'sudo.vim'
 NeoBundle "Shougo/neocomplcache"
@@ -244,7 +244,7 @@ syntax enable
 " コントラストを高くする
 " let g:solarized_contrast = "high"
 colorscheme solarized
-set background=light
+set background=dark
 " カレント行ハイライトON
 set cursorline
 autocmd ColorScheme
