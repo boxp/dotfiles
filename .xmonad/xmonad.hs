@@ -13,6 +13,7 @@
                           , ppTitle = xmobarColor "green" "" . shorten 50
                           }
           , terminal           = "sakura"
+          , modMask            = mod4Mask
           , borderWidth        = 2
           , normalBorderColor  = "#333333"
           , focusedBorderColor = "#cd8b00"

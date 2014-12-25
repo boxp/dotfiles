@@ -20,9 +20,3 @@ nitrogen --restore
 
 # start xmonad
 exec xmonad
-
-# start mpd
-exec mpd
-
-dropboxd &
-gol &
