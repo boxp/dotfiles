@@ -439,6 +439,4 @@ let g:quickrun_config.clojure = {
 \ }
 
 " yank limit
-
 let g:yanking_max_element_length = 104857600
-
