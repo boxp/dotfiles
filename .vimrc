@@ -41,12 +41,17 @@ NeoBundle 'Shougo/vimproc', {
       \     'unix' : 'make -f make_unix.mak',
       \    },
       \ }
+
+NeoBundle 'VimClojure'
+NeoBundle 'synic.vim'
+NeoBundle 'sudo.vim'
+NeoBundle 'YankRing.vim'
+NeoBundle 'Markdown'
+NeoBundle 'textutil.vim'
 NeoBundle "mattn/vimplenote-vim"
 NeoBundle "mattn/webapi-vim"
 NeoBundle "mattn/mkdpreview-vim"
 NeoBundle "altercation/vim-colors-solarized"
-NeoBundle 'synic.vim'
-NeoBundle 'sudo.vim'
 NeoBundle "Shougo/neocomplcache"
 NeoBundle "Shougo/unite.vim"
 NeoBundle "Shougo/neomru.vim"
@@ -61,7 +66,6 @@ NeoBundle 'Shougo/vinarise'
 NeoBundle 'Shougo/unite-session'
 NeoBundle 'Shougo/unite-outline'
 NeoBundle 'Shougo/unite-help'
-NeoBundle 'YankRing.vim'
 NeoBundle 'tyru/open-browser.vim'
 NeoBundle 'basyura/twibill.vim'
 NeoBundle 'tpope/vim-pathogen'
@@ -71,12 +75,9 @@ NeoBundle 'thinca/vim-ref'
 NeoBundle 'thinca/vim-scouter'
 NeoBundle 'thinca/vim-threes'
 NeoBundle 'ujihisa/vimshell-ssh'
-NeoBundle 'Markdown'
-NeoBundle 'textutil.vim'
 NeoBundle 'osyo-manga/unite-quickfix'
 NeoBundle 'kmnk/vim-unite-giti'
 NeoBundle 'tpope/vim-fugitive'
-NeoBundle 'VimClojure'
 NeoBundle 'tpope/vim-fireplace'
 NeoBundle 'tpope/vim-classpath'
 NeoBundle 'guns/vim-clojure-static'
@@ -101,7 +102,7 @@ inoremap <silent> <C-@> <C-[>
 inoremap <C-e> <End>
 imap <C-k> <Plug>(neosnippet_expand_or_jump)
 smap <C-k> <Plug>(neosnippet_expand_or_jump)
-nnoremap <silent> r. :<C-u>source ~/Dropbox/dotfiles/.vimrc<CR>:<C-u>source ~/.gvimrc<CR>
+nnoremap <silent> r. :<C-u>source ~/dotfiles/.vimrc<CR>:<C-u>source ~/.gvimrc<CR>
 nnoremap <silent> su :<C-u>e sudo:%<CR>
 nmap <F12> yyp<C-a>
 nmap <C-J> @a
@@ -406,7 +407,7 @@ autocmd BufRead,BufNewFile *.fxml set filetype=xml
 
 "neosnippet設定
 " Tell Neosnippet about the other snippets
-let g:neosnippet#snippets_directory='~/Dropbox/mysnippets'
+let g:neosnippet#snippets_directory='~/dotfiles/.mysnippets'
 
 " 自動保存
 function! _CompileTexDocument()
@@ -436,3 +437,8 @@ let g:quickrun_config.clojure = {
 \       'command': 'dummy',
 \       'tempfile': '%{tempname()}.clj'
 \ }
+
+" yank limit
+
+let g:yanking_max_element_length = 104857600
+
