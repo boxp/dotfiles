@@ -1,0 +1,23 @@
+snippet     it
+alias       {\it } \it
+  {\it ${1:#:expression}}
+
+snippet     overline
+alias       \overline 
+  \overline{${1:#:expression}}
+
+snippet     multicolumn
+alias       \multicolumn \multicolumn{}{}{}
+  \multicolumn{${1:#:number}}{${2:#:position}}{${3:expression}}
+
+snippet     template
+alias       temp 
+  \documentclass[11pt,a4paper]{jsarticle}
+
+  \usepackage[dvipdfmx]{graphicx}
+  \usepackage[outsidehead]{pageno}
+
+  \author{竹内景太郎}
+  \title{${1:#:title}}
+  \begin{document}
+  \end{document}
