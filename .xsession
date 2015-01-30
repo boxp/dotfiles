@@ -20,3 +20,5 @@ nitrogen --restore
 
 # start xmonad
 exec xmonad
+
+start-pulseaudio-x11

@@ -48,6 +48,7 @@ NeoBundle 'sudo.vim'
 NeoBundle 'YankRing.vim'
 NeoBundle 'Markdown'
 NeoBundle 'textutil.vim'
+NeoBundle 'amdt/vim-niji'
 NeoBundle "mattn/vimplenote-vim"
 NeoBundle "mattn/webapi-vim"
 NeoBundle "mattn/mkdpreview-vim"
@@ -390,8 +391,6 @@ nmap <Leader>rj :<C-u>Ref webdict je<Space>
 nmap <Leader>re :<C-u>Ref webdict ej<Space>
 nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
 
-"Lisp全般の設定
-let g:lisp_rainbow=1
 
 "cljs設定
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
