@@ -42,6 +42,7 @@ NeoBundle 'Shougo/vimproc', {
       \    },
       \ }
 
+NeoBundle 'kchmck/vim-coffee-script'
 NeoBundle 'VimClojure'
 NeoBundle 'synic.vim'
 NeoBundle 'sudo.vim'
