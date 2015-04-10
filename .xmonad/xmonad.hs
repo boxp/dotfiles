@@ -18,6 +18,6 @@ main = do
         , modMask            = mod4Mask
         , borderWidth        = 2
         , normalBorderColor  = "#333333"
-        , focusedBorderColor = "#cd8b00"
+        , focusedBorderColor = "#cb4b16"
         , startupHook = setWMName "LG3D"
         }

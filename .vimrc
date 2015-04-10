@@ -355,8 +355,8 @@ endif
 let g:neocomplcache_omni_patterns.haxe = '\v([\]''"]|\w)(\.|\()'
 
 " indent settings
+filetype plugin indent on
 set tabstop=2
-set autoindent
 set shiftwidth=2
 set expandtab
 
