@@ -29,10 +29,6 @@ endif
 " My Bundles here:
 " Refer to |:NeoBundle-examples|.
 " Note: You don't set neobundle setting in .gvimrc!
-
-call neobundle#end()
-
-
 NeoBundle 'Shougo/vimproc', {
       \ 'build' : {
       \     'windows' : 'make -f make_mingw32.mak',
@@ -98,6 +94,10 @@ if hostname() != 'meganecase'
   NeoBundle 'motemen/hatena-vim'
   NeoBundle 'ujihisa/blogger.vim'
 endif
+
+
+call neobundle#end()
+
 
 " キーマップ的な何か
 inoremap <silent> <C-@> <C-[>
