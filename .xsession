@@ -21,4 +21,7 @@ nitrogen --restore
 # start xmonad
 exec xmonad
 
+# start lighter.pl
+sudo $HOME/bin/lighter.pl &
+
 start-pulseaudio-x11

@@ -9,17 +9,14 @@
 
 (reset! browser "chromium")
 
-; ring
-(reset! ring? true)
-
 ; キーマップを追加
 ; キー：["キーコード" コントロールキー? シフトキー?]
 ; バリュー：引数一つの関数(引数はKeyEvent)
-;(dosync
-;  (alter key-maps merge 
-;    {["I" false false] 
-;     (fn [_]
-;       (.requestFocus (get-node "#form")))}))
+(dosync
+  (alter key-maps merge 
+    {["I" false false] 
+     (fn [_]
+       (.requestFocus (get-node "#form")))}))
 
 ; リプ爆用関数
 (defn little-region
