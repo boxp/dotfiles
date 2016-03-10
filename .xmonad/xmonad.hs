@@ -4,6 +4,7 @@ import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
 import XMonad.Util.Run(spawnPipe)
 import XMonad.Hooks.SetWMName
+import XMonad.Hooks.EwmhDesktops
 
 main = do
     xmproc <- spawnPipe "xmobar"
@@ -16,7 +17,8 @@ main = do
                         }
         , terminal           = "sakura"
         , modMask            = mod4Mask
-        , borderWidth        = 2
+        , handleEventHook    = fullscreenEventHook
+        , borderWidth        = 3
         , normalBorderColor  = "#333333"
         , focusedBorderColor = "#cb4b16"
         , startupHook = setWMName "LG3D"
