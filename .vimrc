@@ -2,8 +2,6 @@
 "                                BOXP vimrc                                      "
 "--------------------------------------------------------------------------------"
 
-" Last modified 2014/09/20
-
 set encoding=utf-8
 
 " source privacy vars(githubに上げたくないパラメーター達)
@@ -12,99 +10,65 @@ if filereadable(".pri_vimrc")
   source .pri_vimrc
 endif
 
-" NeoBundleの設定
-" Note: Skip initialization for vim-tiny or vim-small.
- if !1 | finish | endif
+" from http://qiita.com/okamos/items/2259d5c770d51b88d75b
+" dein settings {{{
+if &compatible
+  set nocompatible
+endif
+" dein.vimのディレクトリ
+let s:dein_dir = expand('~/.cache/dein')
+let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
 
- if has('vim_starting')
-   set nocompatible               " Be iMproved
+" なければgit clone
+if !isdirectory(s:dein_repo_dir)
+  execute '!git clone https://github.com/Shougo/dein.vim' s:dein_repo_dir
+endif
+execute 'set runtimepath^=' . s:dein_repo_dir
 
-" Required:
-   set runtimepath+=~/.vim/bundle/neobundle.vim/
- endif
+" 管理するプラグインを記述したファイル
+let s:toml = '~/.dein.toml'
+let s:lazy_toml = '~/.dein_lazy.toml'
 
-" Required:
- call neobundle#begin(expand('~/.vim/bundle/'))
-
-" My Bundles here:
-" Refer to |:NeoBundle-examples|.
-" Note: You don't set neobundle setting in .gvimrc!
-NeoBundle 'Shougo/vimproc', {
-      \ 'build' : {
-      \     'windows' : 'make -f make_mingw32.mak',
-      \     'cygwin' : 'make -f make_cygwin.mak',
-      \     'mac' : 'make -f make_mac.mak',
-      \     'unix' : 'make -f make_unix.mak',
-      \    },
-      \ }
-
-NeoBundle 'kchmck/vim-coffee-script'
-"NeoBundle 'VimClojure'
-NeoBundle 'synic.vim'
-NeoBundle 'sudo.vim'
-NeoBundle 'YankRing.vim'
-NeoBundle 'Markdown'
-NeoBundle 'textutil.vim'
-NeoBundle 'amdt/vim-niji'
-NeoBundle "mattn/vimplenote-vim"
-NeoBundle "mattn/webapi-vim"
-NeoBundle "mattn/mkdpreview-vim"
-NeoBundle "altercation/vim-colors-solarized"
-NeoBundle "Shougo/neocomplcache"
-NeoBundle "Shougo/unite.vim"
-NeoBundle "Shougo/neomru.vim"
-NeoBundle "Shougo/vimshell"
-NeoBundle "Shougo/vimfiler"
-NeoBundle 'Shougo/neobundle.vim'
-NeoBundle 'Shougo/echodoc'
-NeoBundle 'Shougo/neosnippet'
-NeoBundle 'Shougo/neosnippet-snippets'
-NeoBundle 'Shougo/unite-ssh'
-NeoBundle 'Shougo/vinarise'
-NeoBundle 'Shougo/unite-session'
-NeoBundle 'Shougo/unite-outline'
-NeoBundle 'Shougo/unite-help'
-NeoBundle 'tyru/open-browser.vim'
-NeoBundle 'basyura/twibill.vim'
-NeoBundle 'tpope/vim-pathogen'
-NeoBundle 'thinca/vim-quickrun'
-NeoBundle 'thinca/vim-logcat'
-NeoBundle 'thinca/vim-ref'
-NeoBundle 'thinca/vim-scouter'
-NeoBundle 'thinca/vim-threes'
-NeoBundle 'ujihisa/vimshell-ssh'
-NeoBundle 'osyo-manga/unite-quickfix'
-NeoBundle 'kmnk/vim-unite-giti'
-NeoBundle 'tpope/vim-fugitive'
-NeoBundle 'tpope/vim-fireplace'
-NeoBundle 'tpope/vim-classpath'
-NeoBundle 'guns/vim-clojure-static'
-NeoBundle 'kakkyz81/evervim'
-NeoBundle 'kannokanno/unite-todo'
-NeoBundle 'aharisu/vim_goshrepl'
-NeoBundle 'aharisu/vim-gdev'
-NeoBundle 'ujihisa/neoclojure.vim'
-NeoBundle 'ujihisa/unite-colorscheme'
-
-" メガネケースでの例外設定
-if hostname() != 'meganecase'
-  NeoBundle 'basyura/bitly.vim'
-  NeoBundle 'basyura/TweetVim'
-  NeoBundle 'tsukkee/lingr-vim'
-  NeoBundle 'motemen/hatena-vim'
-  NeoBundle 'ujihisa/blogger.vim'
+" 読み込み、キャッシュは :call dein#clear_cache() で消せます
+if dein#load_state(s:dein_dir)
+  call dein#begin(s:dein_dir)
+  call dein#load_toml(s:toml, {'lazy': 0})
+  call dein#load_toml(s:lazy_toml, {'lazy': 1})
+  call dein#end()
+  call dein#save_state()
 endif
 
+" vimprocだけは最初にインストールしてほしい
+if dein#check_install(['vimproc'])
+  call dein#install(['vimproc'])
+endif
+" その他インストールしていないものはこちらに入れる
+if dein#check_install()
+  call dein#install()
+endif
+" }}}
 
-call neobundle#end()
+" プラグインロード後の設定
+augroup rc_autocmd
+  autocmd!
+augroup END
 
+call dein#begin(s:dein_dir)
+
+if dein#tap('unite.vim')
+  function! s:unite_custom() abort
+    call unite#custom#source('file', 'matchers', "matcher_default")
+  endfunction
+
+  execute 'autocmd rc_autocmd User' 'dein#source#' . g:dein#name 'call s:unite_custom()'
+endif
 
 " キーマップ的な何か
 inoremap <silent> <C-@> <C-[>
 inoremap <C-e> <End>
 imap <C-k> <Plug>(neosnippet_expand_or_jump)
 smap <C-k> <Plug>(neosnippet_expand_or_jump)
-nnoremap <silent> r. :<C-u>source ~/dotfiles/.vimrc<CR>:<C-u>source ~/.gvimrc<CR>
+nnoremap <silent> r. :<C-u>source ~/dotfiles/.vimrc<CR>
 nnoremap <silent> su :<C-u>e sudo:%<CR>
 nmap <F12> yyp<C-a>
 nmap <C-J> @a
@@ -126,7 +90,7 @@ imap <C-1> <ESC>:tabfirst
 imap <C-9> <ESC>:tablast
 
 " YankRing
-nnoremap <silent> yr :<C-u>YRShow<CR>
+nnoremap <silent> <Leader>yr :<C-u>YRShow<CR>
 
 " vimfiler
 nnoremap <silent> <Leader>vf :<C-u>VimFilerCurrentDir<CR>
@@ -140,18 +104,14 @@ nmap , [unite]
 nnoremap [unite]f :<C-u>Unite file<CR>
 nnoremap [unite]bf :<C-u>Unite buffer<CR>
 nnoremap [unite]bk :<C-u>Unite bookmark<CR>
-nnoremap [unite]r :<C-u>Unite file_mru<CR>
+nnoremap [unite]r :<C-u>Unite neomru/file<CR>
 nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
-nnoremap [unite]tt :<C-u>Unite tweetvim<CR>
-nnoremap [unite]p :<C-u>Unite mpc:playlist<CR>
-nnoremap [unite]m :<C-u>Unite mpc:listall<CR>
-nnoremap [unite]d :<C-u>Unite mpc:ls<CR>
-nnoremap [unite]o :<C-u>Unite outline<CR>
 nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
 nnoremap [unite]g :<C-u>Unite giti<CR>
-nnoremap [unite]s :<C-u>Unite session<CR>
-nnoremap [unite]to :<C-u>Unite todo<CR>
-nnoremap <C-\> :<C-u>Unite mapping<CR>
+nnoremap [unite]m :<C-u>Unite mapping<CR>
+
+" インサートモードで開始
+let g:unite_enable_start_insert = 1
 
 " quickrun
 autocmd BufRead,BufNewFile
@@ -166,9 +126,6 @@ let g:quickrun_config = {
 \       "runner/vimproc/updatetime" : 60
 \   },
 \}
-
-"インサートモードで開始
-let g:unite_enable_start_insert = 1
 
 " Execute help.
 nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>

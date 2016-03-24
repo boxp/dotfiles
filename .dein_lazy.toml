@@ -1,0 +1,20 @@
+[[plugins]]
+repo = 'Shougo/neosnippet'
+depends = ['neosnippet-snippets']
+on_i = 1
+on_ft = ['snippet']
+
+[[plugins]]
+repo = 'Shougo/unite.vim'
+
+[[plugins]]
+repo = 'Shougo/neomru.vim'
+on_source = ['unite.vim']
+
+[[plugins]]
+repo = 'kmnk/vim-unite-giti'
+on_source = ['unite.vim']
+
+[[plugins]]
+repo = 'Shougo/neocomplete.vim'
+on_i = 1
