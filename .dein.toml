@@ -112,3 +112,12 @@ repo = 'ujihisa/neoclojure.vim'
 
 [[plugins]]
 repo = 'basyura/bitly.vim'
+
+[[plugins]]
+repo = 'fatih/vim-go'
+
+[[plugins]]
+repo = 'leafgarland/typescript-vim'
+
+[[plugins]]
+repo = 'Quramy/tsuquyomi'

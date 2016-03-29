@@ -114,18 +114,7 @@ nnoremap [unite]m :<C-u>Unite mapping<CR>
 let g:unite_enable_start_insert = 1
 
 " quickrun
-autocmd BufRead,BufNewFile
-\  if filereadable("input.txt")
-\    nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
-\  endif
-
-
-let g:quickrun_config = {
-\   "_" : {
-\       "runner" : "vimproc",
-\       "runner/vimproc/updatetime" : 60
-\   },
-\}
+nnoremap \<space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
 
 " Execute help.
 nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
@@ -154,13 +143,6 @@ set wildmenu wildmode=list:full
 set runtimepath+=~/.vim/
 runtime! userautoload/*.vim
 
-" neocomplcache設定
-let g:neocomplcache_enable_at_startup = 1
-let g:neocomplcache_dictionary_filetype_lists = {
-            \ 'scala' : $HOME.'/Dropbox/dict/scala.dict',
-            \ 'java' : $HOME.'/Dropbox/dict/java.dict'
-            \ }
-
 " vimshell setting
 let g:vimshell_interactive_update_time = 10
 let g:vimshell_prompt = $USERNAME."% "
@@ -188,13 +170,6 @@ autocmd FileType tweetvim nmap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 autocmd FileType tweetvim imap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 "16色に設定
 set t_Co=256
-
-" スクリーン名のキャッシュを利用して、neocomplcache で補完する
-if !exists('g:neocomplcache_dictionary_filetype_lists')
-  let g:neocomplcache_dictionary_filetype_lists = {}
-endif
-let s:neco_dic = g:neocomplcache_dictionary_filetype_lists
-let s:neco_dic.tweetvim_say = $HOME . '/.tweetvim/screen_name'
 
 " solarized設定
 "let g:solarized_termtrans=1
@@ -289,13 +264,6 @@ inoremap <silent> <C-f> <C-r>=IMState('FixMode')<CR>
 " PythonによるIBus制御指定
 let IM_CtrlIBusPython = 1
 
-" vim-quickrun設定
-let g:quickrun_config.scala = {'command' : 'scala'}
-let g:quickrun_config.hxml = {'command' : 'haxe'}
-let g:quickrun_config.mm = {'command' : 'matx'}
-let g:quickrun_config.c = {
-	\ 'cmdopt' : '-lm' }
-
 "backspace"
 set backspace=indent,eol,start
 
@@ -305,17 +273,13 @@ autocmd FileType python set omnifunc=pythoncomplete#Complete
 " disable buzzer
 set visualbell t_vb=
 
-" haxe settings
-if !exists('g:neocomplcache_omni_patterns')
-    let g:neocomplcache_omni_patterns = {}
-endif
-let g:neocomplcache_omni_patterns.haxe = '\v([\]''"]|\w)(\.|\()'
-
 " indent settings
 filetype plugin indent on
-set tabstop=2
-set shiftwidth=2
-set expandtab
+augroup vimrc
+	autocmd! FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
+	autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
+	autocmd! FileType css setlocal shiftwidth=2 tabstop=2 softtabstop=2
+augroup END
 
 " vim-ref
 "webdictサイトの設定
@@ -389,12 +353,6 @@ augroup vimrc-neoclojure
   autocmd FileType clojure setlocal omnifunc=neoclojure#complete
 augroup END
 
-let g:quickrun_config.clojure = {
-\       'runner': 'neoclojure',
-\       'command': 'dummy',
-\       'tempfile': '%{tempname()}.clj'
-\ }
-
 " yank limit
 let g:yanking_max_element_length = 104857600
 
@@ -409,3 +367,79 @@ let g:niji_dark_colours = [
     \ [ '6',  '#2aa198'],
     \ [ '4',  '#268bd2'],
     \ ]
+
+" neocomplete
+"Note: This option must set it in .vimrc(_vimrc).  NOT IN .gvimrc(_gvimrc)!
+" Disable AutoComplPop.
+let g:acp_enableAtStartup = 0
+" Use neocomplete.
+let g:neocomplete#enable_at_startup = 1
+" Use smartcase.
+let g:neocomplete#enable_smart_case = 1
+" Set minimum syntax keyword length.
+let g:neocomplete#sources#syntax#min_keyword_length = 3
+let g:neocomplete#lock_buffer_name_pattern = '\*ku\*'
+
+" Define dictionary.
+let g:neocomplete#sources#dictionary#dictionaries = {
+    \ 'default' : '',
+    \ 'vimshell' : $HOME.'/.vimshell_hist',
+    \ 'scheme' : $HOME.'/.gosh_completions'
+        \ }
+
+" Define keyword.
+if !exists('g:neocomplete#keyword_patterns')
+    let g:neocomplete#keyword_patterns = {}
+endif
+let g:neocomplete#keyword_patterns['default'] = '\h\w*'
+
+" Plugin key-mappings.
+inoremap <expr><C-g>     neocomplete#undo_completion()
+inoremap <expr><C-l>     neocomplete#complete_common_string()
+
+" Recommended key-mappings.
+" <CR>: close popup and save indent.
+inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
+function! s:my_cr_function()
+  return (pumvisible() ? "\<C-y>" : "" ) . "\<CR>"
+  " For no inserting <CR> key.
+  "return pumvisible() ? "\<C-y>" : "\<CR>"
+endfunction
+" <TAB>: completion.
+inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
+" <C-h>, <BS>: close popup and delete backword char.
+inoremap <expr><C-h> neocomplete#smart_close_popup()."\<C-h>"
+inoremap <expr><BS> neocomplete#smart_close_popup()."\<C-h>"
+" Close popup by <Space>.
+"inoremap <expr><Space> pumvisible() ? "\<C-y>" : "\<Space>"
+
+" AutoComplPop like behavior.
+"let g:neocomplete#enable_auto_select = 1
+
+" Shell like behavior(not recommended).
+"set completeopt+=longest
+"let g:neocomplete#enable_auto_select = 1
+"let g:neocomplete#disable_auto_complete = 1
+"inoremap <expr><TAB>  pumvisible() ? "\<Down>" : "\<C-x>\<C-u>"
+
+" Enable omni completion.
+autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+
+" Enable heavy omni completion.
+if !exists('g:neocomplete#sources#omni#input_patterns')
+  let g:neocomplete#sources#omni#input_patterns = {}
+endif
+"let g:neocomplete#sources#omni#input_patterns.php = '[^. \t]->\h\w*\|\h\w*::'
+"let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
+"let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
+
+" For perlomni.vim setting.
+" https://github.com/c9s/perlomni.vim
+let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
+
+" typescript
+
