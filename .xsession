@@ -24,4 +24,7 @@ exec xmonad
 # start lighter.pl
 sudo $HOME/bin/lighter.pl &
 
+# start xscreensaver
+/usr/bin/xscreensaver -no-splash &
+
 start-pulseaudio-x11
