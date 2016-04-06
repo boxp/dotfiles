@@ -156,10 +156,7 @@ nnoremap [unite]to :<C-u>Unite todo<CR>
 nnoremap <C-\> :<C-u>Unite mapping<CR>
 
 " quickrun
-autocmd BufRead,BufNewFile
-\  if filereadable("input.txt")
-\    nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
-\  endif
+nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
 
 
 let g:quickrun_config = {
