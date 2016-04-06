@@ -530,3 +530,8 @@ endif
 " https://github.com/c9s/perlomni.vim
 let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 
+augroup vimrc
+	autocmd! FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
+	autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
+	autocmd! FileType css setlocal shiftwidth=2 tabstop=2 softtabstop=2
+augroup END
