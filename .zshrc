@@ -85,3 +85,5 @@ setopt nonomatch
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 eval "$(direnv hook zsh)"
+
+[[ -s "/home/boxp/.gvm/scripts/gvm" ]] && source "/home/boxp/.gvm/scripts/gvm"
