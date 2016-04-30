@@ -90,6 +90,7 @@ NeoBundle 'Quramy/tsuquyomi'
 NeoBundle 'fatih/vim-go'
 NeoBundle 'vim-scripts/gtags.vim'
 NeoBundle 'haya14busa/incsearch.vim'
+NeoBundle 'diepm/vim-rest-console'
 
 " メガネケースでの例外設定
 if hostname() != 'meganecase'
@@ -112,7 +113,6 @@ smap <C-k> <Plug>(neosnippet_expand_or_jump)
 nnoremap <silent> r. :<C-u>source ~/dotfiles/.vimrc<CR>:<C-u>source ~/.gvimrc<CR>
 nnoremap <silent> su :<C-u>e sudo:%<CR>
 nmap <F12> yyp<C-a>
-nmap <C-J> @a
 
 " incsearch
 map /  <Plug>(incsearch-forward)
@@ -483,4 +483,5 @@ augroup vimrc
 	autocmd! FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
 	autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
 	autocmd! FileType css setlocal shiftwidth=2 tabstop=2 softtabstop=2
+	autocmd! FileType scss setlocal shiftwidth=2 tabstop=2 softtabstop=2
 augroup END

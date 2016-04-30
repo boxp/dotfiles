@@ -18,13 +18,13 @@ xmodmap $HOME/.Xmodmap
 xcompmgr -c &
 nitrogen --restore
 
+# start lighter.pl
+sudo perl $HOME/bin/lighter.pl &
+
 # start xmonad
 exec xmonad
 
-# start lighter.pl
-sudo $HOME/bin/lighter.pl &
-
 # start xscreensaver
-/usr/bin/xscreensaver -no-splash &
+xscreensaver -no-splash &
 
 start-pulseaudio-x11
