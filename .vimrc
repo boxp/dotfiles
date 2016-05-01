@@ -53,18 +53,6 @@ augroup rc_autocmd
   autocmd!
 augroup END
 
-call dein#begin(s:dein_dir)
-
-if dein#tap('unite.vim')
-  function! s:unite_custom() abort
-    call unite#custom#source('file', 'matchers', "matcher_default")
-  endfunction
-
-  execute 'autocmd rc_autocmd User' 'dein#source#' . g:dein#name 'call s:unite_custom()'
-endif
-
-call dein#end()
-
 " キーマップ的な何か
 inoremap <silent> <C-@> <C-[>
 inoremap <C-e> <End>
@@ -101,19 +89,21 @@ nnoremap <silent> <Leader>vt  :<C-u>VimFilerTab<CR>
 nnoremap <silent> <Leader>vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
 
 " Unite
-nmap , [unite]
-
-nnoremap [unite]f :<C-u>Unite file<CR>
-nnoremap [unite]bf :<C-u>Unite buffer<CR>
-nnoremap [unite]bk :<C-u>Unite bookmark<CR>
-nnoremap [unite]r :<C-u>Unite neomru/file<CR>
-nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
-nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
-nnoremap [unite]g :<C-u>Unite giti<CR>
-nnoremap [unite]m :<C-u>Unite mapping<CR>
-
-" インサートモードで開始
-let g:unite_enable_start_insert = 1
+if dein#tap("unite.vim")
+  nmap , [unite]
+  
+  nnoremap [unite]f :<C-u>Unite file<CR>
+  nnoremap [unite]bf :<C-u>Unite buffer<CR>
+  nnoremap [unite]bk :<C-u>Unite bookmark<CR>
+  nnoremap [unite]r :<C-u>Unite neomru/file<CR>
+  nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
+  nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
+  nnoremap [unite]g :<C-u>Unite giti<CR>
+  nnoremap [unite]m :<C-u>Unite mapping<CR>
+  
+  " インサートモードで開始
+  let g:unite_enable_start_insert = 1
+endif
 
 " quickrun
 nnoremap \<space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
@@ -142,8 +132,12 @@ set incsearch
 set wildmenu wildmode=list:full
 
 " 自動的にファイルを読み込むパスを設定 ~/.vim/userautoload/*vim
-set runtimepath+=~/.vim/
-runtime! userautoload/*.vim
+" set runtimepath+=~/.vim/
+" runtime! userautoload/*.vim
+
+"neosnippet設定
+" Tell Neosnippet about the other snippets
+let g:neosnippet#snippets_directory='~/dotfiles/.mysnippets'
 
 " vimshell setting
 let g:vimshell_interactive_update_time = 10
@@ -327,10 +321,6 @@ autocmd BufRead,BufNewFile *.mm set filetype=C
 
 " fxml
 autocmd BufRead,BufNewFile *.fxml set filetype=xml
-
-"neosnippet設定
-" Tell Neosnippet about the other snippets
-let g:neosnippet#snippets_directory='~/dotfiles/.mysnippets'
 
 " 自動保存
 function! _CompileTexDocument()

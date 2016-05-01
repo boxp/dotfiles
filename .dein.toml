@@ -3,13 +3,7 @@ repo = 'Shougo/dein.vim'
 
 [[plugins]]
 repo = 'Shougo/vimproc'
-
-  [plugins.build]
-  windows = 'tools\\update-dll-mingw'
-  cygwin  = 'make -f make_cygwin.mak'
-  mac     = 'make -f make_mac.mak'
-  linux   = 'make'
-  unix    = 'gmake'
+build = 'make'
 
 [[plugins]]
 repo = 'kchmck/vim-coffee-script'
@@ -52,9 +46,6 @@ repo = 'Shougo/vimfiler'
 
 [[plugins]]
 repo = 'Shougo/echodoc'
-
-[[plugins]]
-repo = 'Shougo/neosnippet-snippets'
 
 [[plugins]]
 repo = 'Shougo/vinarise'
@@ -121,3 +112,7 @@ repo = 'leafgarland/typescript-vim'
 
 [[plugins]]
 repo = 'Quramy/tsuquyomi'
+
+[[plugins]]
+repo = 'Shougo/neosnippet-snippets'
+depends = ['neosnippet']
