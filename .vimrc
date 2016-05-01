@@ -61,7 +61,11 @@ smap <C-k> <Plug>(neosnippet_expand_or_jump)
 nnoremap <silent> r. :<C-u>source ~/dotfiles/.vimrc<CR>
 nnoremap <silent> su :<C-u>e sudo:%<CR>
 nmap <F12> yyp<C-a>
-nmap <C-J> @a
+
+" incsearch
+map /  <Plug>(incsearch-forward)
+map ?  <Plug>(incsearch-backward)
+map g/ <Plug>(incsearch-stay)
 
 " window mapping
 nmap <Space>w <C-w>
@@ -106,8 +110,18 @@ if dein#tap("unite.vim")
 endif
 
 " quickrun
-nnoremap \<space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
+nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
 
+
+let g:quickrun_config = {
+\   "_" : {
+\       "runner" : "vimproc",
+\       "runner/vimproc/updatetime" : 60
+\   },
+\}
+
+"インサートモードで開始
+let g:unite_enable_start_insert = 1
 " Execute help.
 nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
 
@@ -194,62 +208,9 @@ set clipboard+=unnamed
 " ステータスライン
 set laststatus=2   " Always show the statusline
 
-" 文字コードの自動認識
-if &encoding !=# 'utf-8'
-  set encoding=japan
-  set fileencoding=japan
-endif
-if has('iconv')
-  let s:enc_euc = 'euc-jp'
-  let s:enc_jis = 'iso-2022-jp'
-  " iconvがeucJP-msに対応しているかをチェック
-  if iconv("\x87\x64\x87\x6a", 'cp932', 'eucjp-ms') ==# "\xad\xc5\xad\xcb"
-    let s:enc_euc = 'eucjp-ms'
-    let s:enc_jis = 'iso-2022-jp-3'
-  " iconvがJISX0213に対応しているかをチェック
-  elseif iconv("\x87\x64\x87\x6a", 'cp932', 'euc-jisx0213') ==# "\xad\xc5\xad\xcb"
-    let s:enc_euc = 'euc-jisx0213'
-    let s:enc_jis = 'iso-2022-jp-3'
-  endif
-  " fileencodingsを構築
-  if &encoding ==# 'utf-8'
-    let s:fileencodings_default = &fileencodings
-    let &fileencodings = s:enc_jis .','. s:enc_euc .',cp932'
-    let &fileencodings = &fileencodings .','. s:fileencodings_default
-    unlet s:fileencodings_default
-  else
-    let &fileencodings = &fileencodings .','. s:enc_jis
-    set fileencodings+=utf-8,ucs-2le,ucs-2
-    if &encoding =~# '^\(euc-jp\|euc-jisx0213\|eucjp-ms\)$'
-      set fileencodings+=cp932
-      set fileencodings-=euc-jp
-      set fileencodings-=euc-jisx0213
-      set fileencodings-=eucjp-ms
-      let &encoding = s:enc_euc
-      let &fileencoding = s:enc_euc
-    else
-      let &fileencodings = &fileencodings .','. s:enc_euc
-    endif
-  endif
-  " 定数を処分
-  unlet s:enc_euc
-  unlet s:enc_jis
-endif
-" 日本語を含まない場合は fileencoding に encoding を使うようにする
-if has('autocmd')
-  function! AU_ReCheck_FENC()
-    if &fileencoding =~# 'iso-2022-jp' && search("[^\x01-\x7e]", 'n') == 0
-      let &fileencoding=&encoding
-    endif
-  endfunction
-  autocmd BufReadPost * call AU_ReCheck_FENC()
-endif
-" 改行コードの自動認識
+set encoding=utf-8
+set fileencodings=iso-2022-jp,euc-jp,sjis,utf-8
 set fileformats=unix,dos,mac
-" □とか○の文字があってもカーソル位置がずれないようにする
-if exists('&ambiwidth')
-  set ambiwidth=double
-endif
 
 "CD
 au   BufEnter *   execute ":lcd " . expand("%:p:h")
@@ -271,11 +232,6 @@ set visualbell t_vb=
 
 " indent settings
 filetype plugin indent on
-augroup vimrc
-	autocmd! FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
-	autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
-	autocmd! FileType css setlocal shiftwidth=2 tabstop=2 softtabstop=2
-augroup END
 
 " vim-ref
 "webdictサイトの設定
@@ -433,5 +389,9 @@ endif
 " https://github.com/c9s/perlomni.vim
 let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 
-" typescript
-
+augroup vimrc
+	autocmd! FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
+	autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
+	autocmd! FileType css setlocal shiftwidth=2 tabstop=2 softtabstop=2
+	autocmd! FileType scss setlocal shiftwidth=2 tabstop=2 softtabstop=2
+augroup END

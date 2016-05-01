@@ -18,5 +18,5 @@ Config { font = "xft:Ricty:size=8:antialias=true"
                     ]
        , sepChar = "%"
        , alignSep = "}{"
-       , template = "%cpu% | %memory% * %swap% | %eth0% - %wlp3s0% | %battery% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %RJTI% | %uname%"
+       , template = "%cpu% | %memory% * %swap% | %enp0s20u1c4i2% - %wlp3s0% | %battery% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %RJTI% | %uname%"
 }

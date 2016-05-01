@@ -116,3 +116,23 @@ repo = 'Quramy/tsuquyomi'
 [[plugins]]
 repo = 'Shougo/neosnippet-snippets'
 depends = ['neosnippet']
+
+[[plugins]]
+repo = 'Shougo/neosnippet-snippets'
+depends = ['neosnippet']
+
+[[plugins]]
+repo = 'vim-scripts/gtags.vim'
+
+[[plugins]]
+repo = 'haya14busa/incsearch.vim'
+
+[[plugins]]
+repo = 'diepm/vim-rest-console'
+
+[[plugins]]
+repo = 'basyura/bitly.vim'
+
+[[plugins]]
+repo = 'basyura/TweetVim'
+depends = ['bitly.vim']

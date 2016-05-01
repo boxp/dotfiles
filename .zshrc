@@ -1,8 +1,6 @@
 # Path to your oh-my-zsh installation.
 export ZSH=$HOME/.oh-my-zsh
 
-export SDL_AUDIODRIVER='alsa'
-
 # Set name of the theme to load.
 # Look in ~/.oh-my-zsh/themes/
 # Optionally, if you set this to "random", it'll load a random theme each
@@ -49,13 +47,11 @@ ZSH_THEME="norm"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git)
 
-# User configuration
-
-export GOPATH="$HOME/go"
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$GOPATH/bin"
 # export MANPATH="/usr/local/man:$MANPATH"
 
 source $ZSH/oh-my-zsh.sh
+
+setopt nonomatch
 
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
@@ -81,3 +77,32 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+#
+# aliases
+alias lock="xscreensaver-command --lock"
+alias gc="git checkout"
+alias gb="git branch"
+alias gs="git status"
+alias gt="tig"
+
+# AUDIO DRIVER settings
+export SDL_AUDIODRIVER='alsa'
+
+# direnv
+eval "$(direnv hook zsh)"
+
+# gvm settings
+ [[ -s "/home/boxp/.gvm/scripts/gvm" ]] && source "/home/boxp/.gvm/scripts/gvm"
+ gvm use go1.6.2
+
+# GOPATH
+export GOPATH="$HOME/go"
+
+# ANDROID-SDK
+export ANDROID_HOME="/opt/android-sdk"
+
+# PATH
+export PATH="$PATH:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$GOPATH/bin:$ANDROID_HOME/tools"
+
+export NVM_DIR="/home/boxp/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
