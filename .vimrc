@@ -392,8 +392,8 @@ let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 augroup vimrc
 	autocmd! FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
 	autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
-	autocmd! FileType css setlocal shiftwidth=4 tabstop=4 softtabstop=4
-	autocmd! FileType scss setlocal shiftwidth=4 tabstop=4 softtabstop=4
+	autocmd! FileType css setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
+	autocmd! FileType scss setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
 augroup END
 
 " Syntastic
