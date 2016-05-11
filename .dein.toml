@@ -136,3 +136,6 @@ repo = 'basyura/bitly.vim'
 [[plugins]]
 repo = 'basyura/TweetVim'
 depends = ['bitly.vim']
+
+[[plugins]]
+repo = 'scrooloose/syntastic'
