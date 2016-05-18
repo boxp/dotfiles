@@ -18,9 +18,6 @@ repo = 'sudo.vim'
 repo = 'YankRing.vim'
 
 [[plugins]]
-repo = 'Markdown'
-
-[[plugins]]
 repo = 'textutil.vim'
 
 [[plugins]]
@@ -31,9 +28,6 @@ repo = 'mattn/vimplenote-vim'
 
 [[plugins]]
 repo = 'mattn/webapi-vim'
-
-[[plugins]]
-repo = 'mattn/mkdpreview-vim'
 
 [[plugins]]
 repo = 'altercation/vim-colors-solarized'
@@ -58,6 +52,9 @@ repo = 'basyura/twibill.vim'
 
 [[plugins]]
 repo = 'tpope/vim-pathogen'
+
+[[plugins]]
+repo = 'tpope/vim-markdown'
 
 [[plugins]]
 repo = 'thinca/vim-quickrun'
@@ -138,4 +135,18 @@ repo = 'basyura/TweetVim'
 depends = ['bitly.vim']
 
 [[plugins]]
-repo = 'scrooloose/syntastic'
+repo = 'osyo-manga/shabadou.vim'
+
+[[plugins]]
+repo = 'jceb/vim-hier'
+
+[[plugins]]
+repo = 'dannyob/quickfixstatus'
+
+[[plugins]]
+repo = 'osyo-manga/vim-watchdogs'
+depends = ['vim-quickrun', 'vimproc', 'shabadou.vim', 'vim-hier', 'quickfixstatus']
+
+[[plugins]]
+repo = 'kannokanno/previm'
+depends = ['open-browser.vim']

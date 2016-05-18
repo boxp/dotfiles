@@ -103,7 +103,7 @@ if dein#tap("unite.vim")
   nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
   nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
   nnoremap [unite]g :<C-u>Unite giti<CR>
-  nnoremap [unite]m :<C-u>Unite mapping<CR>
+  nnoremap [unite]m :<C-u>Unite mpc<CR>
   
   " インサートモードで開始
   let g:unite_enable_start_insert = 1
@@ -278,20 +278,6 @@ autocmd BufRead,BufNewFile *.mm set filetype=C
 " fxml
 autocmd BufRead,BufNewFile *.fxml set filetype=xml
 
-" 自動保存
-function! _CompileTexDocument()
-  exe ":!~/Dropbox/bin/texcomp.sh"
-endfunction
-function! _CompileMarkdown()
-  exe ":!markdown " . expand("%:p") . " >> output.html"
-endfunction
-
-command! CompileTexDocument call _CompileTexDocument()
-command! CompileMarkdown call _CompileMarkdown()
-
-autocmd BufWrite *.tex :CompileTexDocument
-autocmd BufWrite *.md :CompileMarkdown
-
 " gauche
 vmap <CR> <Plug>(gosh_repl_send_block)
 
@@ -396,5 +382,16 @@ augroup vimrc
 	autocmd! FileType scss setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
 augroup END
 
-" Syntastic
-let g:syntastic_scss_checkers = ['scss_lint']
+let g:watchdogs_check_BufWritePost_enables = {
+\	"scss" : 1,
+\	"typescript" : 1
+\}
+
+" previm
+augroup PrevimSettings
+    autocmd!
+    autocmd BufNewFile,BufRead *.{md,mdwn,mkd,mkdn,mark*} set filetype=markdown
+augroup END
+
+" vim-markdown
+let g:markdown_fenced_languages = ['vim', 'python', 'ruby', 'clojure', 'cpp', 'bash=sh']

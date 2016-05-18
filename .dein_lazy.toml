@@ -17,5 +17,9 @@ repo = 'kmnk/vim-unite-giti'
 on_source = ['unite.vim']
 
 [[plugins]]
+repo = 'mattn/unite-mpc'
+on_source = ['unite.vim']
+
+[[plugins]]
 repo = 'Shougo/neocomplete.vim'
 on_i = 1
