@@ -150,3 +150,6 @@ depends = ['vim-quickrun', 'vimproc', 'shabadou.vim', 'vim-hier', 'quickfixstatu
 [[plugins]]
 repo = 'kannokanno/previm'
 depends = ['open-browser.vim']
+
+[[plugins]]
+repo = 'simeji/winresizer'
