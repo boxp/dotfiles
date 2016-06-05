@@ -28,7 +28,7 @@ Config { font = "xft:Ricty:size=8:antialias=true"
 				, "--normal"   , "orange"
 				, "--high"     , "green"
 				-- battery specific options
-				, "--" 	, "1"
+				, "--"
 				-- discharging status
 				, "-o"	, "<left>% (<timeleft>)"
 				-- AC "on" status
