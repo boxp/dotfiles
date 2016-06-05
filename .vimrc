@@ -104,6 +104,11 @@ if dein#tap("unite.vim")
   nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
   nnoremap [unite]g :<C-u>Unite giti<CR>
   nnoremap [unite]m :<C-u>Unite mpc<CR>
+  nnoremap [unite]t :<C-u>Unite todo<CR>
+
+  " unite-todo
+  let g:unite_todo_data_directory = "~/memo"
+  nnoremap <silent> <Leader>t :<C-u>UniteTodoAddSimple<CR>
   
   " インサートモードで開始
   let g:unite_enable_start_insert = 1
@@ -278,6 +283,10 @@ autocmd BufRead,BufNewFile *.mm set filetype=C
 " fxml
 autocmd BufRead,BufNewFile *.fxml set filetype=xml
 
+" xmobarrc
+autocmd BufRead,BufNewFile *.xmobarrc set filetype=haskell
+
+
 " gauche
 vmap <CR> <Plug>(gosh_repl_send_block)
 
@@ -395,3 +404,79 @@ augroup END
 
 " vim-markdown
 let g:markdown_fenced_languages = ['vim', 'python', 'ruby', 'clojure', 'cpp', 'bash=sh']
+
+" Mpc
+nnoremap <Leader>mn :<C-u>MpcNext<CR>
+nnoremap <Leader>mp :<C-u>MpcPrev<CR>
+nnoremap <Leader>mt :<C-u>MpcToggle<CR>
+
+" lightline.vim
+set laststatus=2
+set noshowmode
+
+" from http://itchyny.hatenablog.com/entry/20130828/1377653592
+let g:lightline = {
+        \ 'colorscheme': 'solarized',
+        \ 'mode_map': {'c': 'NORMAL'},
+        \ 'active': {
+        \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ] ]
+        \ },
+        \ 'component_function': {
+        \   'modified': 'LightLineModified',
+        \   'readonly': 'LightLineReadonly',
+        \   'fugitive': 'LightLineFugitive',
+        \   'filename': 'LightLineFilename',
+        \   'fileformat': 'LightLineFileformat',
+        \   'filetype': 'LightLineFiletype',
+        \   'fileencoding': 'LightLineFileencoding',
+        \   'mode': 'LightLineMode'
+        \ }
+        \ }
+
+function! LightLineModified()
+  return &ft =~ 'help\|vimfiler\|gundo' ? '' : &modified ? '+' : &modifiable ? '' : '-'
+endfunction
+
+function! LightLineReadonly()
+  return &ft !~? 'help\|vimfiler\|gundo' && &readonly ? 'x' : ''
+endfunction
+
+function! LightLineFilename()
+  return ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
+        \ (&ft == 'vimfiler' ? vimfiler#get_status_string() :
+        \  &ft == 'unite' ? unite#get_status_string() :
+        \  &ft == 'vimshell' ? vimshell#get_status_string() :
+        \ '' != expand('%:t') ? expand('%:t') : '[No Name]') .
+        \ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
+endfunction
+
+function! LightLineFugitive()
+  if &ft !~? 'vimfiler\|gundo' && exists('*fugitive#head')
+    return fugitive#head()
+  else
+    return ''
+  endif
+endfunction
+
+function! LightLineFileformat()
+  return winwidth(0) > 70 ? &fileformat : ''
+endfunction
+
+function! LightLineFiletype()
+  return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
+endfunction
+
+function! LightLineFileencoding()
+  return winwidth(0) > 70 ? (&fenc !=# '' ? &fenc : &enc) : ''
+endfunction
+
+function! LightLineMode()
+  return winwidth(0) > 60 ? lightline#mode() : ''
+endfunction
+
+" indentLine
+let g:indentLine_color_term = 239
+let g:indentLine_enabled = 1
+
+" TypeScript
+let g:js_indent_typescript = 1

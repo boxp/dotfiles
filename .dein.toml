@@ -108,6 +108,9 @@ repo = 'fatih/vim-go'
 repo = 'leafgarland/typescript-vim'
 
 [[plugins]]
+repo = 'jason0x43/vim-js-indent'
+
+[[plugins]]
 repo = 'Quramy/tsuquyomi'
 
 [[plugins]]
@@ -153,3 +156,15 @@ depends = ['open-browser.vim']
 
 [[plugins]]
 repo = 'simeji/winresizer'
+
+[[plugins]]
+repo = 'mmisono/mpc.vim'
+
+[[plugins]]
+repo = 'itchyny/lightline.vim'
+
+[[plugins]]
+repo = 'cespare/vim-toml'
+
+[[plugins]]
+repo = 'Yggdroot/indentLine'

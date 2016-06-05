@@ -21,5 +21,9 @@ repo = 'mattn/unite-mpc'
 on_source = ['unite.vim']
 
 [[plugins]]
+repo = 'kannokanno/unite-todo'
+on_source = ['unite.vim']
+
+[[plugins]]
 repo = 'Shougo/neocomplete.vim'
 on_i = 1
