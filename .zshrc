@@ -29,15 +29,6 @@ zplug "tj/n", hook-build:"make install"
 zplug "b4b4r07/enhancd", at:v1
 zplug "mollifier/anyframe", at:4c23cb60
 
-# Install if "if:" tag returns true
-zplug "hchbaw/opp.zsh", if:"(( ${ZSH_VERSION%%.*} < 5 ))"
-
-# Can manage gist file just like other packages
-zplug "b4b4r07/79ee61f7c140c63d2786", \
-    from:gist, \
-    as:command, \
-    use:get_last_pane_path.sh
-
 # Support bitbucket
 zplug "b4b4r07/hello_bitbucket", \
     from:bitbucket, \
@@ -75,6 +66,7 @@ fi
 zplug load --verbose
 
 # aliases
+alias :q="exit"
 alias lock="xscreensaver-command --lock"
 alias git="hub"
 alias gc="git checkout"
@@ -113,7 +105,7 @@ setopt prompt_subst
 
 # PROMPT1
 PS1="%{[0m%}
-%{[32m%}[%n@%m] %{[33m%}%~%{[0m%}
+%{[33m%}λ%{[0m%} %{[32m%}[%n@%m] %{[33m%}%~%{[0m%}
 %(?|%{[36m%}ﾙｲ%) ﾟ ヮﾟﾉ%) <|%{[31m%}ﾙｲ%)；ﾟ -ﾟ ﾉ%) <)%{[35m%}\$(parse_git_branch) %{[0m%}"
 
 screenfetch
