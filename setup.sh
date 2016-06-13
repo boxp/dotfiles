@@ -8,3 +8,4 @@ ln -s ~/dotfiles/.xmobarrc ~/.xmobarrc
 ln -s ~/dotfiles/.xsession ~/.xsession
 ln -s ~/dotfiles/.zprofile ~/.zprofile
 ln -s ~/dotfiles/.zshrc ~/.zshrc
+ln -s ~/dotfiles/.tmux.conf ~/.tmux.conf
