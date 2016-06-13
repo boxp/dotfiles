@@ -73,6 +73,10 @@ alias gc="git checkout"
 alias gb="git branch"
 alias gs="git status"
 alias gt="tig"
+alias vis="vim -S ~/.vim.session"
+
+# Default EDITOR
+export EDITOR="vim"
 
 # AUDIO DRIVER settings
 export SDL_AUDIODRIVER='alsa'
@@ -108,4 +112,6 @@ PS1="%{[0m%}
 %{[33m%}λ%{[0m%} %{[32m%}[%n@%m] %{[33m%}%~%{[0m%}
 %(?|%{[36m%}ﾙｲ%) ﾟ ヮﾟﾉ%) <|%{[31m%}ﾙｲ%)；ﾟ -ﾟ ﾉ%) <)%{[35m%}\$(parse_git_branch) %{[0m%}"
 
-screenfetch
+# tmux
+tmux
+

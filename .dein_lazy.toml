@@ -25,5 +25,13 @@ repo = 'kannokanno/unite-todo'
 on_source = ['unite.vim']
 
 [[plugins]]
+repo = 'Shougo/unite-outline'
+on_source = ['unite.vim']
+
+[[plugins]]
+repo = 'Shougo/unite-session'
+on_source = ['unite.vim']
+
+[[plugins]]
 repo = 'Shougo/neocomplete.vim'
 on_i = 1

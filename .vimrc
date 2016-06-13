@@ -103,8 +103,14 @@ if dein#tap("unite.vim")
   nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
   nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
   nnoremap [unite]g :<C-u>Unite giti<CR>
-  nnoremap [unite]m :<C-u>Unite mpc<CR>
-  nnoremap [unite]t :<C-u>Unite todo<CR>
+  nnoremap [unite]mp :<C-u>Unite mpc<CR>
+  nnoremap [unite]ma :<C-u>Unite mapping<CR>
+  nnoremap [unite]o :<C-u>Unite outline<CR>
+  nnoremap [unite]sn :<C-u>Unite session/new<CR>
+  nnoremap [unite]ss :<C-u>Unite session<CR>
+  nnoremap [unite]to :<C-u>Unite todo<CR>
+  nnoremap [unite]tw :<C-u>Unite tweetvim<CR>
+  nnoremap [unite]ta :<C-u>Unite tweetvim/account<CR>
 
   " unite-todo
   let g:unite_todo_data_directory = "~/memo"
@@ -175,7 +181,7 @@ nnoremap <silent> <Space>tt     :<C-u>TweetVimSay<CR>
 " mentions を表示する
 nnoremap <silent> <Space>tr	:<C-u>TweetVimMentions<CR>
 " アイコン表示
-let g:tweetvim_display_icon = 0
+let g:tweetvim_display_icon = 1
 " spで開く
 let g:tweetvim_open_buffer_cmd = 'split!'
 " 1ページあたりの表示ツイート数
@@ -416,63 +422,8 @@ set noshowmode
 
 " from http://itchyny.hatenablog.com/entry/20130828/1377653592
 let g:lightline = {
-        \ 'colorscheme': 'solarized',
-        \ 'mode_map': {'c': 'NORMAL'},
-        \ 'active': {
-        \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ] ]
-        \ },
-        \ 'component_function': {
-        \   'modified': 'LightLineModified',
-        \   'readonly': 'LightLineReadonly',
-        \   'fugitive': 'LightLineFugitive',
-        \   'filename': 'LightLineFilename',
-        \   'fileformat': 'LightLineFileformat',
-        \   'filetype': 'LightLineFiletype',
-        \   'fileencoding': 'LightLineFileencoding',
-        \   'mode': 'LightLineMode'
-        \ }
-        \ }
-
-function! LightLineModified()
-  return &ft =~ 'help\|vimfiler\|gundo' ? '' : &modified ? '+' : &modifiable ? '' : '-'
-endfunction
-
-function! LightLineReadonly()
-  return &ft !~? 'help\|vimfiler\|gundo' && &readonly ? 'x' : ''
-endfunction
-
-function! LightLineFilename()
-  return ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
-        \ (&ft == 'vimfiler' ? vimfiler#get_status_string() :
-        \  &ft == 'unite' ? unite#get_status_string() :
-        \  &ft == 'vimshell' ? vimshell#get_status_string() :
-        \ '' != expand('%:t') ? expand('%:t') : '[No Name]') .
-        \ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
-endfunction
-
-function! LightLineFugitive()
-  if &ft !~? 'vimfiler\|gundo' && exists('*fugitive#head')
-    return fugitive#head()
-  else
-    return ''
-  endif
-endfunction
-
-function! LightLineFileformat()
-  return winwidth(0) > 70 ? &fileformat : ''
-endfunction
-
-function! LightLineFiletype()
-  return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
-endfunction
-
-function! LightLineFileencoding()
-  return winwidth(0) > 70 ? (&fenc !=# '' ? &fenc : &enc) : ''
-endfunction
-
-function! LightLineMode()
-  return winwidth(0) > 60 ? lightline#mode() : ''
-endfunction
+        \ 'colorscheme': 'solarized'
+	\}
 
 " indentLine
 let g:indentLine_color_term = 239
@@ -480,3 +431,6 @@ let g:indentLine_enabled = 1
 
 " TypeScript
 let g:js_indent_typescript = 1
+
+" vim-parenmatch
+let g:loaded_matchparen = 1

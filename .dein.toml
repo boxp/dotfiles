@@ -164,6 +164,12 @@ repo = 'mmisono/mpc.vim'
 repo = 'itchyny/lightline.vim'
 
 [[plugins]]
+repo = 'itchyny/vim-parenmatch'
+
+[[plugins]]
+repo = 'itchyny/vim-cursorword'
+
+[[plugins]]
 repo = 'cespare/vim-toml'
 
 [[plugins]]
