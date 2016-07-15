@@ -96,9 +96,6 @@ repo = 'aharisu/vim_goshrepl'
 repo = 'aharisu/vim-gdev'
 
 [[plugins]]
-repo = 'ujihisa/neoclojure.vim'
-
-[[plugins]]
 repo = 'basyura/bitly.vim'
 
 [[plugins]]
@@ -174,3 +171,6 @@ repo = 'cespare/vim-toml'
 
 [[plugins]]
 repo = 'Yggdroot/indentLine'
+
+[[plugins]]
+repo = 'khadiwala/wundervim'

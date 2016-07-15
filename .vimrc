@@ -95,7 +95,7 @@ nnoremap <silent> <Leader>vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit
 " Unite
 if dein#tap("unite.vim")
   nmap , [unite]
-  
+
   nnoremap [unite]f :<C-u>Unite file<CR>
   nnoremap [unite]bf :<C-u>Unite buffer<CR>
   nnoremap [unite]bk :<C-u>Unite bookmark<CR>
@@ -115,7 +115,7 @@ if dein#tap("unite.vim")
   " unite-todo
   let g:unite_todo_data_directory = "~/memo"
   nnoremap <silent> <Leader>t :<C-u>UniteTodoAddSimple<CR>
-  
+
   " インサートモードで開始
   let g:unite_enable_start_insert = 1
 endif
@@ -244,39 +244,6 @@ set visualbell t_vb=
 " indent settings
 filetype plugin indent on
 
-" vim-ref
-"webdictサイトの設定
-let g:ref_source_webdict_sites = {
-\   'je': {
-\     'url': 'http://dictionary.infoseek.ne.jp/jeword/%s',
-\   },
-\   'ej': {
-\     'url': 'http://dictionary.infoseek.ne.jp/ejword/%s',
-\   },
-\   'wiki': {
-\     'url': 'http://ja.wikipedia.org/wiki/%s',
-\   },
-\ }
-
-"デフォルトサイト
-let g:ref_source_webdict_sites.default = 'ej'
-
-"出力に対するフィルタ。最初の数行を削除
-function! g:ref_source_webdict_sites.je.filter(output)
-  return join(split(a:output, "\n")[15 :], "\n")
-endfunction
-function! g:ref_source_webdict_sites.ej.filter(output)
-  return join(split(a:output, "\n")[15 :], "\n")
-endfunction
-function! g:ref_source_webdict_sites.wiki.filter(output)
-  return join(split(a:output, "\n")[17 :], "\n")
-endfunction
-
-nmap <Leader>rj :<C-u>Ref webdict je<Space>
-nmap <Leader>re :<C-u>Ref webdict ej<Space>
-nmap <Leader>rw :<C-u>Ref webdict wiki<Space>
-
-
 "cljs設定
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
 
@@ -296,11 +263,9 @@ autocmd BufRead,BufNewFile *.xmobarrc set filetype=haskell
 " gauche
 vmap <CR> <Plug>(gosh_repl_send_block)
 
-" neoclojure
-augroup vimrc-neoclojure
-  autocmd!
-  autocmd FileType clojure setlocal omnifunc=neoclojure#complete
-augroup END
+" vim-fireplace
+autocmd BufRead,BufNewFile *.clj vmap <CR> :<C-u>'<,'>Eval<CR>
+autocmd BufRead,BufNewFile *.clj nmap \e :<C-u>Eval<CR>
 
 " yank limit
 let g:yanking_max_element_length = 104857600
@@ -395,12 +360,22 @@ augroup vimrc
 	autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
 	autocmd! FileType css setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
 	autocmd! FileType scss setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
+	autocmd! FileType haskell setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
+	autocmd! FileType typescript setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
 augroup END
 
+" watchdogs
 let g:watchdogs_check_BufWritePost_enables = {
 \	"scss" : 1,
 \	"typescript" : 1
 \}
+
+if !exists("g:quickrun_config")
+	let g:quickrun_config = {}
+endif
+let g:quickrun_config["watchdogs_checker/_"] = {
+	\ "outputter/quickfix/open_cmd" : "",
+	\ }
 
 " previm
 augroup PrevimSettings
@@ -434,3 +409,6 @@ let g:js_indent_typescript = 1
 
 " vim-parenmatch
 let g:loaded_matchparen = 1
+
+" remove trailing whitespace
+autocmd BufWritePre * :%s/\s\+$//ge
