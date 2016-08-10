@@ -59,7 +59,7 @@ inoremap <C-e> <End>
 imap <C-k> <Plug>(neosnippet_expand_or_jump)
 smap <C-k> <Plug>(neosnippet_expand_or_jump)
 nnoremap <silent> r. :<C-u>source ~/dotfiles/.vimrc<CR>
-nnoremap <silent> su :<C-u>e sudo:%<CR>
+nnoremap <silent> \su :<C-u>e sudo:%<CR>
 nmap <F12> yyp<C-a>
 
 " incsearch
@@ -102,7 +102,10 @@ if dein#tap("unite.vim")
   nnoremap [unite]r :<C-u>Unite neomru/file<CR>
   nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
   nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
-  nnoremap [unite]g :<C-u>Unite giti<CR>
+  nnoremap [unite]gi :<C-u>Unite giti<CR>
+  nnoremap [unite]gr :<C-u>Unite grep:. -buffer-name=search-buffer<CR>
+  " カーソル位置の単語をgrep検索
+  nnoremap [unite]cgr :<C-u>Unite grep:. -buffer-name=search-buffer<CR><C-R><C-W><CR>
   nnoremap [unite]mp :<C-u>Unite mpc<CR>
   nnoremap [unite]ma :<C-u>Unite mapping<CR>
   nnoremap [unite]o :<C-u>Unite outline<CR>
@@ -118,6 +121,13 @@ if dein#tap("unite.vim")
 
   " インサートモードで開始
   let g:unite_enable_start_insert = 1
+
+  " unite grepにhw(highway)を使う
+  if executable('hw')
+    let g:unite_source_grep_command = 'hw'
+    let g:unite_source_grep_default_opts = '--no-group --no-color'
+    let g:unite_source_grep_recursive_opt = ''
+  endif
 endif
 
 " quickrun
@@ -125,11 +135,11 @@ nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(inp
 
 
 let g:quickrun_config = {
-\   "_" : {
-\       "runner" : "vimproc",
-\       "runner/vimproc/updatetime" : 60
-\   },
-\}
+      \   "_" : {
+      \       "runner" : "vimproc",
+      \       "runner/vimproc/updatetime" : 60
+      \   },
+      \}
 
 "インサートモードで開始
 let g:unite_enable_start_insert = 1
@@ -204,10 +214,10 @@ set background=dark
 " カレント行ハイライトON
 set cursorline
 autocmd ColorScheme
-  \  " アンダーラインを引く(color terminal) ※このままではcolorschemeに上書きされる
-  \  highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
-  \  " アンダーラインを引く(gui)
-  \  highlight CursorLine gui=underline guifg=NONE guibg=NONE
+      \  " アンダーラインを引く(color terminal) ※このままではcolorschemeに上書きされる
+      \  highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
+      \  " アンダーラインを引く(gui)
+      \  highlight CursorLine gui=underline guifg=NONE guibg=NONE
 
 " vimfiler
 let g:vimfiler_safe_mode_by_default = 0
@@ -220,7 +230,7 @@ set clipboard+=unnamed
 set laststatus=2   " Always show the statusline
 
 set encoding=utf-8
-set fileencodings=iso-2022-jp,euc-jp,sjis,utf-8
+set fileencodings=utf-8,euc-jp,sjis,iso-2022-jp
 set fileformats=unix,dos,mac
 
 "CD
@@ -272,15 +282,15 @@ let g:yanking_max_element_length = 104857600
 
 " vim-niji
 let g:niji_dark_colours = [
-    \ [ '81', '#5fd7ff'],
-    \ [ '99', '#875fff'],
-    \ [ '1',  '#dc322f'],
-    \ [ '76', '#5fd700'],
-    \ [ '3',  '#b58900'],
-    \ [ '2',  '#859900'],
-    \ [ '6',  '#2aa198'],
-    \ [ '4',  '#268bd2'],
-    \ ]
+      \ [ '81', '#5fd7ff'],
+      \ [ '99', '#875fff'],
+      \ [ '1',  '#dc322f'],
+      \ [ '76', '#5fd700'],
+      \ [ '3',  '#b58900'],
+      \ [ '2',  '#859900'],
+      \ [ '6',  '#2aa198'],
+      \ [ '4',  '#268bd2'],
+      \ ]
 
 " neocomplete
 "Note: This option must set it in .vimrc(_vimrc).  NOT IN .gvimrc(_gvimrc)!
@@ -296,14 +306,14 @@ let g:neocomplete#lock_buffer_name_pattern = '\*ku\*'
 
 " Define dictionary.
 let g:neocomplete#sources#dictionary#dictionaries = {
-    \ 'default' : '',
-    \ 'vimshell' : $HOME.'/.vimshell_hist',
-    \ 'scheme' : $HOME.'/.gosh_completions'
-        \ }
+      \ 'default' : '',
+      \ 'vimshell' : $HOME.'/.vimshell_hist',
+      \ 'scheme' : $HOME.'/.gosh_completions'
+      \ }
 
 " Define keyword.
 if !exists('g:neocomplete#keyword_patterns')
-    let g:neocomplete#keyword_patterns = {}
+  let g:neocomplete#keyword_patterns = {}
 endif
 let g:neocomplete#keyword_patterns['default'] = '\h\w*'
 
@@ -355,32 +365,34 @@ endif
 " https://github.com/c9s/perlomni.vim
 let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 
+" Tabbing setting
 augroup vimrc
-	autocmd! FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
-	autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
-	autocmd! FileType css setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
-	autocmd! FileType scss setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
-	autocmd! FileType haskell setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
-	autocmd! FileType typescript setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
+  autocmd! FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
+  autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
+  autocmd! FileType css setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
+  autocmd! FileType scss setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
+  autocmd! FileType haskell setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
+  autocmd! FileType typescript setlocal shiftwidth=4 tabstop=4 softtabstop=4
+  autocmd! FileType vim setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
 augroup END
 
 " watchdogs
 let g:watchdogs_check_BufWritePost_enables = {
-\	"scss" : 1,
-\	"typescript" : 1
-\}
+      \	"scss" : 1,
+      \	"typescript" : 1
+      \}
 
 if !exists("g:quickrun_config")
-	let g:quickrun_config = {}
+  let g:quickrun_config = {}
 endif
 let g:quickrun_config["watchdogs_checker/_"] = {
-	\ "outputter/quickfix/open_cmd" : "",
-	\ }
+      \ "outputter/quickfix/open_cmd" : "",
+      \ }
 
 " previm
 augroup PrevimSettings
-    autocmd!
-    autocmd BufNewFile,BufRead *.{md,mdwn,mkd,mkdn,mark*} set filetype=markdown
+  autocmd!
+  autocmd BufNewFile,BufRead *.{md,mdwn,mkd,mkdn,mark*} set filetype=markdown
 augroup END
 
 " vim-markdown
@@ -397,8 +409,8 @@ set noshowmode
 
 " from http://itchyny.hatenablog.com/entry/20130828/1377653592
 let g:lightline = {
-        \ 'colorscheme': 'solarized'
-	\}
+      \ 'colorscheme': 'solarized'
+      \}
 
 " indentLine
 let g:indentLine_color_term = 239

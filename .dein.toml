@@ -15,9 +15,6 @@ repo = 'synic.vim'
 repo = 'sudo.vim'
 
 [[plugins]]
-repo = 'YankRing.vim'
-
-[[plugins]]
 repo = 'textutil.vim'
 
 [[plugins]]
