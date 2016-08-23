@@ -86,8 +86,7 @@ eval "$(direnv hook zsh)"
 
 # gvm settings
  [[ -s "/home/boxp/.gvm/scripts/gvm" ]] && source "/home/boxp/.gvm/scripts/gvm"
- gvm use go1.6.2
-
+ gvm use go1.7
 # GOPATH
 export GOPATH="$HOME/go"
 

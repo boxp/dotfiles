@@ -87,6 +87,8 @@ imap <C-9> <ESC>:tablast
 nnoremap <silent> <Leader>yr :<C-u>YRShow<CR>
 
 " vimfiler
+autocmd FileType vimfiler nmap <buffer> <CR> <Plug>(vimfiler_expand_or_edit)
+
 nnoremap <silent> <Leader>vf :<C-u>VimFilerCurrentDir<CR>
 nnoremap <silent> <Leader>vfs :<C-u>VimFilerSplit<CR>
 nnoremap <silent> <Leader>vt  :<C-u>VimFilerTab<CR>
@@ -103,9 +105,9 @@ if dein#tap("unite.vim")
   nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
   nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
   nnoremap [unite]gi :<C-u>Unite giti<CR>
-  nnoremap [unite]gr :<C-u>Unite grep:. -buffer-name=search-buffer<CR>
+  nnoremap [unite]gr :<C-u>Unite grep/git:/ -buffer-name=search-buffer<CR>
   " カーソル位置の単語をgrep検索
-  nnoremap [unite]cgr :<C-u>Unite grep:. -buffer-name=search-buffer<CR><C-R><C-W><CR>
+  nnoremap [unite]cgr :<C-u>Unite grep/git:/ -buffer-name=search-buffer<CR><C-R><C-W><CR>
   nnoremap [unite]mp :<C-u>Unite mpc<CR>
   nnoremap [unite]ma :<C-u>Unite mapping<CR>
   nnoremap [unite]o :<C-u>Unite outline<CR>
