@@ -83,9 +83,6 @@ nmap <C-9> :tablast
 imap <C-1> <ESC>:tabfirst
 imap <C-9> <ESC>:tablast
 
-" YankRing
-nnoremap <silent> <Leader>yr :<C-u>YRShow<CR>
-
 " vimfiler
 autocmd FileType vimfiler nmap <buffer> <CR> <Plug>(vimfiler_expand_or_edit)
 
@@ -152,9 +149,6 @@ nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
 " FIXME: feedkeysを用いるべきではない
 nnoremap vnl :call feedkeys("\<C-u>VimpleNote -l\<CR>" . g:mail_address . "\<CR>")
 nnoremap vnn :call feedkeys("\<C-u>VimpleNote -n\<CR> . g:mail_address . "\<CR>")
-
-" w3m
-nnoremap gks :<C-u>W3mSplit google
 
 " マウス機能有効化
 set mouse=a

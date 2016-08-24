@@ -106,6 +106,7 @@ repo = 'jason0x43/vim-js-indent'
 
 [[plugins]]
 repo = 'Quramy/tsuquyomi'
+depends = ['vimproc']
 
 [[plugins]]
 repo = 'Shougo/neosnippet-snippets'
