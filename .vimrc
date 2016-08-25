@@ -220,7 +220,7 @@ let g:vimfiler_safe_mode_by_default = 0
 let g:vimfiler_as_default_explorer = 1
 
 " yank to clipboard
-set clipboard+=unnamed
+set clipboard=unnamedplus,autoselect
 
 " ステータスライン
 set laststatus=2   " Always show the statusline
@@ -420,3 +420,8 @@ let g:loaded_matchparen = 1
 
 " remove trailing whitespace
 autocmd BufWritePre * :%s/\s\+$//ge
+
+" Golang
+" highlight error
+autocmd FileType go :highlight goErr cterm=bold ctermfg=136
+autocmd FileType go :match goErr /\<err\>/
