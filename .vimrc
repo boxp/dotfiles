@@ -425,3 +425,8 @@ autocmd BufWritePre * :%s/\s\+$//ge
 " highlight error
 autocmd FileType go :highlight goErr cterm=bold ctermfg=136
 autocmd FileType go :match goErr /\<err\>/
+
+" vim-go
+let g:go_highlight_structs = 0
+let g:go_highlight_interfaces = 0
+let g:go_highlight_operators = 0
