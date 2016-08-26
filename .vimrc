@@ -392,7 +392,7 @@ augroup PrevimSettings
 augroup END
 
 " vim-markdown
-let g:markdown_fenced_languages = ['vim', 'python', 'ruby', 'clojure', 'cpp', 'bash=sh']
+let g:markdown_fenced_languages = ['vim', 'python', 'ruby', 'clojure', 'cpp', 'bash=sh', 'json=javascript']
 
 " Mpc
 nnoremap <Leader>mn :<C-u>MpcNext<CR>
@@ -422,9 +422,12 @@ let g:loaded_matchparen = 1
 autocmd BufWritePre * :%s/\s\+$//ge
 
 " Golang
-" highlight error
-autocmd FileType go :highlight goErr cterm=bold ctermfg=136
-autocmd FileType go :match goErr /\<err\>/
+augroup go_autocmd
+  autocmd!
+  " highlight error
+  autocmd FileType go :highlight goErr cterm=bold ctermfg=136
+  autocmd FileType go :match goErr /\<err\>/
+augroup END
 
 " vim-go
 let g:go_highlight_structs = 0
