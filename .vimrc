@@ -175,9 +175,9 @@ let g:vimshell_interactive_update_time = 10
 let g:vimshell_prompt = $USERNAME."% "
 
 " vimshell map
-nnoremap <silent> vs :VimShell<CR>
-nnoremap <silent> vsc :VimShellCreate<CR>
-nnoremap <silent> vp :VimShellPop<CR>
+nnoremap <silent> <Leader>vs :VimShell<CR>
+nnoremap <silent> <Leader>vsc :VimShellCreate<CR>
+nnoremap <silent> <Leader>vp :VimShellPop<CR>
 
 " TweetVim設定
 " タイムライン表示
@@ -433,3 +433,9 @@ augroup END
 let g:go_highlight_structs = 0
 let g:go_highlight_interfaces = 0
 let g:go_highlight_operators = 0
+
+" tabの可視化
+set list
+set listchars=tab:>_
+highlight SpecialKey ctermfg=239
+highlight SpecialKey ctermbg=none

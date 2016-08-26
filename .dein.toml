@@ -172,3 +172,5 @@ repo = 'Yggdroot/indentLine'
 
 [[plugins]]
 repo = 'khadiwala/wundervim'
+[[plugins]]
+repo = 'tomtom/tcomment_vim'
