@@ -427,6 +427,9 @@ augroup go_autocmd
   " highlight error
   autocmd FileType go :highlight goErr cterm=bold ctermfg=136
   autocmd FileType go :match goErr /\<err\>/
+
+  " key mapping
+  nnoremap <Leader>l :<C-u>GoLint<CR>
 augroup END
 
 " vim-go
