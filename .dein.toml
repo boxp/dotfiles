@@ -105,10 +105,6 @@ repo = 'leafgarland/typescript-vim'
 repo = 'jason0x43/vim-js-indent'
 
 [[plugins]]
-repo = 'Quramy/tsuquyomi'
-depends = ['vimproc']
-
-[[plugins]]
 repo = 'Shougo/neosnippet-snippets'
 depends = ['neosnippet']
 
@@ -172,5 +168,6 @@ repo = 'Yggdroot/indentLine'
 
 [[plugins]]
 repo = 'khadiwala/wundervim'
+
 [[plugins]]
 repo = 'tomtom/tcomment_vim'

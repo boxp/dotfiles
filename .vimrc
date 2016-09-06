@@ -10,6 +10,9 @@ if filereadable(".pri_vimrc")
   source .pri_vimrc
 endif
 
+" indent settings
+filetype plugin indent on
+
 " from http://qiita.com/okamos/items/2259d5c770d51b88d75b
 " dein settings {{{
 if &compatible
@@ -118,6 +121,10 @@ if dein#tap("unite.vim")
   let g:unite_todo_data_directory = "~/memo"
   nnoremap <silent> <Leader>t :<C-u>UniteTodoAddSimple<CR>
 
+	" unite-session.
+	" Save session automatically.
+	let g:unite_source_session_enable_auto_save = 1
+
   " インサートモードで開始
   let g:unite_enable_start_insert = 1
 
@@ -127,6 +134,13 @@ if dein#tap("unite.vim")
     let g:unite_source_grep_default_opts = '--no-group --no-color'
     let g:unite_source_grep_recursive_opt = ''
   endif
+endif
+
+" Tsuquyomi
+if dein#tap("tsuquyomi")
+  " Enable omni completion
+  let g:tsuquyomi_completion_detail = 1
+  autocmd FileType typescript setlocal completeopt+=menu,preview
 endif
 
 " quickrun
@@ -247,9 +261,6 @@ autocmd FileType python set omnifunc=pythoncomplete#Complete
 " disable buzzer
 set visualbell t_vb=
 
-" indent settings
-filetype plugin indent on
-
 "cljs設定
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
 
@@ -363,12 +374,12 @@ let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 
 " Tabbing setting
 augroup vimrc
-  autocmd! FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
-  autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
+  autocmd! FileType html setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
+  autocmd! FileType javascript setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType css setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType scss setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType haskell setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
-  autocmd! FileType typescript setlocal shiftwidth=4 tabstop=4 softtabstop=4
+  autocmd! FileType typescript setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType vim setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
 augroup END
 
@@ -384,6 +395,8 @@ endif
 let g:quickrun_config["watchdogs_checker/_"] = {
       \ "outputter/quickfix/open_cmd" : "",
       \ }
+" watchdogs.vim の設定を追加
+call watchdogs#setup(g:quickrun_config)
 
 " previm
 augroup PrevimSettings
@@ -438,7 +451,7 @@ let g:go_highlight_interfaces = 0
 let g:go_highlight_operators = 0
 
 " tabの可視化
-set list
-set listchars=tab:>_
-highlight SpecialKey ctermfg=239
-highlight SpecialKey ctermbg=none
+" set list
+" set listchars=tab:>_
+" highlight SpecialKey ctermfg=239
+" highlight SpecialKey ctermbg=none
