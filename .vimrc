@@ -15,9 +15,6 @@ filetype plugin indent on
 
 " from http://qiita.com/okamos/items/2259d5c770d51b88d75b
 " dein settings {{{
-if &compatible
-  set nocompatible
-endif
 " dein.vimのディレクトリ
 let s:dein_dir = expand('~/.cache/dein')
 let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
@@ -395,6 +392,9 @@ endif
 let g:quickrun_config["watchdogs_checker/_"] = {
       \ "outputter/quickfix/open_cmd" : "",
       \ }
+let g:quickrun_config["typescript/watchdogs_checker"] = {
+      \ "type" : "watchdogs_checker/tslint"
+      \}
 " watchdogs.vim の設定を追加
 call watchdogs#setup(g:quickrun_config)
 
