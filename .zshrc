@@ -85,7 +85,7 @@ export SDL_AUDIODRIVER='alsa'
 eval "$(direnv hook zsh)"
 
 # gvm settings
- [[ -s "/home/boxp/.gvm/scripts/gvm" ]] && source "/home/boxp/.gvm/scripts/gvm"
+ [[ -s "~/.gvm/scripts/gvm" ]] && source "~/.gvm/scripts/gvm"
  gvm use go1.7
 # GOPATH
 export GOPATH="$HOME/go"
@@ -114,3 +114,4 @@ PS1="%{[0m%}
 # tmux
 tmux
 
+ [[ -s $HOME/.tmuxinator/scripts/tmuxinator ]] && source $HOME/.tmuxinator/scripts/tmuxinator 
