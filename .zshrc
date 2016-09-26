@@ -71,9 +71,29 @@ alias lock="xscreensaver-command --lock"
 alias git="hub"
 alias gc="git checkout"
 alias gb="git branch"
+alias gpr="git pull-request --browse -F $(git rev-parse --show-toplevel)/.github/PULL_REQUEST_TEMPLATE.md"
 alias gs="git status"
 alias gt="tig"
 alias vis="vim -S ~/.vim.session"
+
+# prompt
+parse_git_branch()
+{
+  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ \1/'
+}
+
+setopt prompt_subst
+
+# PROMPT1
+PS1="%{[0m%}
+%{[33m%}λ%{[0m%} %{[32m%}[%n@%m] %{[33m%}%~%{[0m%}
+%(?|%{[36m%}ﾙｲ%) ﾟ ヮﾟﾉ%) <|%{[31m%}ﾙｲ%)；ﾟ -ﾟ ﾉ%) <)%{[35m%}\$(parse_git_branch) %{[0m%}"
+
+# ghq
+export GHQ_ROOT="$HOME/go/src"
+
+export NVM_DIR="/home/boxp/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 
 # Default EDITOR
 export EDITOR="vim"
@@ -93,25 +113,18 @@ export GOPATH="$HOME/go"
 # ANDROID-SDK
 export ANDROID_HOME="/opt/android-sdk"
 
+# z
+[[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
+
 # PATH
 export PATH="$PATH:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_HOME/tools:/usr/share/git/diff-highlight"
 
-export NVM_DIR="/home/boxp/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+# GRENCH
+export GRENCH_PORT=39874
 
-parse_git_branch()
-{
-  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ \1/'
-}
+ [[ -s $HOME/.tmuxinator/scripts/tmuxinator ]] && source $HOME/.tmuxinator/scripts/tmuxinator
 
-setopt prompt_subst
-
-# PROMPT1
-PS1="%{[0m%}
-%{[33m%}λ%{[0m%} %{[32m%}[%n@%m] %{[33m%}%~%{[0m%}
-%(?|%{[36m%}ﾙｲ%) ﾟ ヮﾟﾉ%) <|%{[31m%}ﾙｲ%)；ﾟ -ﾟ ﾉ%) <)%{[35m%}\$(parse_git_branch) %{[0m%}"
-
-# tmux
-tmux
-
- [[ -s $HOME/.tmuxinator/scripts/tmuxinator ]] && source $HOME/.tmuxinator/scripts/tmuxinator 
+# Autostart if not already in tmux.
+if [[ ! -n $TMUX ]]; then
+  tmux new-session
+fi

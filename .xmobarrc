@@ -1,47 +1,58 @@
 -- Last modified 2013/02/28 11:37
-Config { font = "xft:Ricty:size=8:antialias=true"
-	, bgColor = "black"
-		, fgColor = "grey"
-		, position = Top
-		, allDesktops = True
-		, lowerOnStart = True
-		, overrideRedirect = True
-		, persistent = True
-		, pickBroadest = False
-		, commands = 
-		[ Run Weather "RJTI" ["-t","<station>: <tempC>C","-L","18","-H","25","--normal","green","--high","red","--low","lightblue"] 36000
-		, Run DynNetwork	[ "--template" , "<dev>: <tx>kB/s|<rx>kB/s"
-					, "--Low"      , "1000"       -- units: kB/s
-					, "--High"     , "5000"       -- units: kB/s
-					, "--low"      , "green"
-					, "--normal"   , "orange"
-					, "--high"     , "red"
-					] 10
+Config {
+      font = "xft:Ricty:size=8:antialias=true"
+    , bgColor = "black"
+    , fgColor = "grey"
+    , position = Top
+    , allDesktops = True
+    , lowerOnStart = True
+    , overrideRedirect = True
+    , persistent = True
+    , pickBroadest = False
+    , commands =
+      [ Run Weather "RJTI" ["-t","<station>: <tempC>C","-L","18","-H","25","--normal","green","--high","red","--low","lightblue"] 36000
+      , Run DynNetwork	[ "--template" , "<dev>: <tx>kB/s|<rx>kB/s"
+        , "--Low"      , "1000"       -- units: kB/s
+        , "--High"     , "5000"       -- units: kB/s
+        , "--low"      , "green"
+        , "--normal"   , "orange"
+        , "--high"     , "red"
+      ] 10
 
-		, Run Cpu ["-L","3","-H","50","--normal","green","--high","red"] 10
-		, Run Memory ["-t","Mem: <usedratio>%"] 10
-		, Run Swap [] 10
-		, Run Battery	[ "--template" , "Batt: <acstatus>,  <left>%, <timeleft>"
-				, "--Low"      , "10"        -- units: %
-				, "--High"     , "80"        -- units: %
-				, "--low"      , "red"
-				, "--normal"   , "orange"
-				, "--high"     , "green"
-				-- battery specific options
-				, "--"
-				-- discharging status
-				, "-o"	, "<left>% (<timeleft>)"
-				-- AC "on" status
-				, "-O"	, "<fc=orage>Charging</fc>"
-				-- charged status
-				, "-i"	, "<fc=green>Charged</fc>"
-				] 50
-		, Run MPD ["-t", "<state>: <artist> - <title>"] 10
-		, Run Com "uname" ["-s","-r"] "" 36000
-		, Run Date "%a %b %_d %Y %H:%M:%S" "date" 10
-		, Run StdinReader
-		]
-		, sepChar = "%"
-		, alignSep = "}{"
-		, template = "%cpu% | %memory% * %swap% | %dynnetwork% | %battery% | %mpd% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %RJTI% | %uname%"
+      , Run Cpu ["-L","3","-H","50","--normal","green","--high","red"] 10
+      -- cpu core temperature monitor
+      , Run CoreTemp       [ "--template" , "Temp: <core0>°C"
+      , "--Low"      , "70"        -- units: °C
+      , "--High"     , "80"        -- units: °C
+      , "--low"      , "green"
+      , "--normal"   , "orange"
+      , "--high"     , "red"
+      ] 50
+
+      , Run Memory ["-t","Mem: <usedratio>%"] 10
+      , Run Swap [] 10
+      , Run DiskIO [("/", "Disk: <read>|<write>"), ("sda7", "<total>")] [] 10
+      , Run Battery	[ "--template" , "Batt: <acstatus>,  <left>%, <timeleft>"
+      , "--Low"      , "10"        -- units: %
+      , "--High"     , "80"        -- units: %
+      , "--low"      , "red"
+      , "--normal"   , "orange"
+      , "--high"     , "green"
+      -- battery specific options
+      , "--"
+      -- discharging status
+      , "-o"	, "<left>% (<timeleft>)"
+      -- AC "on" status
+      , "-O"	, "<fc=orage>Charging</fc>"
+      -- charged status
+      , "-i"	, "<fc=green>Charged</fc>"
+      ] 50
+      , Run MPD ["-t", "<state>: <artist> - <title>"] 10
+      , Run Com "uname" ["-s","-r"] "" 36000
+      , Run Date "%a %b %_d %Y %H:%M:%S" "date" 10
+      , Run StdinReader
+      ]
+    , sepChar = "%"
+    , alignSep = "}{"
+    , template = "%cpu%, %coretemp% | %memory% * %swap% | %dynnetwork% | %diskio% | %battery% | %mpd% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %RJTI% | %uname%"
 }

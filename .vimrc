@@ -10,11 +10,11 @@ if filereadable(".pri_vimrc")
   source .pri_vimrc
 endif
 
+" indent settings
+filetype plugin indent on
+
 " from http://qiita.com/okamos/items/2259d5c770d51b88d75b
 " dein settings {{{
-if &compatible
-  set nocompatible
-endif
 " dein.vimのディレクトリ
 let s:dein_dir = expand('~/.cache/dein')
 let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
@@ -83,9 +83,6 @@ nmap <C-9> :tablast
 imap <C-1> <ESC>:tabfirst
 imap <C-9> <ESC>:tablast
 
-" YankRing
-nnoremap <silent> <Leader>yr :<C-u>YRShow<CR>
-
 " vimfiler
 autocmd FileType vimfiler nmap <buffer> <CR> <Plug>(vimfiler_expand_or_edit)
 
@@ -121,6 +118,10 @@ if dein#tap("unite.vim")
   let g:unite_todo_data_directory = "~/memo"
   nnoremap <silent> <Leader>t :<C-u>UniteTodoAddSimple<CR>
 
+	" unite-session.
+	" Save session automatically.
+	let g:unite_source_session_enable_auto_save = 1
+
   " インサートモードで開始
   let g:unite_enable_start_insert = 1
 
@@ -130,6 +131,13 @@ if dein#tap("unite.vim")
     let g:unite_source_grep_default_opts = '--no-group --no-color'
     let g:unite_source_grep_recursive_opt = ''
   endif
+endif
+
+" Tsuquyomi
+if dein#tap("tsuquyomi")
+  " Enable omni completion
+  let g:tsuquyomi_completion_detail = 1
+  autocmd FileType typescript setlocal completeopt+=menu,preview
 endif
 
 " quickrun
@@ -152,9 +160,6 @@ nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
 " FIXME: feedkeysを用いるべきではない
 nnoremap vnl :call feedkeys("\<C-u>VimpleNote -l\<CR>" . g:mail_address . "\<CR>")
 nnoremap vnn :call feedkeys("\<C-u>VimpleNote -n\<CR> . g:mail_address . "\<CR>")
-
-" w3m
-nnoremap gks :<C-u>W3mSplit google
 
 " マウス機能有効化
 set mouse=a
@@ -181,9 +186,9 @@ let g:vimshell_interactive_update_time = 10
 let g:vimshell_prompt = $USERNAME."% "
 
 " vimshell map
-nnoremap <silent> vs :VimShell<CR>
-nnoremap <silent> vsc :VimShellCreate<CR>
-nnoremap <silent> vp :VimShellPop<CR>
+nnoremap <silent> <Leader>vs :VimShell<CR>
+nnoremap <silent> <Leader>vsc :VimShellCreate<CR>
+nnoremap <silent> <Leader>vp :VimShellPop<CR>
 
 " TweetVim設定
 " タイムライン表示
@@ -226,7 +231,7 @@ let g:vimfiler_safe_mode_by_default = 0
 let g:vimfiler_as_default_explorer = 1
 
 " yank to clipboard
-set clipboard+=unnamed
+set clipboard=unnamedplus,autoselect
 
 " ステータスライン
 set laststatus=2   " Always show the statusline
@@ -252,9 +257,6 @@ autocmd FileType python set omnifunc=pythoncomplete#Complete
 
 " disable buzzer
 set visualbell t_vb=
-
-" indent settings
-filetype plugin indent on
 
 "cljs設定
 autocmd BufRead,BufNewFile *.cljs set filetype=clojure
@@ -369,12 +371,12 @@ let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 
 " Tabbing setting
 augroup vimrc
-  autocmd! FileType html setlocal shiftwidth=2 tabstop=2 softtabstop=2
-  autocmd! FileType javascript setlocal shiftwidth=2 tabstop=2 softtabstop=2
+  autocmd! FileType html setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
+  autocmd! FileType javascript setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType css setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType scss setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType haskell setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
-  autocmd! FileType typescript setlocal shiftwidth=4 tabstop=4 softtabstop=4
+  autocmd! FileType typescript setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType vim setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
 augroup END
 
@@ -390,6 +392,11 @@ endif
 let g:quickrun_config["watchdogs_checker/_"] = {
       \ "outputter/quickfix/open_cmd" : "",
       \ }
+let g:quickrun_config["typescript/watchdogs_checker"] = {
+      \ "type" : "watchdogs_checker/tslint"
+      \}
+" watchdogs.vim の設定を追加
+call watchdogs#setup(g:quickrun_config)
 
 " previm
 augroup PrevimSettings
@@ -398,7 +405,7 @@ augroup PrevimSettings
 augroup END
 
 " vim-markdown
-let g:markdown_fenced_languages = ['vim', 'python', 'ruby', 'clojure', 'cpp', 'bash=sh']
+let g:markdown_fenced_languages = ['vim', 'python', 'ruby', 'clojure', 'cpp', 'bash=sh', 'json=javascript']
 
 " Mpc
 nnoremap <Leader>mn :<C-u>MpcNext<CR>
@@ -409,10 +416,66 @@ nnoremap <Leader>mt :<C-u>MpcToggle<CR>
 set laststatus=2
 set noshowmode
 
-" from http://itchyny.hatenablog.com/entry/20130828/1377653592
 let g:lightline = {
-      \ 'colorscheme': 'solarized'
-      \}
+      \ 'colorscheme': 'solarized',
+      \ 'mode_map': { 'c': 'NORMAL' },
+      \ 'active': {
+      \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ] ]
+      \ },
+      \ 'component_function': {
+      \   'modified': 'LightLineModified',
+      \   'readonly': 'LightLineReadonly',
+      \   'fugitive': 'LightLineFugitive',
+      \   'filename': 'LightLineFilename',
+      \   'fileformat': 'LightLineFileformat',
+      \   'filetype': 'LightLineFiletype',
+      \   'fileencoding': 'LightLineFileencoding',
+      \   'mode': 'LightLineMode',
+      \ },
+      \ 'separator': { 'left': '', 'right': '' },
+      \ 'subseparator': { 'left': '|', 'right': '|' }
+      \ }
+
+function! LightLineModified()
+  return &ft =~ 'help\|vimfiler\|gundo' ? '' : &modified ? '+' : &modifiable ? '' : '-'
+endfunction
+
+function! LightLineReadonly()
+  return &ft !~? 'help\|vimfiler\|gundo' && &readonly ? '' : ''
+endfunction
+
+function! LightLineFilename()
+  return ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
+        \ (&ft == 'vimfiler' ? vimfiler#get_status_string() :
+        \  &ft == 'unite' ? unite#get_status_string() :
+        \  &ft == 'vimshell' ? vimshell#get_status_string() :
+        \ '' != expand('%:t') ? expand('%:t') : '[No Name]') .
+        \ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
+endfunction
+
+function! LightLineFugitive()
+  if &ft !~? 'vimfiler\|gundo' && exists("*fugitive#head")
+    let branch = fugitive#head()
+    return branch !=# '' ? ' '.branch : ''
+  endif
+  return ''
+endfunction
+
+function! LightLineFileformat()
+  return winwidth(0) > 70 ? &fileformat : ''
+endfunction
+
+function! LightLineFiletype()
+  return winwidth(0) > 70 ? (&filetype !=# '' ? &filetype : 'no ft') : ''
+endfunction
+
+function! LightLineFileencoding()
+  return winwidth(0) > 70 ? (&fenc !=# '' ? &fenc : &enc) : ''
+endfunction
+
+function! LightLineMode()
+  return winwidth(0) > 60 ? lightline#mode() : ''
+endfunction
 
 " indentLine
 let g:indentLine_color_term = 239
@@ -426,3 +489,25 @@ let g:loaded_matchparen = 1
 
 " remove trailing whitespace
 autocmd BufWritePre * :%s/\s\+$//ge
+
+" Golang
+augroup go_autocmd
+  autocmd!
+  " highlight error
+  autocmd FileType go :highlight goErr cterm=bold ctermfg=136
+  autocmd FileType go :match goErr /\<err\>/
+
+  " key mapping
+  nnoremap <Leader>l :<C-u>GoLint<CR>
+augroup END
+
+" vim-go
+let g:go_highlight_structs = 0
+let g:go_highlight_interfaces = 0
+let g:go_highlight_operators = 0
+
+" tabの可視化
+" set list
+" set listchars=tab:>_
+" highlight SpecialKey ctermfg=239
+" highlight SpecialKey ctermbg=none
