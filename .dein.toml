@@ -171,3 +171,6 @@ repo = 'khadiwala/wundervim'
 
 [[plugins]]
 repo = 'tomtom/tcomment_vim'
+
+[[plugins]]
+repo = 'Chiel92/vim-autoformat'

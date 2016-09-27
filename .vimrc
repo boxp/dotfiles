@@ -484,6 +484,10 @@ let g:indentLine_enabled = 1
 " TypeScript
 let g:js_indent_typescript = 1
 
+augroup typescript_autocmd
+  au BufWrite *.ts :Autoformat
+augroup END
+
 " vim-parenmatch
 let g:loaded_matchparen = 1
 
