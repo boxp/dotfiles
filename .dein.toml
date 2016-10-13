@@ -27,6 +27,9 @@ repo = 'mattn/vimplenote-vim'
 repo = 'mattn/webapi-vim'
 
 [[plugins]]
+repo = 'mattn/excitetranslate-vim'
+
+[[plugins]]
 repo = 'altercation/vim-colors-solarized'
 
 [[plugins]]
@@ -81,9 +84,6 @@ repo = 'tpope/vim-fireplace'
 repo = 'tpope/vim-classpath'
 
 [[plugins]]
-repo = 'guns/vim-clojure-static'
-
-[[plugins]]
 repo = 'kakkyz81/evervim'
 
 [[plugins]]
@@ -97,9 +97,6 @@ repo = 'basyura/bitly.vim'
 
 [[plugins]]
 repo = 'fatih/vim-go'
-
-[[plugins]]
-repo = 'leafgarland/typescript-vim'
 
 [[plugins]]
 repo = 'jason0x43/vim-js-indent'
@@ -171,6 +168,3 @@ repo = 'khadiwala/wundervim'
 
 [[plugins]]
 repo = 'tomtom/tcomment_vim'
-
-[[plugins]]
-repo = 'Chiel92/vim-autoformat'

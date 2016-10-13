@@ -231,7 +231,7 @@ let g:vimfiler_safe_mode_by_default = 0
 let g:vimfiler_as_default_explorer = 1
 
 " yank to clipboard
-set clipboard=unnamedplus,autoselect
+set clipboard=unnamed,unnamedplus,autoselect
 
 " ステータスライン
 set laststatus=2   " Always show the statusline
@@ -258,11 +258,23 @@ autocmd FileType python set omnifunc=pythoncomplete#Complete
 " disable buzzer
 set visualbell t_vb=
 
-"cljs設定
-autocmd BufRead,BufNewFile *.cljs set filetype=clojure
+" clojure設定
+augroup clojure
+  autocmd!
+  autocmd FileType clojure call niji#highlight()
+augroup END
+
+" cljs設定
+augroup cljs
+  autocmd!
+  autocmd BufRead,BufNewFile *.cljs set filetype=clojure
+augroup END
 
 "cljx設定
-autocmd BufRead,BufNewFile *.cljx set filetype=clojure
+augroup cljx
+  autocmd!
+  autocmd BufRead,BufNewFile *.cljx set filetype=clojure
+augroup END
 
 " matx
 autocmd BufRead,BufNewFile *.mm set filetype=C
@@ -275,7 +287,9 @@ autocmd BufRead,BufNewFile *.xmobarrc set filetype=haskell
 
 
 " gauche
-vmap <CR> <Plug>(gosh_repl_send_block)
+augroup gauche_autocmd
+  au BufRead,BufNewFile *.scm vmap <CR> <Plug>(gosh_repl_send_block)
+augroup END
 
 " vim-fireplace
 autocmd BufRead,BufNewFile *.clj vmap <CR> :<C-u>'<,'>Eval<CR>
@@ -373,11 +387,14 @@ let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 augroup vimrc
   autocmd! FileType html setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
   autocmd! FileType javascript setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
+  autocmd! FileType json setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
   autocmd! FileType css setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType scss setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType haskell setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
   autocmd! FileType typescript setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType vim setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
+  autocmd! FileType yaml setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
+  autocmd! FileType ruby setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
 augroup END
 
 " watchdogs
@@ -484,9 +501,16 @@ let g:indentLine_enabled = 1
 " TypeScript
 let g:js_indent_typescript = 1
 
-augroup typescript_autocmd
+" autoformat
+augroup autoformat_autocmd
+  autocmd!
+  au FileType *.ts nnoremap <Leader>f :<C-u>Autoformat<CR>
   au BufWrite *.ts :Autoformat
 augroup END
+
+let g:autoformat_autoindent = 0
+let g:autoformat_retab = 1
+let g:autoformat_remove_trailing_spaces = 0
 
 " vim-parenmatch
 let g:loaded_matchparen = 1
@@ -494,7 +518,7 @@ let g:loaded_matchparen = 1
 " remove trailing whitespace
 autocmd BufWritePre * :%s/\s\+$//ge
 
-" Golang
+" golang
 augroup go_autocmd
   autocmd!
   " highlight error
@@ -503,6 +527,7 @@ augroup go_autocmd
 
   " key mapping
   nnoremap <Leader>l :<C-u>GoLint<CR>
+  nnoremap <Leader>t :<C-u>GoTest<CR>
 augroup END
 
 " vim-go
@@ -515,3 +540,11 @@ let g:go_highlight_operators = 0
 " set listchars=tab:>_
 " highlight SpecialKey ctermfg=239
 " highlight SpecialKey ctermbg=none
+
+" vim-json
+if dein#tap("vim-json")
+  let g:vim_json_syntax_conceal = 0
+endif
+
+" 翻訳
+noremap <silent> tr :<C-u>ExciteTranslate<CR>

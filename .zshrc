@@ -51,6 +51,8 @@ zplug "b4b4r07/emoji-cli", \
 # after executing compinit command and sourcing other plugins
 zplug "zsh-users/zsh-syntax-highlighting", nice:10
 
+zplug "lukechilds/zsh-nvm"
+
 # Can manage local plugins
 zplug "~/.zsh", from:local
 
@@ -92,7 +94,7 @@ PS1="%{[0m%}
 # ghq
 export GHQ_ROOT="$HOME/go/src"
 
-export NVM_DIR="/home/boxp/.nvm"
+export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 
 # Default EDITOR
@@ -105,7 +107,7 @@ export SDL_AUDIODRIVER='alsa'
 eval "$(direnv hook zsh)"
 
 # gvm settings
- [[ -s "~/.gvm/scripts/gvm" ]] && source "~/.gvm/scripts/gvm"
+ [[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
  gvm use go1.7
 # GOPATH
 export GOPATH="$HOME/go"
@@ -128,3 +130,7 @@ export GRENCH_PORT=39874
 if [[ ! -n $TMUX ]]; then
   tmux new-session
 fi
+
+# added by travis gem
+[ -f /Users/boxp/.travis/travis.sh ] && source /Users/boxp/.travis/travis.sh
+[[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn

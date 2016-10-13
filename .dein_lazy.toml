@@ -21,10 +21,6 @@ repo = 'mattn/unite-mpc'
 on_source = ['unite.vim']
 
 [[plugins]]
-repo = 'kannokanno/unite-todo'
-on_source = ['unite.vim']
-
-[[plugins]]
 repo = 'Shougo/unite-outline'
 on_source = ['unite.vim']
 
@@ -39,3 +35,27 @@ on_i = 1
 [[plugins]]
 repo = 'Quramy/tsuquyomi'
 on_ft = ['typescript']
+
+[[plugins]]
+repo = 'Chiel92/vim-autoformat'
+on_ft = ['typescript']
+
+[[plugins]]
+repo = 'leafgarland/typescript-vim'
+on_ft = ['typescript']
+
+[[plugins]]
+repo = 'guns/vim-clojure-static'
+on_ft = ['clojure']
+
+[[plugins]]
+repo = 'venantius/vim-cljfmt'
+on_ft = ['clojure']
+
+[[plugins]]
+repo = 'elzr/vim-json'
+on_ft = ['json']
+
+[[plugins]]
+repo = 'chase/vim-ansible-yaml'
+on_ft = ['yaml', 'ansible']

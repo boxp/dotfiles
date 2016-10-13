@@ -1,0 +1,16 @@
+snippet     Func
+abbr        func Func() { ... }
+options     head
+  // $1 ${4: ...}
+  func ${1:fname}(${2}) ${3:int }{
+    ${0:TARGET:return }
+  }
+
+snippet     Method
+abbr        func ()Func() { ... }
+options     head
+  // $2 ${5: ...}
+  func (${1:s Struct})${2:fname}(${3}) ${4:int }{
+    ${0:TARGET:return }
+  }
+
