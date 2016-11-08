@@ -29,6 +29,11 @@ repo = 'Shougo/unite-session'
 on_source = ['unite.vim']
 
 [[plugins]]
+repo = 'rafi/vim-unite-issue'
+on_source = ['unite.vim']
+depends = ['webapi-vim', 'open-browser.vim', 'unite.vim']
+
+[[plugins]]
 repo = 'Shougo/neocomplete.vim'
 on_i = 1
 
@@ -44,9 +49,9 @@ on_ft = ['typescript']
 repo = 'leafgarland/typescript-vim'
 on_ft = ['typescript']
 
-[[plugins]]
-repo = 'guns/vim-clojure-static'
-on_ft = ['clojure']
+# [[plugins]]
+# repo = 'guns/vim-clojure-static'
+# on_ft = ['clojure']
 
 [[plugins]]
 repo = 'venantius/vim-cljfmt'

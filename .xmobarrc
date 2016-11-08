@@ -31,7 +31,6 @@ Config {
 
       , Run Memory ["-t","Mem: <usedratio>%"] 10
       , Run Swap [] 10
-      , Run DiskIO [("/", "Disk: <read>|<write>"), ("sda7", "<total>")] [] 10
       , Run Battery	[ "--template" , "Batt: <acstatus>,  <left>%, <timeleft>"
       , "--Low"      , "10"        -- units: %
       , "--High"     , "80"        -- units: %
@@ -54,5 +53,5 @@ Config {
       ]
     , sepChar = "%"
     , alignSep = "}{"
-    , template = "%cpu%, %coretemp% | %memory% * %swap% | %dynnetwork% | %diskio% | %battery% | %mpd% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %RJTI% | %uname%"
+    , template = "%cpu%, %coretemp% | %memory% * %swap% | %dynnetwork% | %battery% | %mpd% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %RJTI% | %uname%"
 }

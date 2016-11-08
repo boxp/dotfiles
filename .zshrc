@@ -106,9 +106,6 @@ export SDL_AUDIODRIVER='alsa'
 # direnv
 eval "$(direnv hook zsh)"
 
-# gvm settings
- [[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
- gvm use go1.7
 # GOPATH
 export GOPATH="$HOME/go"
 
@@ -119,7 +116,7 @@ export ANDROID_HOME="/opt/android-sdk"
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
 
 # PATH
-export PATH="$PATH:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_HOME/tools:/usr/share/git/diff-highlight"
+export PATH="$PATH:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_HOME/tools:/usr/share/git/diff-highlight:$HOME/.goenv/bin"
 
 # GRENCH
 export GRENCH_PORT=39874
@@ -134,3 +131,14 @@ fi
 # added by travis gem
 [ -f /Users/boxp/.travis/travis.sh ] && source /Users/boxp/.travis/travis.sh
 [[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
+
+# http://qiita.com/shibukk/items/80430b54ecda7f36ca44
+function gwt() {
+	GIT_CDUP_DIR=`git rev-parse --show-cdup`
+	git worktree add ${GIT_CDUP_DIR}git-worktrees/$1 $1
+}
+
+# goenv
+export GOENV_ROOT="$HOME/.goenv"
+
+eval "$(goenv init -)"

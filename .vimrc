@@ -5,9 +5,8 @@
 set encoding=utf-8
 
 " source privacy vars(githubに上げたくないパラメーター達)
-" g:evervim_devtoken, g:mail_address
-if filereadable(".pri_vimrc")
-  source .pri_vimrc
+if filereadable(expand("~/.pri_vimrc"))
+  source ~/.pri_vimrc
 endif
 
 " indent settings
@@ -102,6 +101,8 @@ if dein#tap("unite.vim")
   nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
   nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
   nnoremap [unite]gi :<C-u>Unite giti<CR>
+  nnoremap [unite]gb :<C-u>Unite giti/branch_recent<CR>
+  nnoremap [unite]gs :<C-u>Unite giti/status<CR>
   nnoremap [unite]gr :<C-u>Unite grep/git:/ -buffer-name=search-buffer<CR>
   " カーソル位置の単語をgrep検索
   nnoremap [unite]cgr :<C-u>Unite grep/git:/ -buffer-name=search-buffer<CR><C-R><C-W><CR>
@@ -113,6 +114,8 @@ if dein#tap("unite.vim")
   nnoremap [unite]to :<C-u>Unite todo<CR>
   nnoremap [unite]tw :<C-u>Unite tweetvim<CR>
   nnoremap [unite]ta :<C-u>Unite tweetvim/account<CR>
+  nnoremap [unite]ij :<C-u>Unite issue:jira<CR>
+  nnoremap [unite]ig :<C-u>Unite issue:github<CR>
 
   " unite-todo
   let g:unite_todo_data_directory = "~/memo"
@@ -131,6 +134,20 @@ if dein#tap("unite.vim")
     let g:unite_source_grep_default_opts = '--no-group --no-color'
     let g:unite_source_grep_recursive_opt = ''
   endif
+
+  " unite-issue
+  " Customize
+  let g:unite_source_issue_jira_priority_table = {
+        \ 10000: '◡', 1: '⚡', 2: 'ᛏ', 3: '●', 4: '○', 5: '▽' }
+
+  let g:unite_source_issue_jira_status_table = {
+        \ 1: 'plan', 3: 'develop', 4: 'reopened', 5: 'resolved', 6: 'closed',
+        \ 10000: 'feedback', 10001: 'staged', 10002: 'waiting',
+        \ 10003: 'deployed', 10004: 'pending', 10008: 'review' }
+
+  let g:unite_source_issue_jira_type_table = {
+        \ 1: 'bug', 2: 'feature', 3: 'task', 4: 'change', 5: 'sub-task',
+        \ 6: 'epic', 7: 'story', 8: 'system', 9: 'sub-bug' }
 endif
 
 " Tsuquyomi
@@ -400,7 +417,7 @@ augroup END
 " watchdogs
 let g:watchdogs_check_BufWritePost_enables = {
       \	"scss" : 1,
-      \	"typescript" : 1
+      \	"typescript" : 0
       \}
 
 if !exists("g:quickrun_config")
@@ -508,7 +525,7 @@ augroup autoformat_autocmd
   au BufWrite *.ts :Autoformat
 augroup END
 
-let g:autoformat_autoindent = 0
+let g:autoformat_autoindent = 1
 let g:autoformat_retab = 1
 let g:autoformat_remove_trailing_spaces = 0
 
