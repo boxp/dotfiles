@@ -293,6 +293,12 @@ augroup cljx
   autocmd BufRead,BufNewFile *.cljx set filetype=clojure
 augroup END
 
+"edn設定
+augroup edn
+  autocmd!
+  autocmd BufRead,BufNewFile *.edn set filetype=clojure
+augroup END
+
 " matx
 autocmd BufRead,BufNewFile *.mm set filetype=C
 
@@ -417,7 +423,8 @@ augroup END
 " watchdogs
 let g:watchdogs_check_BufWritePost_enables = {
       \	"scss" : 1,
-      \	"typescript" : 0
+      \	"textlint" : 1,
+      \	"typescript" : 1
       \}
 
 if !exists("g:quickrun_config")

@@ -22,47 +22,25 @@ zplug "junegunn/fzf-bin", \
     rename-to:fzf, \
     use:"*darwin*amd64*"
 
-# Run a command after a plugin is installed/updated
-zplug "tj/n", hook-build:"make install"
-
 # Supports checking out a specific branch/tag/commit
 zplug "b4b4r07/enhancd", at:v1
 zplug "mollifier/anyframe", at:4c23cb60
-
-# Support bitbucket
-zplug "b4b4r07/hello_bitbucket", \
-    from:bitbucket, \
-    as:command, \
-    hook-build:"chmod 755 *.sh", \
-    use:"*.sh"
-
-# Group dependencies. Load emoji-cli if jq is installed in this example
-zplug "stedolan/jq", \
-    from:gh-r, \
-    as:command, \
-    rename-to:jq
-zplug "b4b4r07/emoji-cli", \
-    on:"stedolan/jq"
-# Note: To specify the order in which packages should be loaded, use the nice
-#       tag described in the next section
 
 # Set the priority when loading
 # e.g., zsh-syntax-highlighting must be loaded
 # after executing compinit command and sourcing other plugins
 zplug "zsh-users/zsh-syntax-highlighting", nice:10
 
-zplug "lukechilds/zsh-nvm"
-
 # Can manage local plugins
 zplug "~/.zsh", from:local
 
 # Install plugins if there are plugins that have not been installed
-if ! zplug check --verbose; then
-    printf "Install? [y/N]: "
-    if read -q; then
-        echo; zplug install
-    fi
-fi
+# if ! zplug check --verbose; then
+#     printf "Install? [y/N]: "
+#     if read -q; then
+#         echo; zplug install
+#     fi
+# fi
 
 # Then, source plugins and add commands to $PATH
 zplug load --verbose
@@ -94,9 +72,6 @@ PS1="%{[0m%}
 # ghq
 export GHQ_ROOT="$HOME/go/src"
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
-
 # Default EDITOR
 export EDITOR="vim"
 
@@ -116,7 +91,7 @@ export ANDROID_HOME="/opt/android-sdk"
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
 
 # PATH
-export PATH="$PATH:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_HOME/tools:/usr/share/git/diff-highlight:$HOME/.goenv/bin"
+export PATH="$HOME/.nodebrew/current/bin:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_HOME/tools:/usr/share/git/diff-highlight:$HOME/.goenv/bin:./node_modules/.bin:$PATH"
 
 # GRENCH
 export GRENCH_PORT=39874
@@ -125,7 +100,7 @@ export GRENCH_PORT=39874
 
 # Autostart if not already in tmux.
 if [[ ! -n $TMUX ]]; then
-  tmux new-session
+  tmux new -s default
 fi
 
 # added by travis gem
@@ -138,7 +113,34 @@ function gwt() {
 	git worktree add ${GIT_CDUP_DIR}git-worktrees/$1 $1
 }
 
+# peco history
+function peco-select-history() {
+	local tac
+	if which tac > /dev/null; then
+		tac="tac"
+	else
+		tac="tail -r"
+	fi
+	BUFFER=$(\history -n 1 | \
+		eval $tac | \
+		peco --query "$LBUFFER")
+	CURSOR=$#BUFFER
+	zle clear-screen
+}
+zle -N peco-select-history
+bindkey '^r' peco-select-history
+
 # goenv
 export GOENV_ROOT="$HOME/.goenv"
 
 eval "$(goenv init -)"
+
+# vi mode
+bindkey -v
+
+# HISTORY
+export HISTFILE=${HOME}/.zsh_history
+export HISTSIZE=1000
+export SAVEHIST=100000
+setopt hist_ignore_dups
+setopt EXTENDED_HISTORY

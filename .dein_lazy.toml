@@ -49,14 +49,6 @@ on_ft = ['typescript']
 repo = 'leafgarland/typescript-vim'
 on_ft = ['typescript']
 
-# [[plugins]]
-# repo = 'guns/vim-clojure-static'
-# on_ft = ['clojure']
-
-[[plugins]]
-repo = 'venantius/vim-cljfmt'
-on_ft = ['clojure']
-
 [[plugins]]
 repo = 'elzr/vim-json'
 on_ft = ['json']
