@@ -54,6 +54,7 @@ alias gb="git branch"
 alias gpr="git pull-request --browse -F $(git rev-parse --show-toplevel)/.github/PULL_REQUEST_TEMPLATE.md"
 alias gs="git status"
 alias gt="tig"
+alias mux="tmuxinator"
 alias vis="vim -S ~/.vim.session"
 
 # prompt

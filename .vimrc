@@ -266,7 +266,7 @@ inoremap <silent> <C-f> <C-r>=IMState('FixMode')<CR>
 " PythonによるIBus制御指定
 let IM_CtrlIBusPython = 1
 
-"backspace"
+" backspace
 set backspace=indent,eol,start
 
 " vim-python setting
@@ -422,9 +422,9 @@ augroup END
 
 " watchdogs
 let g:watchdogs_check_BufWritePost_enables = {
-      \	"scss" : 1,
-      \	"textlint" : 1,
-      \	"typescript" : 1
+      \	"scss" : 0,
+      \	"textlint" : 0,
+      \	"typescript" : 0
       \}
 
 if !exists("g:quickrun_config")
@@ -529,11 +529,15 @@ let g:js_indent_typescript = 1
 augroup autoformat_autocmd
   autocmd!
   au FileType *.ts nnoremap <Leader>f :<C-u>Autoformat<CR>
-  au BufWrite *.ts :Autoformat
+  " au BufWrite *.ts :Autoformat
+  au FileType *.scss nnoremap <Leader>f :<C-u>Autoformat<CR>
+  " au BufWrite *.scss :Autoformat
+  au FileType *.html nnoremap <Leader>f :<C-u>Autoformat<CR>
+  " au BufWrite *.html :Autoformat
 augroup END
 
-let g:autoformat_autoindent = 1
-let g:autoformat_retab = 1
+let g:autoformat_autoindent = 0
+let g:autoformat_retab = 0
 let g:autoformat_remove_trailing_spaces = 0
 
 " vim-parenmatch
