@@ -5,11 +5,10 @@ xsetroot -cursor_name left_ptr
 xrdb -merge $HOME/.Xresources
 
 # uim
-export GTK_IM_MODULE='uim'
-export QT_IM_MODULE='uim'
-uim-xim &
-export XMODIFIERS=@im='uim'
-uim-toolbar-gtk &
+export GTK_IM_MODULE='ibus'
+export QT_IM_MODULE='ibus'
+export XMODIFIERS=@im='ibus'
+ibus-daemon --xim -d
 
 # set keymap
 setxkbmap -layout us

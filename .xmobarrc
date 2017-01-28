@@ -46,7 +46,6 @@ Config {
       -- charged status
       , "-i"	, "<fc=green>Charged</fc>"
       ] 50
-      , Run MPD ["-t", "<state>: <artist> - <title>"] 10
       , Run Com "uname" ["-s","-r"] "" 36000
       , Run Date "%a %b %_d %Y %H:%M:%S" "date" 10
       , Run StdinReader
