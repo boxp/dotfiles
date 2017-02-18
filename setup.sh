@@ -2,7 +2,7 @@
 
 ln -s ~/dotfiles/.xmonad ~/.xmonad
 ln -s ~/dotfiles/.Xmodmap ~/.Xmodmap
-ln -s ~/dotfiles/.Xresources ~/Xresources
+ln -s ~/dotfiles/.Xresources ~/.Xresources
 ln -s ~/dotfiles/.vimrc ~/.vimrc
 ln -s ~/dotfiles/.xmobarrc ~/.xmobarrc
 ln -s ~/dotfiles/.xsession ~/.xsession

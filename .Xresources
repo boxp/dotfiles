@@ -34,7 +34,7 @@ URxvt*color14 : #34E2E2
 URxvt*color7  : #D3D7CF
 URxvt*color15 : #EEEEEC
 
-!urxvt fonts: 
+!urxvt fonts:
 
 URxvt*font: xft:Ricty:pixelsize=12
 URxvt*boldFont: xft:Ricty:bold:pixelsize=12
@@ -47,7 +47,7 @@ URxvt.perl-ext-common:  default,matcher,tabbedex
 !enabling clickable links:
 
 URxvt.urlLauncher:      /usr/bin/chromium
-URxvt.matcher.button:   1 
+URxvt.matcher.button:   1
 
 !urxvt scrolling options and cursor style:
 
@@ -69,7 +69,7 @@ URxvt.tabbed.title: no
 
 URxvt.scrollBar_right:  True
 
-Xft.dpi: 160
+Xft.dpi: 120
 Xft.autohint: 0
 Xft.lcdfilter:  lcddefault
 Xft.hintstyle:  hintfull
