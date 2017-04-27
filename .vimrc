@@ -103,9 +103,9 @@ if dein#tap("unite.vim")
   nnoremap [unite]gi :<C-u>Unite giti<CR>
   nnoremap [unite]gb :<C-u>Unite giti/branch_recent<CR>
   nnoremap [unite]gs :<C-u>Unite giti/status<CR>
-  nnoremap [unite]gr :<C-u>Unite grep/git:/ -buffer-name=search-buffer<CR>
+  nnoremap [unite]gr :<C-u>Unite grep/git:/ -buffer-name=search-buffer -no-quit<CR>
   " カーソル位置の単語をgrep検索
-  nnoremap [unite]cgr :<C-u>Unite grep/git:/ -buffer-name=search-buffer<CR><C-R><C-W><CR>
+  nnoremap [unite]cgr :<C-u>Unite grep/git:/ -buffer-name=search-buffer -no-quit<CR><C-R><C-W><CR>
   nnoremap [unite]mp :<C-u>Unite mpc<CR>
   nnoremap [unite]ma :<C-u>Unite mapping<CR>
   nnoremap [unite]o :<C-u>Unite outline<CR>
@@ -154,6 +154,8 @@ endif
 if dein#tap("tsuquyomi")
   " Enable omni completion
   let g:tsuquyomi_completion_detail = 1
+  " Tsuquyomiのエラーチェックを無効化
+  let g:tsuquyomi_disable_quickfix = 1
   autocmd FileType typescript setlocal completeopt+=menu,preview
 endif
 
@@ -236,7 +238,7 @@ syntax enable
 colorscheme solarized
 set background=dark
 " カレント行ハイライトON
-set cursorline
+" set cursorline
 autocmd ColorScheme
       \  " アンダーラインを引く(color terminal) ※このままではcolorschemeに上書きされる
       \  highlight CursorLine cterm=underline ctermfg=NONE ctermbg=NONE
@@ -261,10 +263,20 @@ set fileformats=unix,dos,mac
 au   BufEnter *   execute ":lcd " . expand("%:p:h")
 
 "im_control.vim
+" 「日本語入力固定モード」の動作モード
+let IM_CtrlMode = 1
 " 「日本語入力固定モード」切替キー
-inoremap <silent> <C-f> <C-r>=IMState('FixMode')<CR>
-" PythonによるIBus制御指定
-let IM_CtrlIBusPython = 1
+inoremap <silent> <C-j> <C-r>=IMState('FixMode')<CR>
+" IBus 1.5以降
+function! IMCtrl(cmd)
+  let cmd = a:cmd
+  let res = system('ibus engine "mozc-jp"')
+  return ''
+endfunction
+
+" <ESC>押下後のIM切替開始までの反応が遅い場合はttimeoutlenを短く設定してみてください。
+" IMCtrl()のsystem()コマンド実行時に&を付けて非同期で実行するという方法でも体感速度が上がる場合があります。
+set timeout timeoutlen=3000 ttimeoutlen=100
 
 " backspace
 set backspace=indent,eol,start
@@ -395,16 +407,16 @@ autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
 autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
 
 " Enable heavy omni completion.
-if !exists('g:neocomplete#sources#omni#input_patterns')
-  let g:neocomplete#sources#omni#input_patterns = {}
-endif
-"let g:neocomplete#sources#omni#input_patterns.php = '[^. \t]->\h\w*\|\h\w*::'
-"let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
-"let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
+" if !exists('g:neocomplete#sources#omni#input_patterns')
+"   let g:neocomplete#sources#omni#input_patterns = {}
+" endif
+" let g:neocomplete#sources#omni#input_patterns.php = '[^. \t]->\h\w*\|\h\w*::'
+" let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
+" let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
 
 " For perlomni.vim setting.
 " https://github.com/c9s/perlomni.vim
-let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
+" let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
 
 " Tabbing setting
 augroup vimrc
@@ -422,17 +434,22 @@ augroup END
 
 " watchdogs
 let g:watchdogs_check_BufWritePost_enables = {
-      \	"scss" : 0,
-      \	"textlint" : 0,
-      \	"typescript" : 0
+      \	"scss" : 1,
+      \	"textlint" : 1,
+      \	"typescript" : 1
       \}
 
 if !exists("g:quickrun_config")
   let g:quickrun_config = {}
 endif
-let g:quickrun_config["watchdogs_checker/_"] = {
-      \ "outputter/quickfix/open_cmd" : "",
-      \ }
+" quickfixウィンドウを表示しない
+" let g:quickrun_config["watchdogs_checker/_"] = {
+"       \ "outputter/quickfix/open_cmd" : "",
+"       \ }
+let g:quickrun_config["watchdogs_checker/tslint"] = {
+      \ "command" : "tslint",
+      \ "cmdopt" : "--type-check"
+      \}
 let g:quickrun_config["typescript/watchdogs_checker"] = {
       \ "type" : "watchdogs_checker/tslint"
       \}
@@ -559,9 +576,14 @@ augroup go_autocmd
 augroup END
 
 " vim-go
+" let g:go_highlight_types = 1
+let g:go_highlight_fields = 1
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
 let g:go_highlight_structs = 0
 let g:go_highlight_interfaces = 0
 let g:go_highlight_operators = 0
+let g:go_metalinter_enabled = ['vet', 'golint', 'errcheck']
 
 " tabの可視化
 " set list

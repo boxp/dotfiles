@@ -106,10 +106,6 @@ repo = 'Shougo/neosnippet-snippets'
 depends = ['neosnippet']
 
 [[plugins]]
-repo = 'Shougo/neosnippet-snippets'
-depends = ['neosnippet']
-
-[[plugins]]
 repo = 'vim-scripts/gtags.vim'
 
 [[plugins]]
@@ -168,3 +164,6 @@ repo = 'khadiwala/wundervim'
 
 [[plugins]]
 repo = 'tomtom/tcomment_vim'
+
+[[plugins]]
+repo = 'fuenor/im_control.vim'

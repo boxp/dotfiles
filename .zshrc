@@ -145,3 +145,9 @@ export HISTSIZE=1000
 export SAVEHIST=100000
 setopt hist_ignore_dups
 setopt EXTENDED_HISTORY
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/home/boxp/Downloads/google-cloud-sdk/path.zsh.inc' ]; then source '/home/boxp/Downloads/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then source '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
