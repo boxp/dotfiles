@@ -38,9 +38,9 @@ if dein#load_state(s:dein_dir)
 endif
 
 " vimprocだけは最初にインストールしてほしい
-if dein#check_install(['vimproc'])
-  call dein#install(['vimproc'])
-endif
+" if dein#check_install(['vimproc'])
+"   call dein#install(['vimproc'])
+" endif
 " その他インストールしていないものはこちらに入れる
 if dein#check_install()
   call dein#install()
@@ -90,66 +90,6 @@ nnoremap <silent> <Leader>vfs :<C-u>VimFilerSplit<CR>
 nnoremap <silent> <Leader>vt  :<C-u>VimFilerTab<CR>
 nnoremap <silent> <Leader>vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
 
-" Unite
-if dein#tap("unite.vim")
-  nmap , [unite]
-
-  nnoremap [unite]f :<C-u>Unite file<CR>
-  nnoremap [unite]bf :<C-u>Unite buffer<CR>
-  nnoremap [unite]bk :<C-u>Unite bookmark<CR>
-  nnoremap [unite]r :<C-u>Unite neomru/file<CR>
-  nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
-  nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
-  nnoremap [unite]gi :<C-u>Unite giti<CR>
-  nnoremap [unite]gb :<C-u>Unite giti/branch_recent<CR>
-  nnoremap [unite]gs :<C-u>Unite giti/status<CR>
-  nnoremap [unite]gr :<C-u>Unite grep/git:/ -buffer-name=search-buffer -no-quit<CR>
-  " カーソル位置の単語をgrep検索
-  nnoremap [unite]cgr :<C-u>Unite grep/git:/ -buffer-name=search-buffer -no-quit<CR><C-R><C-W><CR>
-  nnoremap [unite]mp :<C-u>Unite mpc<CR>
-  nnoremap [unite]ma :<C-u>Unite mapping<CR>
-  nnoremap [unite]o :<C-u>Unite outline<CR>
-  nnoremap [unite]sn :<C-u>Unite session/new<CR>
-  nnoremap [unite]ss :<C-u>Unite session<CR>
-  nnoremap [unite]to :<C-u>Unite todo<CR>
-  nnoremap [unite]tw :<C-u>Unite tweetvim<CR>
-  nnoremap [unite]ta :<C-u>Unite tweetvim/account<CR>
-  nnoremap [unite]ij :<C-u>Unite issue:jira<CR>
-  nnoremap [unite]ig :<C-u>Unite issue:github<CR>
-
-  " unite-todo
-  let g:unite_todo_data_directory = "~/memo"
-  nnoremap <silent> <Leader>t :<C-u>UniteTodoAddSimple<CR>
-
-	" unite-session.
-	" Save session automatically.
-	let g:unite_source_session_enable_auto_save = 1
-
-  " インサートモードで開始
-  let g:unite_enable_start_insert = 1
-
-  " unite grepにhw(highway)を使う
-  if executable('hw')
-    let g:unite_source_grep_command = 'hw'
-    let g:unite_source_grep_default_opts = '--no-group --no-color'
-    let g:unite_source_grep_recursive_opt = ''
-  endif
-
-  " unite-issue
-  " Customize
-  let g:unite_source_issue_jira_priority_table = {
-        \ 10000: '◡', 1: '⚡', 2: 'ᛏ', 3: '●', 4: '○', 5: '▽' }
-
-  let g:unite_source_issue_jira_status_table = {
-        \ 1: 'plan', 3: 'develop', 4: 'reopened', 5: 'resolved', 6: 'closed',
-        \ 10000: 'feedback', 10001: 'staged', 10002: 'waiting',
-        \ 10003: 'deployed', 10004: 'pending', 10008: 'review' }
-
-  let g:unite_source_issue_jira_type_table = {
-        \ 1: 'bug', 2: 'feature', 3: 'task', 4: 'change', 5: 'sub-task',
-        \ 6: 'epic', 7: 'story', 8: 'system', 9: 'sub-bug' }
-endif
-
 " Tsuquyomi
 if dein#tap("tsuquyomi")
   " Enable omni completion
@@ -163,17 +103,12 @@ endif
 nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
 
 
-let g:quickrun_config = {
-      \   "_" : {
-      \       "runner" : "vimproc",
-      \       "runner/vimproc/updatetime" : 60
-      \   },
-      \}
-
-"インサートモードで開始
-let g:unite_enable_start_insert = 1
-" Execute help.
-nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
+" let g:quickrun_config = {
+"       \   "_" : {
+"       \       "runner" : "vimproc",
+"       \       "runner/vimproc/updatetime" : 60
+"       \   },
+"       \}
 
 " Vimplenote
 " FIXME: feedkeysを用いるべきではない
@@ -250,7 +185,7 @@ let g:vimfiler_safe_mode_by_default = 0
 let g:vimfiler_as_default_explorer = 1
 
 " yank to clipboard
-set clipboard=unnamed,unnamedplus,autoselect
+set clipboard=unnamedplus
 
 " ステータスライン
 set laststatus=2   " Always show the statusline
@@ -345,79 +280,6 @@ let g:niji_dark_colours = [
       \ [ '4',  '#268bd2'],
       \ ]
 
-" neocomplete
-"Note: This option must set it in .vimrc(_vimrc).  NOT IN .gvimrc(_gvimrc)!
-" Disable AutoComplPop.
-let g:acp_enableAtStartup = 0
-" Use neocomplete.
-let g:neocomplete#enable_at_startup = 1
-" Use smartcase.
-let g:neocomplete#enable_smart_case = 1
-" Set minimum syntax keyword length.
-let g:neocomplete#sources#syntax#min_keyword_length = 3
-let g:neocomplete#lock_buffer_name_pattern = '\*ku\*'
-
-" Define dictionary.
-let g:neocomplete#sources#dictionary#dictionaries = {
-      \ 'default' : '',
-      \ 'vimshell' : $HOME.'/.vimshell_hist',
-      \ 'scheme' : $HOME.'/.gosh_completions'
-      \ }
-
-" Define keyword.
-if !exists('g:neocomplete#keyword_patterns')
-  let g:neocomplete#keyword_patterns = {}
-endif
-let g:neocomplete#keyword_patterns['default'] = '\h\w*'
-
-" Plugin key-mappings.
-inoremap <expr><C-g>     neocomplete#undo_completion()
-inoremap <expr><C-l>     neocomplete#complete_common_string()
-
-" Recommended key-mappings.
-" <CR>: close popup and save indent.
-inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
-function! s:my_cr_function()
-  return (pumvisible() ? "\<C-y>" : "" ) . "\<CR>"
-  " For no inserting <CR> key.
-  "return pumvisible() ? "\<C-y>" : "\<CR>"
-endfunction
-" <TAB>: completion.
-inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
-" <C-h>, <BS>: close popup and delete backword char.
-inoremap <expr><C-h> neocomplete#smart_close_popup()."\<C-h>"
-inoremap <expr><BS> neocomplete#smart_close_popup()."\<C-h>"
-" Close popup by <Space>.
-"inoremap <expr><Space> pumvisible() ? "\<C-y>" : "\<Space>"
-
-" AutoComplPop like behavior.
-"let g:neocomplete#enable_auto_select = 1
-
-" Shell like behavior(not recommended).
-"set completeopt+=longest
-"let g:neocomplete#enable_auto_select = 1
-"let g:neocomplete#disable_auto_complete = 1
-"inoremap <expr><TAB>  pumvisible() ? "\<Down>" : "\<C-x>\<C-u>"
-
-" Enable omni completion.
-autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
-autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
-autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
-autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
-
-" Enable heavy omni completion.
-" if !exists('g:neocomplete#sources#omni#input_patterns')
-"   let g:neocomplete#sources#omni#input_patterns = {}
-" endif
-" let g:neocomplete#sources#omni#input_patterns.php = '[^. \t]->\h\w*\|\h\w*::'
-" let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
-" let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
-
-" For perlomni.vim setting.
-" https://github.com/c9s/perlomni.vim
-" let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
-
 " Tabbing setting
 augroup vimrc
   autocmd! FileType html setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
@@ -505,7 +367,7 @@ endfunction
 function! LightLineFilename()
   return ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
         \ (&ft == 'vimfiler' ? vimfiler#get_status_string() :
-        \  &ft == 'unite' ? unite#get_status_string() :
+        \  &ft == 'denite' ? denite#get_status_string() :
         \  &ft == 'vimshell' ? vimshell#get_status_string() :
         \ '' != expand('%:t') ? expand('%:t') : '[No Name]') .
         \ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
@@ -574,16 +436,6 @@ augroup go_autocmd
   nnoremap <Leader>l :<C-u>GoLint<CR>
   nnoremap <Leader>t :<C-u>GoTest<CR>
 augroup END
-
-" vim-go
-" let g:go_highlight_types = 1
-let g:go_highlight_fields = 1
-let g:go_highlight_functions = 1
-let g:go_highlight_methods = 1
-let g:go_highlight_structs = 0
-let g:go_highlight_interfaces = 0
-let g:go_highlight_operators = 0
-let g:go_metalinter_enabled = ['vet', 'golint', 'errcheck']
 
 " tabの可視化
 " set list
