@@ -102,14 +102,6 @@ endif
 " quickrun
 nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
 
-
-" let g:quickrun_config = {
-"       \   "_" : {
-"       \       "runner" : "vimproc",
-"       \       "runner/vimproc/updatetime" : 60
-"       \   },
-"       \}
-
 " Vimplenote
 " FIXME: feedkeysを用いるべきではない
 nnoremap vnl :call feedkeys("\<C-u>VimpleNote -l\<CR>" . g:mail_address . "\<CR>")
