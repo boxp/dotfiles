@@ -9,16 +9,16 @@ build = 'make'
 repo = 'kchmck/vim-coffee-script'
 
 [[plugins]]
-repo = 'synic.vim'
+repo = 'vim-scripts/synic.vim'
 
 [[plugins]]
-repo = 'sudo.vim'
+repo = 'vim-scripts/sudo.vim'
 
 [[plugins]]
-repo = 'textutil.vim'
+repo = 'vim-scripts/textutil.vim'
 
 [[plugins]]
-repo = 'vim-niji'
+repo = 'vim-scripts/vim-niji'
 
 [[plugins]]
 repo = 'mattn/vimplenote-vim'
