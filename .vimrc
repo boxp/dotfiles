@@ -329,6 +329,7 @@ augroup END
 " vim-fireplace
 autocmd BufRead,BufNewFile *.clj vmap <CR> :<C-u>'<,'>Eval<CR>
 autocmd BufRead,BufNewFile *.clj nmap \e :<C-u>Eval<CR>
+autocmd BufRead,BufNewFile *.clj nmap \r :<C-u>Eval (user/reset)<CR>
 
 " yank limit
 let g:yanking_max_element_length = 104857600
