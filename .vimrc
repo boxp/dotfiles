@@ -209,22 +209,6 @@ nnoremap <silent> <Leader>vs :VimShell<CR>
 nnoremap <silent> <Leader>vsc :VimShellCreate<CR>
 nnoremap <silent> <Leader>vp :VimShellPop<CR>
 
-" TweetVim設定
-" タイムライン表示
-nnoremap <silent> <Space>tf	:<C-u>TweetVimHomeTimeline<CR>
-" 発言用バッファを表示する
-nnoremap <silent> <Space>tt     :<C-u>TweetVimSay<CR>
-" mentions を表示する
-nnoremap <silent> <Space>tr	:<C-u>TweetVimMentions<CR>
-" アイコン表示
-let g:tweetvim_display_icon = 1
-" spで開く
-let g:tweetvim_open_buffer_cmd = 'split!'
-" 1ページあたりの表示ツイート数
-let g:tweetvim_tweet_per_page = 100
-" 更新キーをマップ ※augroupなし
-autocmd FileType tweetvim nmap <buffer> <C-r> <Plug>(tweetvim_action_reload)
-autocmd FileType tweetvim imap <buffer> <C-r> <Plug>(tweetvim_action_reload)
 "16色に設定
 set t_Co=256
 
@@ -311,9 +295,9 @@ augroup gauche_autocmd
 augroup END
 
 " vim-fireplace
-autocmd BufRead,BufNewFile *.clj vmap <CR> :<C-u>'<,'>Eval<CR>
-autocmd BufRead,BufNewFile *.clj nmap \e :<C-u>Eval<CR>
-autocmd BufRead,BufNewFile *.clj nmap \r :<C-u>Eval (user/reset)<CR>
+autocmd BufRead,BufNewFile *.clj,*.cljs,*.cljc vmap <CR> :<C-u>'<,'>Eval<CR>
+autocmd BufRead,BufNewFile *.clj,*.cljs,*.cljc nmap \e :<C-u>Eval<CR>
+autocmd BufRead,BufNewFile *.clj,*.cljs,*.cljc nmap \r :<C-u>Eval (user/reset)<CR>
 
 " yank limit
 let g:yanking_max_element_length = 104857600
@@ -449,11 +433,6 @@ augroup END
 
 " vim-markdown
 let g:markdown_fenced_languages = ['vim', 'python', 'ruby', 'clojure', 'cpp', 'bash=sh', 'json=javascript']
-
-" Mpc
-nnoremap <Leader>mn :<C-u>MpcNext<CR>
-nnoremap <Leader>mp :<C-u>MpcPrev<CR>
-nnoremap <Leader>mt :<C-u>MpcToggle<CR>
 
 " lightline.vim
 set laststatus=2

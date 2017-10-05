@@ -6,22 +6,10 @@ repo = 'Shougo/vimproc'
 build = 'make'
 
 [[plugins]]
-repo = 'kchmck/vim-coffee-script'
-
-[[plugins]]
-repo = 'vim-scripts/synic.vim'
-
-[[plugins]]
 repo = 'vim-scripts/sudo.vim'
 
 [[plugins]]
-repo = 'vim-scripts/textutil.vim'
-
-[[plugins]]
 repo = 'vim-scripts/vim-niji'
-
-[[plugins]]
-repo = 'mattn/vimplenote-vim'
 
 [[plugins]]
 repo = 'mattn/webapi-vim'
@@ -48,9 +36,6 @@ repo = 'Shougo/vinarise'
 repo = 'tyru/open-browser.vim'
 
 [[plugins]]
-repo = 'basyura/twibill.vim'
-
-[[plugins]]
 repo = 'tpope/vim-pathogen'
 
 [[plugins]]
@@ -60,16 +45,7 @@ repo = 'tpope/vim-markdown'
 repo = 'thinca/vim-quickrun'
 
 [[plugins]]
-repo = 'thinca/vim-logcat'
-
-[[plugins]]
 repo = 'thinca/vim-ref'
-
-[[plugins]]
-repo = 'thinca/vim-scouter'
-
-[[plugins]]
-repo = 'thinca/vim-threes'
 
 [[plugins]]
 repo = 'ujihisa/vimshell-ssh'
@@ -93,9 +69,6 @@ repo = 'aharisu/vim_goshrepl'
 repo = 'aharisu/vim-gdev'
 
 [[plugins]]
-repo = 'basyura/bitly.vim'
-
-[[plugins]]
 repo = 'fatih/vim-go'
 
 [[plugins]]
@@ -113,13 +86,6 @@ repo = 'haya14busa/incsearch.vim'
 
 [[plugins]]
 repo = 'diepm/vim-rest-console'
-
-[[plugins]]
-repo = 'basyura/bitly.vim'
-
-[[plugins]]
-repo = 'basyura/TweetVim'
-depends = ['bitly.vim']
 
 [[plugins]]
 repo = 'osyo-manga/shabadou.vim'
@@ -160,10 +126,4 @@ repo = 'cespare/vim-toml'
 repo = 'Yggdroot/indentLine'
 
 [[plugins]]
-repo = 'khadiwala/wundervim'
-
-[[plugins]]
 repo = 'tomtom/tcomment_vim'
-
-[[plugins]]
-repo = 'fuenor/im_control.vim'
