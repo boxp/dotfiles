@@ -6,13 +6,14 @@ zplug "zsh-users/zsh-history-substring-search"
 
 # Use the package as a command
 # And accept glob patterns (e.g., brace, wildcard, ...)
-zplug "Jxck/dotfiles", as:command, use:"bin/{histuniq,color}"
+# zplug "Jxck/dotfiles", as:command, use:"bin/{histuniq,color}"
 
 # Can manage everything e.g., other person's zshrc
 zplug "tcnksm/docker-alias", use:zshrc
 
 # Disable updates using the "frozen:" tag
-zplug "k4rthik/git-cal", as:command, frozen:1
+# zplug "k4rthik/git-cal", as:command, frozen:1
+zplug "k4rthik/git-cal", as:command
 
 # Grab binaries from GitHub Releases
 # and rename with the "rename-to:" tag
@@ -20,7 +21,7 @@ zplug "junegunn/fzf-bin", \
     from:gh-r, \
     as:command, \
     rename-to:fzf, \
-    use:"*darwin*amd64*"
+    use:"*linux*amd64*"
 
 # Supports checking out a specific branch/tag/commit
 zplug "b4b4r07/enhancd", at:v1
@@ -29,10 +30,7 @@ zplug "mollifier/anyframe", at:4c23cb60
 # Set the priority when loading
 # e.g., zsh-syntax-highlighting must be loaded
 # after executing compinit command and sourcing other plugins
-zplug "zsh-users/zsh-syntax-highlighting", nice:10
-
-# Can manage local plugins
-zplug "~/.zsh", from:local
+zplug "zsh-users/zsh-syntax-highlighting", defer:3
 
 # Install plugins if there are plugins that have not been installed
 # if ! zplug check --verbose; then
@@ -51,7 +49,7 @@ alias lock="xscreensaver-command --lock"
 alias git="hub"
 alias gc="git checkout"
 alias gb="git branch"
-alias gpr="git pull-request --browse -F $(git rev-parse --show-toplevel)/.github/PULL_REQUEST_TEMPLATE.md"
+alias gpr="git pull-request --browse"
 alias gs="git status"
 alias gt="tig"
 alias mux="tmuxinator"
@@ -99,9 +97,10 @@ export GRENCH_PORT=39874
 
  [[ -s $HOME/.tmuxinator/scripts/tmuxinator ]] && source $HOME/.tmuxinator/scripts/tmuxinator
 
-# Autostart if not already in tmux.
-if [[ ! -n $TMUX ]]; then
-  tmux new -s default
+# TMUX
+if which tmux >/dev/null 2>&1; then
+    #if not inside a tmux session, and if no session is started, start a new session
+    test -z "$TMUX" && (tmux attach || tmux new-session)
 fi
 
 # added by travis gem
