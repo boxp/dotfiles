@@ -10,3 +10,4 @@ ln -s ~/dotfiles/.zprofile ~/.zprofile
 ln -s ~/dotfiles/.zshrc ~/.zshrc
 ln -s ~/dotfiles/.tmux.conf ~/.tmux.conf
 ln -s ~/dotfiles/.mysnippets ~/.mysnippets
+ln -s ~/dotfiles/.spacemacs ~/.spacemacs
