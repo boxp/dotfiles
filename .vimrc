@@ -288,6 +288,8 @@ autocmd BufRead,BufNewFile *.fxml set filetype=xml
 " xmobarrc
 autocmd BufRead,BufNewFile *.xmobarrc set filetype=haskell
 
+" nginx
+autocmd BufRead,BufNewFile nginx/*.conf set filetype=nginx
 
 " gauche
 augroup gauche_autocmd
