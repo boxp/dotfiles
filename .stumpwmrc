@@ -2,6 +2,7 @@
 
 (set-prefix-key (kbd "C-e"))
 
+(run-commands "gnewbg 1")
 (run-commands "gnewbg 2")
 (run-commands "gnewbg 3")
 (run-commands "gnewbg 4")
@@ -11,22 +12,23 @@
 (run-commands "gnewbg 8")
 (run-commands "gnewbg 9")
 (run-commands "gnewbg 0")
-(run-commands "gnewbg Terminal")
 
 ;; launch applications
-(run-commands "gselect Terminal")
-(run-or-raise "sakura" '(:class "Terminal"))
+(run-commands "gselect 1")
+(run-or-raise "sakura" '(:class "Sakura"))
 
 ;; to default group 1
 (run-commands "gselect 1")
 
 ;; call Terminal
 (undefine-key *root-map* (kbd "C-e"))
-(undefine-key *root-map* (kbd "e"))
 (define-key *root-map* (kbd "C-e") "exec sakura")
-(define-key *root-map* (kbd "e") "gselect Terminal")
 
 ;; Vim Style
+(undefine-key *root-map* (kbd "Left"))
+(undefine-key *root-map* (kbd "Down"))
+(undefine-key *root-map* (kbd "Up"))
+(undefine-key *root-map* (kbd "Right"))
 (undefine-key *root-map* (kbd "h"))
 (undefine-key *root-map* (kbd "j"))
 (undefine-key *root-map* (kbd "k"))
@@ -35,3 +37,16 @@
 (define-key *root-map* (kbd "j") "move-focus down")
 (define-key *root-map* (kbd "k") "move-focus up")
 (define-key *root-map* (kbd "l") "move-focus right")
+
+(undefine-key *root-map* (kbd "M-Left"))
+(undefine-key *root-map* (kbd "M-Down"))
+(undefine-key *root-map* (kbd "M-Up"))
+(undefine-key *root-map* (kbd "M-Right"))
+(undefine-key *root-map* (kbd "H"))
+(undefine-key *root-map* (kbd "J"))
+(undefine-key *root-map* (kbd "K"))
+(undefine-key *root-map* (kbd "L"))
+(define-key *root-map* (kbd "H") "move-window left")
+(define-key *root-map* (kbd "J") "move-window down")
+(define-key *root-map* (kbd "K") "move-window up")
+(define-key *root-map* (kbd "L") "move-window right")

@@ -21,10 +21,10 @@ feh --bg-fill ~/Downloads/32025929_p0\ \(1\)_waifu2x_art_noise1_scale_tta_1.png
 sudo perl $HOME/bin/lighter.pl &
 
 # start xmonad
-# exec xmonad
+exec xmonad
 
 # start stumpwm
-exec stumpwm
+# exec stumpwm
 
 # start xscreensaver
 xscreensaver -no-splash &
