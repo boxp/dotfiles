@@ -15,13 +15,16 @@ setxkbmap -layout us
 xmodmap $HOME/.Xmodmap
 
 xcompmgr -c &
-nitrogen --restore
+feh --bg-fill ~/Downloads/32025929_p0\ \(1\)_waifu2x_art_noise1_scale_tta_1.png
 
 # start lighter.pl
 sudo perl $HOME/bin/lighter.pl &
 
 # start xmonad
-exec xmonad
+# exec xmonad
+
+# start stumpwm
+exec stumpwm
 
 # start xscreensaver
 xscreensaver -no-splash &

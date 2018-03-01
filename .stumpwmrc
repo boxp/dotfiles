@@ -1,0 +1,37 @@
+(in-package :stumpwm)
+
+(set-prefix-key (kbd "C-e"))
+
+(run-commands "gnewbg 2")
+(run-commands "gnewbg 3")
+(run-commands "gnewbg 4")
+(run-commands "gnewbg 5")
+(run-commands "gnewbg 6")
+(run-commands "gnewbg 7")
+(run-commands "gnewbg 8")
+(run-commands "gnewbg 9")
+(run-commands "gnewbg 0")
+(run-commands "gnewbg Terminal")
+
+;; launch applications
+(run-commands "gselect Terminal")
+(run-or-raise "sakura" '(:class "Terminal"))
+
+;; to default group 1
+(run-commands "gselect 1")
+
+;; call Terminal
+(undefine-key *root-map* (kbd "C-e"))
+(undefine-key *root-map* (kbd "e"))
+(define-key *root-map* (kbd "C-e") "exec sakura")
+(define-key *root-map* (kbd "e") "gselect Terminal")
+
+;; Vim Style
+(undefine-key *root-map* (kbd "h"))
+(undefine-key *root-map* (kbd "j"))
+(undefine-key *root-map* (kbd "k"))
+(undefine-key *root-map* (kbd "l"))
+(define-key *root-map* (kbd "h") "move-focus left")
+(define-key *root-map* (kbd "j") "move-focus down")
+(define-key *root-map* (kbd "k") "move-focus up")
+(define-key *root-map* (kbd "l") "move-focus right")

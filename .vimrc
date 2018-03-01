@@ -156,6 +156,9 @@ if dein#tap("tsuquyomi")
   let g:tsuquyomi_completion_detail = 1
   " Tsuquyomiのエラーチェックを無効化
   let g:tsuquyomi_disable_quickfix = 1
+
+  nnoremap <C-i> :<C-u>TsuImport<CR>
+
   autocmd FileType typescript setlocal completeopt+=menu,preview
 endif
 
@@ -259,6 +262,7 @@ set visualbell t_vb=
 augroup clojure
   autocmd!
   autocmd FileType clojure call niji#highlight()
+  autocmd FileType lisp call niji#highlight()
 augroup END
 
 " cljs設定
@@ -289,7 +293,7 @@ autocmd BufRead,BufNewFile *.fxml set filetype=xml
 autocmd BufRead,BufNewFile *.xmobarrc set filetype=haskell
 
 " nginx
-autocmd BufRead,BufNewFile nginx/*.conf set filetype=nginx
+autocmd BufRead,BufNewFile */nginx/*.conf set filetype=nginx
 
 " gauche
 augroup gauche_autocmd
@@ -401,6 +405,7 @@ augroup vimrc
   autocmd! FileType vim setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
   autocmd! FileType yaml setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
   autocmd! FileType ruby setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
+  autocmd! FileType sql setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
 augroup END
 
 " watchdogs
@@ -564,3 +569,10 @@ endif
 
 " 翻訳
 noremap <silent> tr :<C-u>ExciteTranslate<CR>
+
+" 透過
+highlight Normal ctermbg=none
+highlight NonText ctermbg=none
+highlight LineNr ctermbg=none
+highlight Folded ctermbg=none
+highlight EndOfBuffer ctermbg=none

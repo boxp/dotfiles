@@ -58,5 +58,5 @@ repo = 'chase/vim-ansible-yaml'
 on_ft = ['yaml', 'ansible']
 
 [[plugins]]
-repo = 'vim-scripts/nginx.vim'
+repo = 'chr4/nginx.vim'
 on_ft = ['nginx']

@@ -49,6 +49,9 @@ alias lock="xscreensaver-command --lock"
 alias git="hub"
 alias gc="git checkout"
 alias gb="git branch"
+alias gpull='git pull origin $(git rev-parse --abbrev-ref HEAD)'
+alias gpush='git push origin $(git rev-parse --abbrev-ref HEAD)'
+alias grf='git fetch origin $(git rev-parse --abbrev-ref HEAD) && git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)'
 alias gpr="git pull-request --browse"
 alias gs="git status"
 alias gt="tig"
@@ -150,5 +153,3 @@ if [ -f '/home/boxp/Downloads/google-cloud-sdk/path.zsh.inc' ]; then source '/ho
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then source '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
-
-eval $(thefuck --alias)
