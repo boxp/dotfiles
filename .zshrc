@@ -153,3 +153,5 @@ if [ -f '/home/boxp/Downloads/google-cloud-sdk/path.zsh.inc' ]; then source '/ho
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then source '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
+
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"

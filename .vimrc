@@ -295,6 +295,9 @@ autocmd BufRead,BufNewFile *.xmobarrc set filetype=haskell
 " nginx
 autocmd BufRead,BufNewFile */nginx/*.conf set filetype=nginx
 
+" graphql
+autocmd BufRead,BufNewFile *.graphql set filetype=graphql
+
 " gauche
 augroup gauche_autocmd
   au BufRead,BufNewFile *.scm vmap <CR> <Plug>(gosh_repl_send_block)
