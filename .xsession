@@ -15,7 +15,7 @@ setxkbmap -layout us
 xmodmap $HOME/.Xmodmap
 
 xcompmgr -c &
-feh --bg-fill ~/Downloads/32025929_p0\ \(1\)_waifu2x_art_noise1_scale_tta_1.png
+feh --bg-fill ~/Downloads/cache_1f330eca-f5e9-4432-c4ec-65e94ff769f7.png
 
 # start lighter.pl
 sudo perl $HOME/bin/lighter.pl &
