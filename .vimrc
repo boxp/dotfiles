@@ -519,12 +519,8 @@ let g:js_indent_typescript = 1
 " autoformat
 augroup autoformat_autocmd
   autocmd!
-  au FileType *.ts nnoremap <Leader>f :<C-u>Autoformat<CR>
-  " au BufWrite *.ts :Autoformat
-  au FileType *.scss nnoremap <Leader>f :<C-u>Autoformat<CR>
-  " au BufWrite *.scss :Autoformat
-  au FileType *.html nnoremap <Leader>f :<C-u>Autoformat<CR>
-  " au BufWrite *.html :Autoformat
+  au FileType *.ts,*.scss,*.html  nnoremap <Leader>f :<C-u>Prettier<CR>
+  au BufWrite *.ts,*.scss,*.html :Prettier
 augroup END
 
 let g:autoformat_autoindent = 0
