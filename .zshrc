@@ -56,6 +56,7 @@ alias gpr="git pull-request --browse"
 alias gs="git status"
 alias gt="tig"
 alias mux="tmuxinator"
+alias oplist="op list items | jq -c '.[] | {title: .overview.title, uuid: .uuid}' | peco | jq -r '.uuid' | xargs op get item | jq '.'"
 alias vis="vim -S ~/.vim.session"
 
 # prompt
@@ -88,6 +89,7 @@ export GOPATH="$HOME/go"
 
 # ANDROID-SDK
 export ANDROID_HOME="$HOME/Android/Sdk"
+export ANDROID_SDK_ROOT="/opt/android-sdk"
 
 # z
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
@@ -154,4 +156,4 @@ if [ -f '/home/boxp/Downloads/google-cloud-sdk/path.zsh.inc' ]; then source '/ho
 # The next line enables shell command completion for gcloud.
 if [ -f '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then source '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
 
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:/opt/Jasper:$PATH"

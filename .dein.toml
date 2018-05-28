@@ -69,9 +69,6 @@ repo = 'aharisu/vim_goshrepl'
 repo = 'aharisu/vim-gdev'
 
 [[plugins]]
-repo = 'fatih/vim-go'
-
-[[plugins]]
 repo = 'jason0x43/vim-js-indent'
 
 [[plugins]]
@@ -127,3 +124,9 @@ repo = 'Yggdroot/indentLine'
 
 [[plugins]]
 repo = 'tomtom/tcomment_vim'
+
+[[plugins]]
+repo = 'moro/vim-review'
+
+[[plugins]]
+repo = 'ryym/vim-riot'

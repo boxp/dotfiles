@@ -34,10 +34,6 @@ on_source = ['unite.vim']
 depends = ['webapi-vim', 'open-browser.vim', 'unite.vim']
 
 [[plugins]]
-repo = 'Shougo/neocomplete.vim'
-on_i = 1
-
-[[plugins]]
 repo = 'Quramy/tsuquyomi'
 on_ft = ['typescript']
 
@@ -68,3 +64,12 @@ on_ft = ['graphql']
 [[plugins]]
 repo = 'prettier/vim-prettier'
 on_ft = ['javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue']
+
+[[plugins]]
+repo = 'fatih/vim-go'
+on_ft = ['go']
+
+[[plugins]]
+repo = 'Shougo/deoplete.nvim'
+depends = ['roxma/nvim-yarp', 'roxma/vim-hug-neovim-rpc']
+on_i = 1

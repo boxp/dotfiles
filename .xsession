@@ -27,9 +27,8 @@ exec xmonad
 # exec stumpwm
 
 # start xscreensaver
-xscreensaver -no-splash &
-
-# start xscreensaver
 /usr/bin/xscreensaver -no-splash &
 
 start-pulseaudio-x11
+
+export ANDROID_SDK_ROOT="/opt/android-sdk"
