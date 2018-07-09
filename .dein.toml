@@ -130,3 +130,9 @@ repo = 'moro/vim-review'
 
 [[plugins]]
 repo = 'ryym/vim-riot'
+
+[[plugins]]
+repo = 'roxma/nvim-yarp'
+
+[[plugins]]
+repo = 'roxma/vim-hug-neovim-rpc'
