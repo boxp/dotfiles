@@ -95,7 +95,7 @@ export ANDROID_SDK_ROOT="/opt/android-sdk"
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
 
 # PATH
-export PATH="$HOME/.nodebrew/current/bin:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:/usr/share/git/diff-highlight:$HOME/.goenv/bin:./node_modules/.bin:$PATH"
+export PATH="$HOME/.nodebrew/current/bin:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:/usr/share/git/diff-highlight:$HOME/.goenv/bin:./node_modules/.bin:/opt/marp:$PATH"
 
 # GRENCH
 export GRENCH_PORT=39874

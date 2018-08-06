@@ -62,7 +62,7 @@ repo = 'jparise/vim-graphql'
 on_ft = ['graphql']
 
 [[plugins]]
-repo = 'prettier/vim-prettier'
+repo = 'w0rp/ale'
 on_ft = ['javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue']
 
 [[plugins]]

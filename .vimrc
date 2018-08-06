@@ -156,6 +156,8 @@ if dein#tap("tsuquyomi")
   let g:tsuquyomi_completion_detail = 1
   " Tsuquyomiのエラーチェックを無効化
   let g:tsuquyomi_disable_quickfix = 1
+  " pathsに基づいたimport文にする
+  let g:tsuquyomi_baseurl_import_path	 = 1
 
   nnoremap <C-i> :<C-u>TsuImport<CR>
 
@@ -346,16 +348,16 @@ augroup END
 let g:watchdogs_check_BufWritePost_enables = {
       \	"scss" : 1,
       \	"textlint" : 1,
-      \	"typescript" : 1
+      \	"typescript" : 0
       \}
 
 if !exists("g:quickrun_config")
   let g:quickrun_config = {}
 endif
 " quickfixウィンドウを表示しない
-" let g:quickrun_config["watchdogs_checker/_"] = {
-"       \ "outputter/quickfix/open_cmd" : "",
-"       \ }
+let g:quickrun_config["watchdogs_checker/_"] = {
+      \ "outputter/quickfix/open_cmd" : "",
+      \ }
 let g:quickrun_config["watchdogs_checker/tslint"] = {
       \ "command" : "tslint",
       \ "cmdopt" : "--type-check"
@@ -365,6 +367,8 @@ let g:quickrun_config["typescript/watchdogs_checker"] = {
       \}
 " watchdogs.vim の設定を追加
 call watchdogs#setup(g:quickrun_config)
+
+nnoremap <silent> <leader>wa :WatchdogsRun<CR>
 
 " previm
 augroup PrevimSettings
@@ -448,11 +452,11 @@ let g:indentLine_enabled = 1
 let g:js_indent_typescript = 1
 
 " autoformat
-augroup autoformat_autocmd
-  autocmd!
-  au FileType *.ts,*.scss,*.html  nnoremap <Leader>f :<C-u>Prettier<CR>
-  au BufWrite *.ts,*.scss :Prettier
-augroup END
+" augroup autoformat_autocmd
+"   autocmd!
+"   au FileType *.ts,*.tsx,*.scss,*.html,*.css  nnoremap <Leader>f :<C-u>Prettier<CR>
+"   au BufWrite *.ts,*.tsx,*.scss,*.css :Prettier
+" augroup END
 
 let g:autoformat_autoindent = 0
 let g:autoformat_retab = 0
@@ -506,3 +510,12 @@ highlight NonText ctermbg=none
 highlight LineNr ctermbg=none
 highlight Folded ctermbg=none
 highlight EndOfBuffer ctermbg=none
+
+" Ale
+if dein#tap("ale")
+  let g:ale_completion_enabled = 1
+  let g:ale_fix_on_save = 1
+  let g:ale_fixers = {
+  \   'typescript': ['prettier', 'tslint'],
+  \}
+endif
