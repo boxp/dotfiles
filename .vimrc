@@ -261,6 +261,10 @@ autocmd FileType python set omnifunc=pythoncomplete#Complete
 set visualbell t_vb=
 
 " clojure設定
+if dein#tap("vim-cljfmt.vim")
+  let g:clj_fmt_autosave = 0
+endif
+
 augroup clojure
   autocmd!
   autocmd FileType clojure call niji#highlight()
@@ -337,7 +341,7 @@ augroup vimrc
   autocmd! FileType scss setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
   autocmd! FileType riot setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
   autocmd! FileType haskell setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
-  autocmd! FileType typescript setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
+  autocmd! FileType typescript setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
   autocmd! FileType vim setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
   autocmd! FileType yaml setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
   autocmd! FileType ruby setlocal expandtab shiftwidth=2 tabstop=2 softtabstop=2
@@ -513,9 +517,10 @@ highlight EndOfBuffer ctermbg=none
 
 " Ale
 if dein#tap("ale")
-  let g:ale_completion_enabled = 1
+  let g:ale_completion_enabled = 0
   let g:ale_fix_on_save = 1
   let g:ale_fixers = {
   \   'typescript': ['prettier', 'tslint'],
+  \   'css': ['prettier', 'stylelint']
   \}
 endif

@@ -73,3 +73,7 @@ on_ft = ['go']
 repo = 'Shougo/deoplete.nvim'
 depends = ['roxma/nvim-yarp', 'roxma/vim-hug-neovim-rpc']
 on_i = 1
+
+[[plugins]]
+repo = 'venantius/vim-cljfmt'
+on_ft = ['clojure']
