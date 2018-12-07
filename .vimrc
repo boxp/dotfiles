@@ -3,6 +3,7 @@
 "--------------------------------------------------------------------------------"
 
 set encoding=utf-8
+set hidden
 
 " source privacy vars(githubに上げたくないパラメーター達)
 if filereadable(expand("~/.pri_vimrc"))
@@ -164,6 +165,12 @@ if dein#tap("tsuquyomi")
   autocmd FileType typescript setlocal completeopt+=menu,preview
 endif
 
+" vim-test
+if dein#tap("vim-test")
+  " TypeScriptのファイルもJavaScriptとして認識させる
+  let test#javascript#minitest#file_pattern = '(/__tests__/.*|(\\.|/)(test))\\.(jsx?|tsx?)$'
+endif
+
 " quickrun
 nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(input.txt)
 
@@ -260,11 +267,6 @@ autocmd FileType python set omnifunc=pythoncomplete#Complete
 " disable buzzer
 set visualbell t_vb=
 
-" clojure設定
-if dein#tap("vim-cljfmt.vim")
-  let g:clj_fmt_autosave = 0
-endif
-
 augroup clojure
   autocmd!
   autocmd FileType clojure call niji#highlight()
@@ -272,10 +274,10 @@ augroup clojure
 augroup END
 
 " cljs設定
-augroup cljs
-  autocmd!
-  autocmd BufRead,BufNewFile *.cljs set filetype=clojure
-augroup END
+" augroup cljs
+"   autocmd!
+"   autocmd BufRead,BufNewFile *.cljs set filetype=clojure
+" augroup END
 
 "cljx設定
 augroup cljx
@@ -310,9 +312,9 @@ augroup gauche_autocmd
 augroup END
 
 " vim-fireplace
-autocmd BufRead,BufNewFile *.clj,*.cljs,*.cljc vmap <CR> :<C-u>'<,'>Eval<CR>
-autocmd BufRead,BufNewFile *.clj,*.cljs,*.cljc nmap \e :<C-u>Eval<CR>
-autocmd BufRead,BufNewFile *.clj,*.cljs,*.cljc nmap \r :<C-u>Eval (user/reset)<CR>
+" autocmd BufRead,BufNewFile *.clj,*.cljs,*.cljc vmap <CR> :<C-u>'<,'>Eval<CR>
+" autocmd BufRead,BufNewFile *.clj,*.cljs,*.cljc nmap \e :<C-u>Eval<CR>
+" autocmd BufRead,BufNewFile *.clj,*.cljs,*.cljc nmap \r :<C-u>Eval (user/reset)<CR>
 
 " yank limit
 let g:yanking_max_element_length = 104857600
@@ -523,4 +525,9 @@ if dein#tap("ale")
   \   'typescript': ['prettier', 'tslint'],
   \   'css': ['prettier', 'stylelint']
   \}
+endif
+
+" vim-iced
+if dein#tap("vim-iced")
+  let g:iced_enable_default_key_mappings = 1
 endif

@@ -74,6 +74,22 @@ repo = 'Shougo/deoplete.nvim'
 depends = ['roxma/nvim-yarp', 'roxma/vim-hug-neovim-rpc']
 on_i = 1
 
+# [[plugins]]
+# repo = 'venantius/vim-cljfmt'
+# on_ft = ['clojure']
+
 [[plugins]]
-repo = 'venantius/vim-cljfmt'
+repo = 'janko-m/vim-test'
+on_ft = ['javascript', 'typescript']
+
+[[plugins]]
+repo = 'liquidz/vim-iced'
 on_ft = ['clojure']
+
+[[plugins]]
+repo = 'guns/vim-sexp'
+on_source = ['vim-iced']
+
+[[plugins]]
+repo = 'ctrlpvim/ctrlp.vim'
+on_source = ['vim-iced']
