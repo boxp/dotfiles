@@ -84,8 +84,9 @@ export SDL_AUDIODRIVER='alsa'
 # direnv
 eval "$(direnv hook zsh)"
 
-# GOPATH
+# GO
 export GOPATH="$HOME/go"
+GO111MODULE=on
 
 # ANDROID-SDK
 export ANDROID_HOME="$HOME/Android/Sdk"
@@ -93,9 +94,6 @@ export ANDROID_SDK_ROOT="/opt/android-sdk"
 
 # z
 [[ -r "/usr/share/z/z.sh" ]] && source /usr/share/z/z.sh
-
-# PATH
-export PATH="$HOME/.nodebrew/current/bin:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:/usr/share/git/diff-highlight:$HOME/.goenv/bin:./node_modules/.bin:/opt/marp:/opt/webstorm/bin:$PATH"
 
 # GRENCH
 export GRENCH_PORT=39874
@@ -136,6 +134,7 @@ zle -N peco-select-history
 bindkey '^r' peco-select-history
 
 # goenv
+export PATH="$HOME/.goenv/bin:$PATH"
 export GOENV_ROOT="$HOME/.goenv"
 
 eval "$(goenv init -)"
@@ -156,4 +155,6 @@ if [ -f '/home/boxp/Downloads/google-cloud-sdk/path.zsh.inc' ]; then source '/ho
 # The next line enables shell command completion for gcloud.
 if [ -f '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then source '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
 
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:/opt/Jasper:/opt/Postman/Postman:$HOME/.cache/dein/repos/github.com/liquidz/vim-iced/bin:$PATH"
+
+# PATH
+export PATH="$HOME/.nodebrew/current/bin:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:/usr/share/git/diff-highlight:./node_modules/.bin:/opt/marp:/opt/webstorm/bin:$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:/opt/Jasper:/opt/Postman/Postman:$HOME/.cache/dein/repos/github.com/liquidz/vim-iced/bin:$PATH"

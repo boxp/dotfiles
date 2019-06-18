@@ -53,5 +53,5 @@ Config {
       ]
     , sepChar = "%"
     , alignSep = "}{"
-    , template = "%cpu%, %coretemp% | %memory% * %swap% | %dynnetwork% | %battery% | %mpd% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %RJTI% | %uname%"
+    , template = "%cpu%, %coretemp% | %memory% * %swap% | %dynnetwork% | %battery% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %RJTI% | %uname%"
 }
