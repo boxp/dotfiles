@@ -1,6 +1,5 @@
--- Last modified 2013/02/28 11:37
 Config {
-      font = "xft:Ricty:size=8:antialias=true"
+      font = "xft:Ricty:size=10:antialias=true"
     , bgColor = "black"
     , fgColor = "grey"
     , position = Top
@@ -11,8 +10,7 @@ Config {
     , pickBroadest = True
     , persistent = True
     , commands =
-      [ Run Weather "RJTI" ["-t","<station>: <tempC>C","-L","18","-H","25","--normal","green","--high","red","--low","lightblue"] 36000
-      , Run DynNetwork	[ "--template" , "<dev>: <tx>kB/s|<rx>kB/s"
+      [ Run DynNetwork	[ "--template" , "<dev>: <tx>kB/s|<rx>kB/s"
         , "--Low"      , "1000"       -- units: kB/s
         , "--High"     , "5000"       -- units: kB/s
         , "--low"      , "green"
@@ -47,11 +45,11 @@ Config {
       -- charged status
       , "-i"	, "<fc=green>Charged</fc>"
       ] 50
-      , Run Com "uname" ["-s","-r"] "" 36000
+      -- , Run Com "uname" ["-s","-r"] "" 36000
       , Run Date "%a %b %_d %Y %H:%M:%S" "date" 10
       , Run StdinReader
       ]
     , sepChar = "%"
     , alignSep = "}{"
-    , template = "%cpu%, %coretemp% | %memory% * %swap% | %dynnetwork% | %battery% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %RJTI% | %uname%"
+    , template = "%cpu%, %coretemp% | %memory% * %swap% | %dynnetwork% | %battery% }{ %StdinReader% | <fc=#ee9a00>%date%</fc>| %uname%"
 }

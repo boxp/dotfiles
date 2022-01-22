@@ -15,7 +15,7 @@ setxkbmap -layout us
 xmodmap $HOME/.Xmodmap
 
 xcompmgr -c &
-feh --bg-fill ~/Downloads/cache_1f330eca-f5e9-4432-c4ec-65e94ff769f7.png
+feh --bg-fill ~/Downloads/MVIMG_20191121_065738\(1\).jpg
 
 # start xmonad
 exec xmonad
@@ -30,5 +30,8 @@ start-pulseaudio-x11
 
 export ANDROID_SDK_ROOT="/opt/android-sdk"
 
+# for vscode
+export PATH=$PATH:/home/boxp/.goenv/shims
+
 # dpi
-xrandr --output eDP-1 --scale 1.2x1.2
+xrandr --output eDP-1 --scale 0.8x0.8

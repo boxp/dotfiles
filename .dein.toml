@@ -53,8 +53,8 @@ repo = 'ujihisa/vimshell-ssh'
 [[plugins]]
 repo = 'tpope/vim-fugitive'
 
-# [[plugins]]
-# repo = 'tpope/vim-fireplace'
+[[plugins]]
+repo = 'tpope/vim-fireplace'
 
 [[plugins]]
 repo = 'tpope/vim-classpath'

@@ -48,6 +48,8 @@ alias :q="exit"
 alias lock="xscreensaver-command --lock"
 alias git="hub"
 alias gc="git checkout"
+alias gr="git restore"
+alias gsw="git switch"
 alias gb="git branch"
 alias gpull='git pull origin $(git rev-parse --abbrev-ref HEAD)'
 alias gpush='git push origin $(git rev-parse --abbrev-ref HEAD)'
@@ -58,6 +60,8 @@ alias gt="tig"
 alias mux="tmuxinator"
 alias oplist="op list items | jq -c '.[] | {title: .overview.title, uuid: .uuid}' | peco | jq -r '.uuid' | xargs op get item | jq '.'"
 alias vis="vim -S ~/.vim.session"
+alias ssm_port_forwarder.sh="$HOME/go/src/github.com/eure/utility-scripts/aws/gateway/ssm_port_forwarder.sh"
+alias ssm_gateway_connector.sh="$HOME/go/src/github.com/eure/utility-scripts/aws/gateway/ssm_gateway_connector.sh"
 
 # prompt
 parse_git_branch()
@@ -133,12 +137,6 @@ function peco-select-history() {
 zle -N peco-select-history
 bindkey '^r' peco-select-history
 
-# goenv
-export PATH="$HOME/.goenv/bin:$PATH"
-export GOENV_ROOT="$HOME/.goenv"
-
-eval "$(goenv init -)"
-
 # vi mode
 bindkey -v
 
@@ -157,4 +155,4 @@ if [ -f '/home/boxp/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then sourc
 
 
 # PATH
-export PATH="$HOME/.nodebrew/current/bin:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:/usr/share/git/diff-highlight:./node_modules/.bin:/opt/marp:/opt/webstorm/bin:$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:/opt/Jasper:/opt/Postman/Postman:$HOME/.cache/dein/repos/github.com/liquidz/vim-iced/bin:$PATH"
+export PATH="$HOME/.nodebrew/current/bin:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/platform-tools:/usr/share/git/diff-highlight:./node_modules/.bin:/opt/marp:/opt/webstorm/bin:$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:/opt/Jasper:/opt/Postman/Postman:$HOME/.cache/dein/repos/github.com/liquidz/vim-iced/bin:$PATH"

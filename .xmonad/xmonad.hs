@@ -20,7 +20,7 @@ main = do
                         { ppOutput = hPutStrLn xmproc
                         , ppTitle = xmobarColor "green" "" . shorten 50
                         }
-        , terminal           = "sakura"
+        , terminal           = "alacritty"
         , modMask            = mod4Mask
         , handleEventHook    = fullscreenEventHook
         -- , borderWidth        = 3
