@@ -342,7 +342,8 @@ you should place your code here."
    '((cider-ns-refresh-after-fn . "user/start")
      (cider-ns-refresh-before-fn . "user/stop")
      (cider-ns-refresh-after-fn . "integrant.repl/resume")
-     (cider-ns-refresh-before-fn . "integrant.repl/suspend"))))
+     (cider-ns-refresh-before-fn . "integrant.repl/suspend")))
+ '(warning-suppress-types '((use-package) (use-package) (use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
