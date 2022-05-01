@@ -51,16 +51,10 @@ repo = 'thinca/vim-ref'
 repo = 'ujihisa/vimshell-ssh'
 
 [[plugins]]
-repo = 'tpope/vim-fugitive'
-
-[[plugins]]
 repo = 'tpope/vim-fireplace'
 
 [[plugins]]
 repo = 'tpope/vim-classpath'
-
-[[plugins]]
-repo = 'kakkyz81/evervim'
 
 [[plugins]]
 repo = 'aharisu/vim_goshrepl'
