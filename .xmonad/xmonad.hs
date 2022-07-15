@@ -1,5 +1,6 @@
 import System.IO
 import XMonad
+import XMonad.Config
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
 import XMonad.Util.Run(spawnPipe)
@@ -13,8 +14,8 @@ import XMonad.Layout.NoBorders         -- In Full mode, border is no use
 
 main = do
     xmproc <- spawnPipe "xmobar"
-    xmonad $ defaultConfig
-        { manageHook = manageDocks <+> manageHook defaultConfig
+    xmonad $  ewmhFullscreen . ewmh  $ def
+        { manageHook = manageHook def <+> manageDocks
         , layoutHook = avoidStruts $ toggleLayouts (noBorders Full) $ myLayout
         , logHook = dynamicLogWithPP $ xmobarPP
                         { ppOutput = hPutStrLn xmproc
@@ -22,7 +23,6 @@ main = do
                         }
         , terminal           = "alacritty"
         , modMask            = mod4Mask
-        , handleEventHook    = fullscreenEventHook
         -- , borderWidth        = 3
         , normalBorderColor  = "#333333"
         , focusedBorderColor = "#cb4b16"

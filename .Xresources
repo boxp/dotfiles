@@ -2,7 +2,7 @@
 ! Xft settings
 !-------------------------------------------------------------------------------
 
-Xft.dpi:                    160
+Xft.dpi:                    200
 Xft.antialias:              true
 Xft.rgba:                   rgba
 Xft.hinting:                true
