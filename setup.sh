@@ -18,3 +18,4 @@ ln -s ~/ghq/github.com/boxp/dotfiles/.config/ghostty ~/.config/ghostty
 ln -s ~/ghq/github.com/boxp/dotfiles/.config/gwq ~/.config/gwq
 mkdir -p ~/.claude
 ln -s ~/ghq/github.com/boxp/dotfiles/.claude/CLAUDE.md ~/.claude/CLAUDE.md
+ln -s ~/ghq/github.com/boxp/dotfiles/.claude/skills ~/.claude/skills
