@@ -2,10 +2,6 @@
 repo = 'Shougo/dein.vim'
 
 [[plugins]]
-repo = 'Shougo/vimproc'
-build = 'make'
-
-[[plugins]]
 repo = 'vim-scripts/sudo.vim'
 
 [[plugins]]
@@ -89,7 +85,7 @@ repo = 'dannyob/quickfixstatus'
 
 [[plugins]]
 repo = 'osyo-manga/vim-watchdogs'
-depends = ['vim-quickrun', 'vimproc', 'shabadou.vim', 'vim-hier', 'quickfixstatus']
+depends = ['vim-quickrun', 'shabadou.vim', 'vim-hier', 'quickfixstatus']
 
 [[plugins]]
 repo = 'kannokanno/previm'

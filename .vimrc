@@ -38,10 +38,6 @@ if dein#load_state(s:dein_dir)
   call dein#save_state()
 endif
 
-" vimprocだけは最初にインストールしてほしい
-if dein#check_install(['vimproc'])
-  call dein#install(['vimproc'])
-endif
 " その他インストールしていないものはこちらに入れる
 if dein#check_install()
   call dein#install()
@@ -177,8 +173,7 @@ nnoremap \<Space> :<C-u>QuickRun -input "input.txt"<CR> " QuickRun with args(inp
 
 let g:quickrun_config = {
       \   "_" : {
-      \       "runner" : "vimproc",
-      \       "runner/vimproc/updatetime" : 60
+      \       "runner" : "job",
       \   },
       \}
 
