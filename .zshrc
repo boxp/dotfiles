@@ -31,7 +31,7 @@ PS1="%{[0m%}
 %(?|%{[36m%}ﾙｲ%) ﾟ ヮﾟﾉ%) <|%{[31m%}ﾙｲ%)；ﾟ -ﾟ ﾉ%) <)%{[35m%}\$(parse_git_branch) %{[0m%}"
 
 # ghq
-export GHQ_ROOT="$HOME/go/src"
+export GHQ_ROOT="$HOME/ghq"
 
 # Default EDITOR
 export EDITOR="vim"
@@ -137,3 +137,22 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
   # Windows専用の設定をここに追加
   :
 fi
+
+# ref: https://zenn.dev/shunk031/articles/ghq-gwq-fzf-worktree
+function ghq-path() {
+    ghq list --full-path | fzf
+}
+
+function dev() {
+    local moveto
+    moveto=$(ghq-path)
+    cd "${moveto}" || exit 1
+
+    # rename session if in tmux
+    if [[ -n ${TMUX} ]]; then
+        local repo_name
+        repo_name="${moveto##*/}"
+
+        tmux rename-session "${repo_name//./-}"
+    fi
+}
