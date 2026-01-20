@@ -11,3 +11,5 @@ ln -s ~/dotfiles/.zshrc ~/.zshrc
 ln -s ~/dotfiles/.tmux.conf ~/.tmux.conf
 ln -s ~/dotfiles/.mysnippets ~/.mysnippets
 ln -s ~/dotfiles/.spacemacs ~/.spacemacs
+mkdir -p ~/.config
+ln -s ~/dotfiles/.config/ghostty ~/.config/ghostty
