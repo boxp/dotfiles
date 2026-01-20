@@ -160,3 +160,9 @@ export DEVKITPPC=/opt/devkitpro/devkitPPC
 
 # PATH
 export PATH="$HOME/.nodebrew/current/bin:$(ruby -e 'print Gem.user_dir')/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/bin:$HOME/.local/bin:$GOPATH/bin:$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/platform-tools:/usr/share/git/diff-highlight:./node_modules/.bin:/opt/marp:/opt/webstorm/bin:$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:/opt/Jasper:/opt/Postman/Postman:$HOME/.cache/dein/repos/github.com/liquidz/vim-iced/bin:$PATH"
+
+# ===================
+# Machine-specific settings
+# ===================
+# ~/.pri_zshrc に端末固有の設定を記述可能
+[[ -f "$HOME/.pri_zshrc" ]] && source "$HOME/.pri_zshrc"
