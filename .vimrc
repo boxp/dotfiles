@@ -26,8 +26,8 @@ endif
 execute 'set runtimepath^=' . s:dein_repo_dir
 
 " 管理するプラグインを記述したファイル
-let s:toml = '~/dotfiles/.dein.toml'
-let s:lazy_toml = '~/dotfiles/.dein_lazy.toml'
+let s:toml = '~/.dein.toml'
+let s:lazy_toml = '~/.dein_lazy.toml'
 
 " 読み込み、キャッシュは :call dein#clear_cache() で消せます
 if dein#load_state(s:dein_dir)
