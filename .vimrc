@@ -345,31 +345,6 @@ augroup vimrc
   autocmd! FileType sql setlocal expandtab shiftwidth=4 tabstop=4 softtabstop=4
 augroup END
 
-" watchdogs
-let g:watchdogs_check_BufWritePost_enables = {
-      \	"scss" : 1,
-      \	"textlint" : 1,
-      \	"typescript" : 0
-      \}
-
-if !exists("g:quickrun_config")
-  let g:quickrun_config = {}
-endif
-" quickfixウィンドウを表示しない
-let g:quickrun_config["watchdogs_checker/_"] = {
-      \ "outputter/quickfix/open_cmd" : "",
-      \ }
-let g:quickrun_config["watchdogs_checker/tslint"] = {
-      \ "command" : "tslint",
-      \ "cmdopt" : "--type-check"
-      \}
-let g:quickrun_config["typescript/watchdogs_checker"] = {
-      \ "type" : "watchdogs_checker/tslint"
-      \}
-" watchdogs.vim の設定を追加
-call watchdogs#setup(g:quickrun_config)
-
-nnoremap <silent> <leader>wa :WatchdogsRun<CR>
 
 " previm
 augroup PrevimSettings

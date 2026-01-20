@@ -84,10 +84,6 @@ repo = 'jceb/vim-hier'
 repo = 'dannyob/quickfixstatus'
 
 [[plugins]]
-repo = 'osyo-manga/vim-watchdogs'
-depends = ['vim-quickrun', 'shabadou.vim', 'vim-hier', 'quickfixstatus']
-
-[[plugins]]
 repo = 'kannokanno/previm'
 depends = ['open-browser.vim']
 
