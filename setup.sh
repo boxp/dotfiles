@@ -13,3 +13,4 @@ ln -s ~/dotfiles/.mysnippets ~/.mysnippets
 ln -s ~/dotfiles/.spacemacs ~/.spacemacs
 mkdir -p ~/.config
 ln -s ~/dotfiles/.config/ghostty ~/.config/ghostty
+ln -s ~/dotfiles/.config/gwq ~/.config/gwq
