@@ -1,52 +1,6 @@
-source ~/.zplug/init.zsh
-
-# zplug
-# Make sure to use double quotes
-zplug "zsh-users/zsh-history-substring-search"
-
-# Use the package as a command
-# And accept glob patterns (e.g., brace, wildcard, ...)
-# zplug "Jxck/dotfiles", as:command, use:"bin/{histuniq,color}"
-
-# Can manage everything e.g., other person's zshrc
-zplug "tcnksm/docker-alias", use:zshrc
-
-# Disable updates using the "frozen:" tag
-# zplug "k4rthik/git-cal", as:command, frozen:1
-zplug "k4rthik/git-cal", as:command
-
-# Grab binaries from GitHub Releases
-# and rename with the "rename-to:" tag
-zplug "junegunn/fzf-bin", \
-    from:gh-r, \
-    as:command, \
-    rename-to:fzf, \
-    use:"*linux*amd64*"
-
-# Supports checking out a specific branch/tag/commit
-zplug "b4b4r07/enhancd", at:v1
-zplug "mollifier/anyframe", at:4c23cb60
-
-# Set the priority when loading
-# e.g., zsh-syntax-highlighting must be loaded
-# after executing compinit command and sourcing other plugins
-zplug "zsh-users/zsh-syntax-highlighting", defer:3
-
-# Install plugins if there are plugins that have not been installed
-# if ! zplug check --verbose; then
-#     printf "Install? [y/N]: "
-#     if read -q; then
-#         echo; zplug install
-#     fi
-# fi
-
-# Then, source plugins and add commands to $PATH
-zplug load
-
 # aliases
 alias :q="exit"
 alias lock="xscreensaver-command --lock"
-alias git="hub"
 alias gc="git checkout"
 alias gr="git restore"
 alias gsw="git switch"
@@ -166,3 +120,20 @@ export PATH="$HOME/.nodebrew/current/bin:$(ruby -e 'print Gem.user_dir')/bin:/us
 # ===================
 # ~/.pri_zshrc に端末固有の設定を記述可能
 [[ -f "$HOME/.pri_zshrc" ]] && source "$HOME/.pri_zshrc"
+
+# ===================
+# OS-specific settings
+# ===================
+
+# macOS
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  # macOS専用の設定をここに追加
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+  :
+fi
+
+# Windows (WSL, Git Bash, Cygwin)
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+  # Windows専用の設定をここに追加
+  :
+fi
