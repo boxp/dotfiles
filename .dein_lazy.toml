@@ -4,33 +4,13 @@ on_i = 1
 on_ft = ['snippet']
 
 [[plugins]]
-repo = 'Shougo/unite.vim'
-on_cmd = ['Unite']
+repo = 'junegunn/fzf'
+build = './install --bin'
 
 [[plugins]]
-repo = 'Shougo/neomru.vim'
-on_source = ['unite.vim']
-
-[[plugins]]
-repo = 'kmnk/vim-unite-giti'
-on_source = ['unite.vim']
-
-[[plugins]]
-repo = 'mattn/unite-mpc'
-on_source = ['unite.vim']
-
-[[plugins]]
-repo = 'Shougo/unite-outline'
-on_source = ['unite.vim']
-
-[[plugins]]
-repo = 'Shougo/unite-session'
-on_source = ['unite.vim']
-
-[[plugins]]
-repo = 'rafi/vim-unite-issue'
-on_source = ['unite.vim']
-depends = ['webapi-vim', 'open-browser.vim', 'unite.vim']
+repo = 'junegunn/fzf.vim'
+depends = ['fzf']
+on_cmd = ['Files', 'GFiles', 'Buffers', 'Rg', 'History', 'Maps', 'BTags', 'Helptags']
 
 [[plugins]]
 repo = 'Quramy/tsuquyomi'
