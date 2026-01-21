@@ -54,7 +54,7 @@ inoremap <silent> <C-@> <C-[>
 inoremap <C-e> <End>
 imap <C-k> <Plug>(neosnippet_expand_or_jump)
 smap <C-k> <Plug>(neosnippet_expand_or_jump)
-nnoremap <silent> r. :<C-u>source ~/dotfiles/.vimrc<CR>
+nnoremap <silent> r. :<C-u>source ~/.vimrc<CR>
 nnoremap <silent> \su :<C-u>e sudo:%<CR>
 nmap <F12> yyp<C-a>
 
@@ -89,6 +89,10 @@ nnoremap <silent> <Leader>vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit
 
 " fzf.vim
 if dein#tap("fzf.vim")
+  " 隠しファイルも検索対象にする（.gitは除外）
+  command! -bang -nargs=? -complete=dir Files
+    \ call fzf#vim#files(<q-args>, fzf#vim#with_preview({'source': 'rg --files --hidden --glob "!.git"'}), <bang>0)
+
   nmap , [fzf]
 
   nnoremap [fzf]f :<C-u>Files<CR>
@@ -97,7 +101,13 @@ if dein#tap("fzf.vim")
   nnoremap [fzf]gs :<C-u>GFiles?<CR>
   nnoremap [fzf]gr :<C-u>Rg<CR>
   " カーソル位置の単語をgrep検索
-  nnoremap [fzf]cgr :<C-u>Rg <C-R><C-W><CR>
+  function! s:RgCword()
+    let word = expand('<cword>')
+    if !empty(word)
+      execute 'Rg ' . word
+    endif
+  endfunction
+  nnoremap [fzf]cgr :<C-u>call <SID>RgCword()<CR>
   nnoremap [fzf]ma :<C-u>Maps<CR>
   nnoremap [fzf]o :<C-u>BTags<CR>
 endif
