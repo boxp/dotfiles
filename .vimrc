@@ -87,64 +87,19 @@ nnoremap <silent> <Leader>vfs :<C-u>VimFilerSplit<CR>
 nnoremap <silent> <Leader>vt  :<C-u>VimFilerTab<CR>
 nnoremap <silent> <Leader>vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit<CR>
 
-" Unite
-if dein#tap("unite.vim")
-  nmap , [unite]
+" fzf.vim
+if dein#tap("fzf.vim")
+  nmap , [fzf]
 
-  nnoremap [unite]f :<C-u>Unite file<CR>
-  nnoremap [unite]bf :<C-u>Unite buffer<CR>
-  nnoremap [unite]bk :<C-u>Unite bookmark<CR>
-  nnoremap [unite]r :<C-u>Unite neomru/file<CR>
-  nnoremap [unite]a :<C-u>Unite file buffer file_mru<CR>
-  nnoremap [unite]<Tab> :<C-u>Unite tab<CR>
-  nnoremap [unite]gi :<C-u>Unite giti<CR>
-  nnoremap [unite]gb :<C-u>Unite giti/branch_recent<CR>
-  nnoremap [unite]gs :<C-u>Unite giti/status<CR>
-  nnoremap [unite]gr :<C-u>Unite grep/git:/ -buffer-name=search-buffer -no-quit<CR>
+  nnoremap [fzf]f :<C-u>Files<CR>
+  nnoremap [fzf]bf :<C-u>Buffers<CR>
+  nnoremap [fzf]r :<C-u>History<CR>
+  nnoremap [fzf]gs :<C-u>GFiles?<CR>
+  nnoremap [fzf]gr :<C-u>Rg<CR>
   " カーソル位置の単語をgrep検索
-  nnoremap [unite]cgr :<C-u>Unite grep/git:/ -buffer-name=search-buffer -no-quit<CR><C-R><C-W><CR>
-  nnoremap [unite]mp :<C-u>Unite mpc<CR>
-  nnoremap [unite]ma :<C-u>Unite mapping<CR>
-  nnoremap [unite]o :<C-u>Unite outline<CR>
-  nnoremap [unite]sn :<C-u>Unite session/new<CR>
-  nnoremap [unite]ss :<C-u>Unite session<CR>
-  nnoremap [unite]to :<C-u>Unite todo<CR>
-  nnoremap [unite]tw :<C-u>Unite tweetvim<CR>
-  nnoremap [unite]ta :<C-u>Unite tweetvim/account<CR>
-  nnoremap [unite]ij :<C-u>Unite issue:jira<CR>
-  nnoremap [unite]ig :<C-u>Unite issue:github<CR>
-
-  " unite-todo
-  let g:unite_todo_data_directory = "~/memo"
-  nnoremap <silent> <Leader>t :<C-u>UniteTodoAddSimple<CR>
-
-	" unite-session.
-	" Save session automatically.
-	let g:unite_source_session_enable_auto_save = 1
-
-  " インサートモードで開始
-  let g:unite_enable_start_insert = 1
-
-  " unite grepにhw(highway)を使う
-  if executable('hw')
-    let g:unite_source_grep_command = 'hw'
-    let g:unite_source_grep_default_opts = '--no-group --no-color'
-    let g:unite_source_grep_recursive_opt = ''
-  endif
-
-  " unite-issue
-  " Customize
-  let g:unite_source_issue_jira_priority_table = {
-        \ 10000: '◡', 1: '⚡', 2: 'ᛏ', 3: '●', 4: '○', 5: '▽' }
-
-  let g:unite_source_issue_jira_status_table = {
-        \ 1: 'plan', 3: 'develop', 4: 'reopened', 5: 'resolved', 6: 'closed',
-        \ 10000: 'feedback', 10001: 'staged', 10002: 'waiting',
-        \ 10003: 'deployed', 10004: 'pending', 10008: 'review' }
-
-  let g:unite_source_issue_jira_type_table = {
-        \ 1: 'bug', 2: 'feature', 3: 'task', 4: 'change', 5: 'sub-task',
-        \ 6: 'epic', 7: 'story', 8: 'system', 9: 'sub-bug' }
+  nnoremap [fzf]cgr :<C-u>Rg <C-R><C-W><CR>
+  nnoremap [fzf]ma :<C-u>Maps<CR>
+  nnoremap [fzf]o :<C-u>BTags<CR>
 endif
 
 " Tsuquyomi
@@ -177,10 +132,8 @@ let g:quickrun_config = {
       \   },
       \}
 
-"インサートモードで開始
-let g:unite_enable_start_insert = 1
 " Execute help.
-nnoremap <silent> <C-h>  :<C-u>Unite -buffer-name=help help<CR>
+nnoremap <silent> <C-h> :<C-u>Helptags<CR>
 
 " Vimplenote
 " FIXME: feedkeysを用いるべきではない
@@ -389,7 +342,6 @@ endfunction
 function! LightLineFilename()
   return ('' != LightLineReadonly() ? LightLineReadonly() . ' ' : '') .
         \ (&ft == 'vimfiler' ? vimfiler#get_status_string() :
-        \  &ft == 'unite' ? unite#get_status_string() :
         \  &ft == 'vimshell' ? vimshell#get_status_string() :
         \ '' != expand('%:t') ? expand('%:t') : '[No Name]') .
         \ ('' != LightLineModified() ? ' ' . LightLineModified() : '')
