@@ -13,6 +13,7 @@ ln -s ~/ghq/github.com/boxp/dotfiles/.zshrc ~/.zshrc
 ln -s ~/ghq/github.com/boxp/dotfiles/.tmux.conf ~/.tmux.conf
 ln -s ~/ghq/github.com/boxp/dotfiles/.mysnippets ~/.mysnippets
 ln -s ~/ghq/github.com/boxp/dotfiles/.spacemacs ~/.spacemacs
+ln -s ~/ghq/github.com/boxp/dotfiles/.aerospace.toml ~/.aerospace.toml
 mkdir -p ~/.config
 ln -s ~/ghq/github.com/boxp/dotfiles/.config/ghostty ~/.config/ghostty
 ln -s ~/ghq/github.com/boxp/dotfiles/.config/gwq ~/.config/gwq
