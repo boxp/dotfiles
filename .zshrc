@@ -129,7 +129,8 @@ export PATH="$HOME/.nodebrew/current/bin:$(ruby -e 'print Gem.user_dir')/bin:/us
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # macOS専用の設定をここに追加
   eval "$(/opt/homebrew/bin/brew shellenv)"
-  :
+  # Homebrew補完パスを追加（compinitより先に設定）
+  FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 fi
 
 # Windows (WSL, Git Bash, Cygwin)
@@ -137,6 +138,19 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
   # Windows専用の設定をここに追加
   :
 fi
+
+# ===================
+# Completion settings
+# ===================
+# 補完システムの有効化
+autoload -Uz compinit && compinit
+
+# 補完オプション
+setopt auto_menu           # Tab連打で補完候補を順に表示
+setopt auto_complete       # 自動補完
+setopt list_packed         # 補完候補を詰めて表示
+zstyle ':completion:*' menu select  # 矢印キーで補完候補を選択可能に
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'  # 大文字小文字を区別しない
 
 # ref: https://zenn.dev/shunk031/articles/ghq-gwq-fzf-worktree
 function ghq-path() {
