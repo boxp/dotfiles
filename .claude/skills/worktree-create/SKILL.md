@@ -1,6 +1,6 @@
 ---
 name: worktree-create
-description: gwqを使って新しいworktreeを作成。「新しいブランチで作業したい」「feature branchを切りたい」時に使用
+description: gwqを使って新しいworktreeを作成・追加。「worktreeを作成」「worktreeを追加」「新しいブランチで作業」「feature branchを切りたい」「PRを作成するためにブランチを作る」「gwq add」時に使用
 argument-hint: <branch-name>
 ---
 
