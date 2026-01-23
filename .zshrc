@@ -147,7 +147,7 @@ autoload -Uz compinit && compinit
 
 # 補完オプション
 setopt auto_menu           # Tab連打で補完候補を順に表示
-setopt auto_complete       # 自動補完
+setopt auto_list           # 自動的に補完候補を表示
 setopt list_packed         # 補完候補を詰めて表示
 zstyle ':completion:*' menu select  # 矢印キーで補完候補を選択可能に
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'  # 大文字小文字を区別しない
