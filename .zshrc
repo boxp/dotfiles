@@ -11,6 +11,7 @@ alias grf='git fetch origin $(git rev-parse --abbrev-ref HEAD) && git reset --ha
 alias gpr="git pull-request --browse"
 alias gs="git status"
 alias gt="tig"
+alias lg="lazygit"
 alias mux="tmuxinator"
 alias oplist="op list items | jq -c '.[] | {title: .overview.title, uuid: .uuid}' | peco | jq -r '.uuid' | xargs op get item | jq '.'"
 alias vis="vim -S ~/.vim.session"
