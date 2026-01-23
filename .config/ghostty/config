@@ -1,2 +1,4 @@
 theme = Solarized Dark Patched
 font-family = Menlo
+background-opacity = 0.9
+background-blur = true
