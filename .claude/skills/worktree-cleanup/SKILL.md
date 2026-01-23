@@ -39,15 +39,23 @@ argument-hint: <worktree-pattern>
 ## 注意
 - 削除前に `gwq status` で変更がないか確認
 - 重要な変更がある場合はコミットしてから削除
+- **重要**: `gwq remove`は削除対象のworktreeディレクトリ内からは実行できない。メインリポジトリディレクトリに移動してから実行すること
+  ```bash
+  cd $(gwq get master)  # または cd ~/ghq/github.com/<owner>/<repo>
+  gwq remove -b <pattern>
+  ```
 
 ## 完全クリーンアップ例
 ```bash
 # 1. セッション終了
 gwq tmux kill feature/done
 
-# 2. worktreeとブランチ削除
+# 2. メインリポジトリに移動
+cd $(gwq get master)
+
+# 3. worktreeとブランチ削除
 gwq remove -b feature/done
 
-# 3. 孤立したworktree参照をクリーン
+# 4. 孤立したworktree参照をクリーン
 gwq prune
 ```
