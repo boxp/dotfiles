@@ -1,1 +1,7 @@
-- リポジトリに修正を入れる場合は、原則的にghq+gwq+tmuxを使ってworktree上で作業すること。
+- リポジトリに修正を入れる場合は、原則的に以下のskillsを使ってworktree上で作業すること。
+    - skills/codex-review
+    - codex-review-file
+    - multi-repo-dev
+    - worktree-cleanup
+    - worktree-create
+    - worktree-dev
