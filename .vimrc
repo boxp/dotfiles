@@ -89,6 +89,9 @@ nnoremap <silent> <Leader>vi :<C-u>VimFiler -split -simple -winwidth=35 -no-quit
 
 " fzf.vim
 if dein#tap("fzf.vim")
+  " 全画面表示
+  let g:fzf_layout = { 'window': { 'width': 1.0, 'height': 1.0 } }
+
   " 隠しファイルも検索対象にする（.gitは除外）
   command! -bang -nargs=? -complete=dir Files
     \ call fzf#vim#files(<q-args>, fzf#vim#with_preview({'source': 'rg --files --hidden --glob "!.git"'}), <bang>0)
