@@ -58,4 +58,8 @@ gwq remove -b feature/done
 
 # 4. 孤立したworktree参照をクリーン
 gwq prune
+
+# 5. 最新のmainブランチに戻る
+cd $(gwq get main || gwq get master)
+git pull origin main || git pull origin master
 ```
