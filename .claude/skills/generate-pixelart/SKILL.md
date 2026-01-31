@@ -38,8 +38,10 @@ generate-imageスキルを使い、Step 1の出力を参照画像として、ド
 
 - Step 1の出力画像を参照画像として指定
 - プロンプトでピクセルアートスタイルを明確に指定する
-  - 例: 「GBA RPG風ピクセルアート、限定パレット、アンチエイリアスなし、ドット絵」
-  - 例: 「16-bit pixel art style, limited color palette, no anti-aliasing, clean pixel edges」
+  - **具体的な目標解像度をプロンプトに含めること**（例: 「for 240x160 screen」）
+  - 例（GBA BG向け）: `GBA-style pixel art character bust-up for 240x160 screen. True pixel art, crisp 1px edges, no anti-aliasing, no gradients, 64-color palette, optional subtle dithering.`
+  - 例（汎用）: `16-bit pixel art style, limited color palette, no anti-aliasing, clean pixel edges`
+  - 例（日本語）: 「GBA RPG風ピクセルアート、限定パレット、アンチエイリアスなし、ドット絵」
 - 設定ファイルが指定されている場合は、Step 1と同様にその全文をプロンプトに含める
 - **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step2.png`）
 - 出力ファイルパスを控えておく（Step 3で使用）
@@ -49,47 +51,25 @@ generate-imageスキルを使い、Step 1の出力を参照画像として、ド
 
 以下のコマンドを順に実行して、AI生成画像をtrue pixel artに変換する。
 
-#### 3-1. 背景をグリーンに置換（ImageMagick）
+#### 3-1. グリーン背景を透明化（ImageMagick）
 
-画像の4隅からfloodfillで背景をグリーン(#00FF00)に置換する。
-`%[fx:w-1]` 記法はImageMagick 6では動作しないため、先に `identify` で画像サイズを取得し、座標を計算してから実行する。
-
-**【重要】角が前景の場合の安全策:**
-floodfillは「角が背景色である」前提で動作する。被写体が画像端まで伸びている構図（全画面キャラ、クロップ画像など）では、角の前景がグリーンに置換されて出力が壊れる。
-実行前に以下の手順で安全確認を行うこと:
-
-1. Readツールで画像を目視確認し、4隅が背景色であることを確認する
-2. 角に前景（キャラクター等）が存在する場合は、以下のいずれかで対処する:
-   - **Step 2のプロンプトで「背景は単色、キャラクターは画像中央に収まるように」と指示して再生成する**（推奨）
-   - floodfillを実行する角を、背景色である角のみに限定する（前景がある角はスキップ）
-   - このステップ自体をスキップし、proper-pixel-artの `-t` オプションなしで実行する
+グリーン背景およびエッジ付近のグリーンが混ざった中間色ピクセル（フリンジ）を透明化する。
 
 ```bash
-# 画像サイズを取得
-W=$(identify -format '%w' <step2-output>)
-H=$(identify -format '%h' <step2-output>)
-# 4隅からfloodfill（座標は0始まりなので w-1, h-1）
-# ※ 前景が角にある場合は該当する -draw 行を除外すること
-convert <step2-output> -fuzz 8% -fill '#00FF00' \
-  -draw "color 0,0 floodfill" \
-  -draw "color $((W-1)),0 floodfill" \
-  -draw "color 0,$((H-1)) floodfill" \
-  -draw "color $((W-1)),$((H-1)) floodfill" \
-  <green-bg-output>
+convert <step2-output> -fuzz 35% -transparent '#00FF00' <transparent-output>
 ```
 
-- **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step2_green.png`）
-- `-fuzz` の値は背景と前景の色差に応じて調整（デフォルト8%、背景が複雑なら下げる）
-- 背景がキャラクターと十分異なる場合や、すでにグリーン背景の場合はこのステップをスキップ可能
+- **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step2_transp.png`）
+- `-fuzz 35%` でグリーンに近い中間色も含めて透明化する。前景のグリーン系の色が透明化されてしまう場合は値を下げて調整する
 
 #### 3-2. proper-pixel-artでダウンサンプル＋量子化
 
 ```bash
-uvx --from proper-pixel-art ppa <green-bg-output> -o <final-output> -c <colors> -t
+uvx --from proper-pixel-art ppa <transparent-output> -o <final-output> -c <colors> -w <pixel-width>
 ```
 
 - `-c`: 量子化色数（デフォルト256、GBA向けなら16や64など用途に応じて調整）
-- `-t`: 4隅からfloodfillで背景を透明化（背景色は自動検出）
+- `-w`: **入力画像の1ドット幅を手動指定する（必須）**。AI生成のドット絵風画像はクリーンなピクセルグリッドを持たないため、自動検出では正しいドット幅を判定できない。`入力画像の幅 / 目標解像度の幅` で計算する（例: 1K画像(1264px幅)でGBA BG 240px幅を狙う場合、`1264 / 240 ≈ 5` → `-w 5`）
 
 #### 3-3. 結果確認
 
@@ -101,20 +81,13 @@ uvx --from proper-pixel-art ppa <green-bg-output> -o <final-output> -c <colors> 
 
 1. generate-imageスキルで高品質イラストを `/tmp/pixelart_step1.png` に生成（アスペクト比 3:2）
 2. generate-imageスキルでStep 1の出力を参照し「GBA RPG風ピクセルアート、限定パレット、アンチエイリアスなし」で `/tmp/pixelart_step2.png` に再生成
-3. ImageMagickで背景をマゼンタに置換:
+3. ImageMagickでグリーン背景を透明化:
    ```bash
-   W=$(identify -format '%w' /tmp/pixelart_step2.png)
-   H=$(identify -format '%h' /tmp/pixelart_step2.png)
-   convert /tmp/pixelart_step2.png -fuzz 8% -fill '#00FF00' \
-     -draw "color 0,0 floodfill" \
-     -draw "color $((W-1)),0 floodfill" \
-     -draw "color 0,$((H-1)) floodfill" \
-     -draw "color $((W-1)),$((H-1)) floodfill" \
-     /tmp/pixelart_step2_green.png
+   convert /tmp/pixelart_step2.png -fuzz 35% -transparent '#00FF00' /tmp/pixelart_step2_transp.png
    ```
-4. proper-pixel-artで最終出力（ユーザー指定パスまたはカレントディレクトリ）に変換:
+4. proper-pixel-artで最終出力（ユーザー指定パスまたはカレントディレクトリ）に変換（1264/240≈5 → `-w 5`）:
    ```bash
-   uvx --from proper-pixel-art ppa /tmp/pixelart_step2_green.png -o final.png -c 64 -t
+   uvx --from proper-pixel-art ppa /tmp/pixelart_step2_transp.png -o final.png -c 64 -w 5
    ```
 5. Readツールで `final.png` を目視確認
 
