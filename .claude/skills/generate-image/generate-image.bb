@@ -3,30 +3,24 @@
 (ns generate-image
   (:require [babashka.http-client :as http]
             [cheshire.core :as json]
-            [babashka.cli :as cli]
+            [clojure.tools.cli :refer [parse-opts]]
             [clojure.java.io :as io]
             [clojure.string :as str])
   (:import [java.util Base64]
            [java.time.format DateTimeFormatter]
            [java.time LocalDateTime]))
 
-(def usage-text
-  "Usage: bb generate-image.bb [options] <prompt>
-
-Options:
-  -a, --aspect-ratio RATIO  アスペクト比 (default: 1:1)
-  -s, --size SIZE           画像サイズ 1K/2K/4K (default: 2K)
-  -o, --output PATH         出力ファイルパス (default: ./gemini-<timestamp>.<ext>)
-  -i, --image PATH          入力画像パス（複数指定可）
-  -h, --help                ヘルプ表示")
-
-(def cli-spec
-  {:spec
-   {:aspect-ratio {:alias :a :default "1:1" :desc "アスペクト比"}
-    :size         {:alias :s :default "2K" :desc "画像サイズ"}
-    :output       {:alias :o :desc "出力ファイルパス"}
-    :image        {:alias :i :coerce [] :desc "入力画像パス"}
-    :help         {:alias :h :coerce :boolean :desc "ヘルプ表示"}}})
+(def cli-options
+  [["-a" "--aspect-ratio RATIO" "アスペクト比"
+    :default "1:1"]
+   ["-s" "--size SIZE" "画像サイズ 1K/2K/4K"
+    :default "2K"]
+   ["-o" "--output PATH" "出力ファイルパス"]
+   ["-i" "--image PATH" "入力画像パス（複数指定可）"
+    :multi true
+    :default []
+    :update-fn conj]
+   ["-h" "--help" "ヘルプ表示"]])
 
 (defn die [msg]
   (binding [*out* *err*]
@@ -81,7 +75,7 @@ Options:
                                       :imageSize size}}}))
 
 (defn call-api [api-key body]
-  (let [url (str "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent")
+  (let [url "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent"
         resp (try
                (http/post url
                           {:headers {"x-goog-api-key" api-key
@@ -111,19 +105,24 @@ Options:
     path))
 
 (defn -main [args]
-  (let [{:keys [args opts]} (cli/parse-args args cli-spec)]
-    (when (:help opts)
-      (println usage-text)
+  (let [{:keys [options arguments summary errors]} (parse-opts args cli-options)]
+    (when errors
+      (doseq [e errors] (binding [*out* *err*] (println e)))
+      (System/exit 1))
+    (when (:help options)
+      (println "Usage: bb generate-image.bb [options] <prompt>\n")
+      (println summary)
       (System/exit 0))
-    (when (empty? args)
-      (println usage-text)
+    (when (empty? arguments)
+      (println "Usage: bb generate-image.bb [options] <prompt>\n")
+      (println summary)
       (die "\nError: Prompt is required."))
     (let [api-key      (validate-env)
-          prompt       (str/join " " args)
-          images       (mapv load-image (or (:image opts) []))
-          aspect-ratio (or (:aspect-ratio opts) "1:1")
-          size         (or (:size opts) "2K")
-          output       (:output opts)
+          prompt       (str/join " " arguments)
+          images       (mapv load-image (:image options))
+          aspect-ratio (:aspect-ratio options)
+          size         (:size options)
+          output       (:output options)
           body         (build-request-body prompt images aspect-ratio size)
           response     (call-api api-key body)
           inline-data  (extract-image response)
