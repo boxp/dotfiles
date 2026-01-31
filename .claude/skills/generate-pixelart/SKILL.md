@@ -14,7 +14,7 @@ AI画像生成 → ドット絵風再生成 → true pixel art変換の3ステ�
 ## 中間ファイルの出力先
 
 - **Step 1〜Step 3-1の中間ファイルはすべて `/tmp` 配下に出力すること**
-- 最終出力（Step 3-2のproper-pixel-art出力）のみ、ユーザー指定のパスまたはカレントディレクトリに出力する
+- 最終出力（Step 3-2の背景色統一後の出力）のみ、ユーザー指定のパスまたはカレントディレクトリに出力する
 
 ## 3ステップの手順
 
@@ -51,25 +51,27 @@ generate-imageスキルを使い、Step 1の出力を参照画像として、ド
 
 以下のコマンドを順に実行して、AI生成画像をtrue pixel artに変換する。
 
-#### 3-1. グリーン背景を透明化（ImageMagick）
-
-グリーン背景およびエッジ付近のグリーンが混ざった中間色ピクセル（フリンジ）を透明化する。
+#### 3-1. proper-pixel-artでダウンサンプル＋量子化
 
 ```bash
-convert <step2-output> -fuzz 35% -transparent '#00FF00' <transparent-output>
+uvx --from proper-pixel-art ppa <step2-output> -o <ppa-output> -c <colors> -w <pixel-width> -u 1
 ```
 
-- **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step2_transp.png`）
-- `-fuzz 35%` でグリーンに近い中間色も含めて透明化する。前景のグリーン系の色が透明化されてしまう場合は値を下げて調整する
-
-#### 3-2. proper-pixel-artでダウンサンプル＋量子化
-
-```bash
-uvx --from proper-pixel-art ppa <transparent-output> -o <final-output> -c <colors> -w <pixel-width>
-```
-
-- `-c`: 量子化色数（デフォルト256、GBA向けなら16や64など用途に応じて調整）
+- `-c`: 量子化色数（デフォルト256、GBA BG向けなら256、GBAスプライト向けなら16など用途に応じて調整）
 - `-w`: **入力画像の1ドット幅を手動指定する（必須）**。AI生成のドット絵風画像はクリーンなピクセルグリッドを持たないため、自動検出では正しいドット幅を判定できない。`入力画像の幅 / 目標解像度の幅` で計算する（例: 1K画像(1264px幅)でGBA BG 240px幅を狙う場合、`1264 / 240 ≈ 5` → `-w 5`）
+- `-u 1`: **初期アップスケールを無効化する（必須）**。デフォルトでは入力画像が2倍にアップスケールされてから `-w` が適用されるため、`-u 1` を指定しないと出力サイズが想定の2倍になる
+- **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step3_ppa.png`）
+
+#### 3-2. グリーン背景の単一色統一（ImageMagick）
+
+AI生成画像はグリーン背景を指定してもピクセルごとに微妙な色ブレが生じる。ppa変換後もこのブレが残るため、最後にグリーン系のピクセルを完全な単一色 `#00FF00` に統一する。
+
+```bash
+convert <ppa-output> -fuzz 35% -fill '#00FF00' -opaque '#00FF00' <final-output>
+```
+
+- `-fuzz 35%` でグリーンに近い中間色も含めて `#00FF00` に統一する。前景のグリーン系の色まで置換されてしまう場合は値を下げて調整する
+- 最終出力はユーザー指定のパスまたはカレントディレクトリに出力する
 
 #### 3-3. 結果確認
 
@@ -81,24 +83,24 @@ uvx --from proper-pixel-art ppa <transparent-output> -o <final-output> -c <color
 
 1. generate-imageスキルで高品質イラストを `/tmp/pixelart_step1.png` に生成（アスペクト比 3:2）
 2. generate-imageスキルでStep 1の出力を参照し「GBA RPG風ピクセルアート、限定パレット、アンチエイリアスなし」で `/tmp/pixelart_step2.png` に再生成
-3. ImageMagickでグリーン背景を透明化:
+3. proper-pixel-artでダウンサンプル＋量子化（1264/240≈5 → `-w 5`、`-u 1`で初期アップスケール無効化）:
    ```bash
-   convert /tmp/pixelart_step2.png -fuzz 35% -transparent '#00FF00' /tmp/pixelart_step2_transp.png
+   uvx --from proper-pixel-art ppa /tmp/pixelart_step2.png -o /tmp/pixelart_step3_ppa.png -c 256 -w 5 -u 1
    ```
-4. proper-pixel-artで最終出力（ユーザー指定パスまたはカレントディレクトリ）に変換（1264/240≈5 → `-w 5`）:
+4. ImageMagickでグリーン背景を単一色に統一:
    ```bash
-   uvx --from proper-pixel-art ppa /tmp/pixelart_step2_transp.png -o final.png -c 64 -w 5
+   convert /tmp/pixelart_step3_ppa.png -fuzz 35% -fill '#00FF00' -opaque '#00FF00' final.png
    ```
 5. Readツールで `final.png` を目視確認
 
 ## 依存ツール
 
-- `convert` (ImageMagick) — 背景色置換
+- `convert` (ImageMagick) — 背景色の単一色統一
 - `uvx` (uv) — proper-pixel-artの実行
 
 ## エラー時の対応
 
 - Step 1/2で画像が生成されない → プロンプトを変更して再試行
-- Step 3-1でfloodfillが不適切 → `-fuzz` 値を調整（大きくすると広範囲に置換）
-- Step 3-1で背景置換が不要 → ステップをスキップ
+- Step 3-2で前景のグリーン系の色まで置換される → `-fuzz` 値を下げて調整
+- Step 3-2で背景色の統一が不要 → ステップをスキップ
 - proper-pixel-artが見つからない → `uvx --from proper-pixel-art ppa --help` で確認
