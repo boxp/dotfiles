@@ -58,7 +58,7 @@
     (let [bytes (-> f io/input-stream .readAllBytes)
           b64   (.encodeToString (Base64/getEncoder) bytes)
           mime  (mime-type-from-ext path)]
-      {:mime_type mime :data b64})))
+      {:mimeType mime :data b64})))
 
 (defn default-output-path [mime-type]
   (let [ext (ext-from-mime mime-type)
@@ -67,7 +67,7 @@
 
 (defn build-request-body [prompt images aspect-ratio size]
   (let [text-part {:text prompt}
-        image-parts (mapv (fn [img-data] {:inline_data img-data}) images)
+        image-parts (mapv (fn [img-data] {:inlineData img-data}) images)
         parts (into [text-part] image-parts)]
     {:contents [{:parts parts}]
      :generationConfig {:responseModalities ["TEXT" "IMAGE"]
