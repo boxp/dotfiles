@@ -1,12 +1,12 @@
 ---
 name: generate-image
-description: Gemini Nano Banana Proで画像を生成・編集。「画像を生成」「画像を作って」「イラストを描いて」時に使用
-argument-hint: "[options] <prompt>"
+description: Gemini 2.5 Flash Image (Nano Banana)で画像を生成・編集。「画像を生成」「画像を作って」「イラストを描いて」時に使用。Nano Banana Proを使う場合は -m gemini-3-pro-image-preview を指定
+argument-hint: "[options] [-m model] <prompt>"
 ---
 
 # Gemini画像生成スキル
 
-Gemini 3 Pro (`gemini-3-pro-image-preview`) を使って画像を生成・編集します。
+Gemini 2.5 Flash Image (`gemini-2.5-flash-image-preview`) を使って画像を生成・編集します。`-m` オプションでモデルを変更可能です。
 
 ## 使用方法
 
@@ -20,6 +20,7 @@ $ARGUMENTS
 
 - `-a, --aspect-ratio RATIO` : アスペクト比 (default: 1:1)
 - `-s, --size SIZE` : 画像サイズ 1K/2K/4K (default: 2K)
+- `-m, --model MODEL` : モデル名 (default: gemini-2.5-flash-image-preview)
 - `-o, --output PATH` : 出力ファイルパス (default: ./gemini-<timestamp>.<ext>)
 - `-i, --image PATH` : 入力画像パス（複数指定可、画像編集やスタイル参照に使用）
 - `-h, --help` : ヘルプ表示
@@ -44,6 +45,11 @@ bb /home/boxp/.claude/skills/generate-image/generate-image.bb -i ref.png "この
 ### 複数の入力画像を融合
 ```bash
 bb /home/boxp/.claude/skills/generate-image/generate-image.bb -i ref1.png -i ref2.png "これらの画像を融合して"
+```
+
+### モデルを指定して生成（例: Nano Banana Pro）
+```bash
+bb /home/boxp/.claude/skills/generate-image/generate-image.bb -m gemini-3-pro-image-preview "夕焼けの海辺の風景"
 ```
 
 ## 必要な環境変数
