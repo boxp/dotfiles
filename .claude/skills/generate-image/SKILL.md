@@ -1,6 +1,6 @@
 ---
 name: generate-image
-description: Gemini 2.5 Flash Image (Nano Banana)で画像を生成・編集。「画像を生成」「画像を作って」「イラストを描いて」時に使用
+description: Gemini 2.5 Flash Image (Nano Banana)で画像を生成・編集。「画像を生成」「画像を作って」「イラストを描いて」時に使用。Nano Banana Proを使う場合は -m gemini-3-pro-image-preview を指定
 argument-hint: "[options] [-m model] <prompt>"
 ---
 
