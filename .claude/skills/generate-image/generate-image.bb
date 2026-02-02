@@ -13,10 +13,9 @@
 (def cli-options
   [["-a" "--aspect-ratio RATIO" "アスペクト比"
     :default "1:1"]
-   ["-s" "--size SIZE" "画像サイズ 1K/2K/4K"
-    :default "2K"]
+   ["-s" "--size SIZE" "画像サイズ 1K/2K/4K（gemini-3-pro-image-preview等で有効）"]
    ["-m" "--model MODEL" "モデル名"
-    :default "gemini-2.5-flash-image-preview"]
+    :default "gemini-2.5-flash-image"]
    ["-o" "--output PATH" "出力ファイルパス"]
    ["-i" "--image PATH" "入力画像パス（複数指定可）"
     :multi true
@@ -70,11 +69,12 @@
 (defn build-request-body [prompt images aspect-ratio size]
   (let [text-part {:text prompt}
         image-parts (mapv (fn [img-data] {:inlineData img-data}) images)
-        parts (into [text-part] image-parts)]
+        parts (into [text-part] image-parts)
+        image-config (cond-> {:aspectRatio aspect-ratio}
+                       size (assoc :imageSize size))]
     {:contents [{:parts parts}]
      :generationConfig {:responseModalities ["TEXT" "IMAGE"]
-                        :imageConfig {:aspectRatio aspect-ratio
-                                      :imageSize size}}}))
+                        :imageConfig image-config}}))
 
 (defn call-api [api-key model body]
   (let [url (str "https://generativelanguage.googleapis.com/v1beta/models/" model ":generateContent")
