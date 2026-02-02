@@ -8,6 +8,8 @@ argument-hint: "<プロンプトまたは説明>"
 
 AI画像生成 → ドット絵風再生成 → true pixel art変換の3ステップでドット絵を生成します。
 
+**【重要】generate-imageスキルの呼び出し時は、必ず `-m gemini-3-pro-image-preview -s 1K` を指定してNano Banana Proモデルを使用すること。** デフォルトのNano Banana（gemini-2.5-flash-image）は参照画像ベースのスタイル変換（Step 2）が効かないため、ドット絵パイプラインには不向き。
+
 ## 引数
 - `$ARGUMENTS`: 生成したいドット絵の説明（日本語可）
 
@@ -28,9 +30,9 @@ generate-imageスキルを使い、まず高品質なイラストを生成する
 - アスペクト比はユーザー指定または用途に応じて選択
 - キャラクターやオブジェクトの画像を生成する場合、背景色をグリーン(#00FF00)にすること
 - **この段階ではドット絵ではなく高品質なイラストとして生成すること**
+- **generate-imageスキルに `-m gemini-3-pro-image-preview -s 1K` を必ず指定すること**
 - **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step1.png`）
 - 出力ファイルパスを控えておく（Step 2で使用）
-- 解像度は1Kで生成すること
 
 ### Step 2: ドット絵風画像の再生成
 
@@ -43,9 +45,9 @@ generate-imageスキルを使い、Step 1の出力を参照画像として、ド
   - 例（汎用）: `16-bit pixel art style, limited color palette, no anti-aliasing, clean pixel edges`
   - 例（日本語）: 「GBA RPG風ピクセルアート、限定パレット、アンチエイリアスなし、ドット絵」
 - 設定ファイルが指定されている場合は、Step 1と同様にその全文をプロンプトに含める
+- **generate-imageスキルに `-m gemini-3-pro-image-preview -s 1K` を必ず指定すること**
 - **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step2.png`）
 - 出力ファイルパスを控えておく（Step 2.5で使用）
-- 解像度は1Kで生成すること
 
 ### Step 2.5: グリーン背景の単一色統一（ImageMagick）
 
