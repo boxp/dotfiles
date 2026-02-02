@@ -15,6 +15,8 @@
     :default "1:1"]
    ["-s" "--size SIZE" "画像サイズ 1K/2K/4K"
     :default "2K"]
+   ["-m" "--model MODEL" "モデル名"
+    :default "gemini-2.5-flash-image-preview"]
    ["-o" "--output PATH" "出力ファイルパス"]
    ["-i" "--image PATH" "入力画像パス（複数指定可）"
     :multi true
@@ -74,8 +76,8 @@
                         :imageConfig {:aspectRatio aspect-ratio
                                       :imageSize size}}}))
 
-(defn call-api [api-key body]
-  (let [url "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent"
+(defn call-api [api-key model body]
+  (let [url (str "https://generativelanguage.googleapis.com/v1beta/models/" model ":generateContent")
         resp (try
                (http/post url
                           {:headers {"x-goog-api-key" api-key
@@ -122,9 +124,10 @@
           images       (mapv load-image (:image options))
           aspect-ratio (:aspect-ratio options)
           size         (:size options)
+          model        (:model options)
           output       (:output options)
           body         (build-request-body prompt images aspect-ratio size)
-          response     (call-api api-key body)
+          response     (call-api api-key model body)
           inline-data  (extract-image response)
           saved-path   (decode-and-save inline-data output)]
       (println saved-path))))
