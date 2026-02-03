@@ -7,4 +7,3 @@
     - worktree-cleanup
     - worktree-create
     - worktree-dev
-- Obsidian Vault（$OBSIDIAN_ROOT）が参照可能。BOXP・lolice k8s cluster・ひとはこに関する質問時は `boxp-obsidian-search` skillを活用すること
