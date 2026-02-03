@@ -1,3 +1,4 @@
+- ユーザーには日本語で受け答えすること
 - リポジトリに修正を入れる場合は、原則的に以下のskillsを使ってworktree上で作業すること。
     - skills/codex-review
     - codex-review-file
