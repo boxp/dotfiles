@@ -29,7 +29,7 @@ setopt prompt_subst
 # PROMPT1
 PS1="%{[0m%}
 %{[33m%}λ%{[0m%} %{[32m%}[%n@%m] %{[33m%}%~%{[0m%}
-%(?|%{[36m%}ﾙｲ%) ﾟ ヮﾟﾉ%) <|%{[31m%}ﾙｲ%)；ﾟ -ﾟ ﾉ%) <)%{[35m%}\$(parse_git_branch) %{[0m%}"
+%(?|%{[36m%}('ω'%) < |%{[31m%}(;ω;%) < )%{[35m%}\$(parse_git_branch) %{[0m%}"
 
 # ghq
 export GHQ_ROOT="$HOME/ghq"
@@ -94,6 +94,14 @@ bindkey '^r' peco-select-history
 
 # vi mode
 bindkey -v
+KEYTIMEOUT=1  # vi-modeでのモード切り替えを高速化
+
+# vi-modeでモード切り替え時にプロンプトを再描画（表示ズレ防止）
+function zle-line-init zle-keymap-select {
+    zle reset-prompt
+}
+zle -N zle-line-init
+zle -N zle-keymap-select
 
 # HISTORY
 export HISTFILE=${HOME}/.zsh_history
