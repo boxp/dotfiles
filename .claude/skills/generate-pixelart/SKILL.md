@@ -94,6 +94,131 @@ uvx --from proper-pixel-art ppa <unified-output> -o <final-output> -c <colors> -
    ```
 5. Readツールで `final.png` を目視確認
 
+### GBA キャラクターBG（縦長→正方形切り出し）パターン
+
+キャラクターのバストアップBGを作る場合、1:1で生成するとキャラが小さくなりドット絵変換時に潰れやすい。
+**9:16の縦長で生成→ppa変換→頭頂部基準で正方形に切り出し** することで、キャラを大きく描画できる。
+
+1. Step 1: generate-imageスキルで **`-a 9:16`** で縦長イラストを生成（グリーンバック）
+2. Step 2: Step 1を参照画像としてドット絵風に再生成（同じく `-a 9:16`）
+3. Step 2.5: グリーン背景を統一
+4. Step 3: ppa変換。**`-w` は1:1の場合と同じ値を使う**（例: 1:1で `-w 4` なら縦長でも `-w 4`）
+   - 768x1376 の入力に `-w 4` → 192x344 の出力になる
+5. **切り出し**: ImageMagickで頭頂部基準に正方形（256x256）で切り出す。幅が足りない場合はグリーンで拡張する:
+   ```bash
+   convert <step3_full.png> -background '#00FF00' -gravity North -extent 256x256 <step3.png>
+   ```
+   - `-gravity North` で画像上部（頭）を基準に切り出す
+   - 幅が256に満たない場合は左右にグリーンが補填される（キャラは中央配置）
+6. BMP3変換:
+   ```bash
+   convert <step3.png> -type Palette BMP3:<output.bmp>
+   ```
+
+**このパターンを使うべき場面:**
+- グリーンバック付きキャラクターBG（バストアップ等）
+- 最終出力が正方形（256x256）だがキャラを大きく描きたい場合
+
+**使わなくてよい場面:**
+- 全画面イラスト → 最初から1:1で生成
+- 背景BG（風景のみ）→ 1:1で生成
+- スプライト → 下記の一括生成パターンを使用
+
+### GBA スプライト一括生成パターン
+
+複数のスプライトを1枚の画像にまとめて生成し、切り出し後に個別にppa変換する。
+デザインの統一感を保つために、関連するスプライトは可能な限り1枚にまとめて生成する。
+
+1. **Step 1**: generate-imageスキルで**全スプライトを1枚の画像に並べて生成**する
+   - プロンプトに各スプライトの内容・配置を明記する（例: 「左から順に: グーカード、チョキカード、パーカード」）
+   - グリーンバック(`#00FF00`)を指定
+   - アスペクト比はスプライトの配置に合わせて選択（横並びなら横長）
+2. **Step 2**: Step 1を参照画像としてドット絵風に再生成（同じアスペクト比）
+3. **Step 2.5**: グリーン背景を単一色に統一
+4. **切り出し**: ImageMagickで各スプライトを個別に切り出す
+   ```bash
+   # 例: 1264x768の画像から3つのスプライトを切り出し
+   convert <step2_unified.png> -crop 420x768+0+0 +repage /tmp/sprite1_cut.png
+   convert <step2_unified.png> -crop 420x768+422+0 +repage /tmp/sprite2_cut.png
+   convert <step2_unified.png> -crop 420x768+844+0 +repage /tmp/sprite3_cut.png
+   ```
+   - 切り出し位置は `identify -verbose` や目視で確認する
+   - 左右反転が必要なスプライトには `-flop` を追加する
+5. **Step 3**: 切り出した各画像に対して個別にppa変換する
+   ```bash
+   uvx --from proper-pixel-art ppa /tmp/sprite1_cut.png -o /tmp/sprite1_ppa.png -c 16 -w <pixel-width> -u 1
+   ```
+   - `-c 16`: GBAスプライトは4bpp（16色）
+   - `-w`: `切り出し画像の幅 / 目標スプライト幅` で計算
+6. **BMP3変換**: 各スプライトをBMP3 4bppに変換
+   ```bash
+   convert <ppa.png> -type Palette -colors 16 BMP3:<output.bmp>
+   ```
+7. **パレットindex 0修正（必須）**: ImageMagickの`-colors 16`量子化ではパレットの並び順が保証されず、index 0が`#00FF00`にならないことが多い。GBAスプライトではindex 0が透過色として扱われるため、**BMP3変換後に必ずパレットindex 0を`#00FF00`に修正すること**。
+
+   ```python
+   import struct
+
+   def fix_sprite_palette_index0(bmp_path):
+       with open(bmp_path, 'rb') as f:
+           data = bytearray(f.read())
+
+       w = struct.unpack_from('<i', data, 18)[0]
+       h = abs(struct.unpack_from('<i', data, 22)[0])
+       bpp = struct.unpack_from('<H', data, 28)[0]
+       data_offset = struct.unpack_from('<I', data, 10)[0]
+       n_colors = 1 << bpp
+
+       # Read palette and find green
+       pal = []
+       for i in range(n_colors):
+           off = 54 + i * 4
+           b, g, r = data[off], data[off+1], data[off+2]
+           pal.append((r, g, b))
+
+       green_idx = next((i for i, c in enumerate(pal) if c == (0, 255, 0)), None)
+       if green_idx is None:
+           # Find closest to green
+           green_idx = min(range(n_colors), key=lambda i: pal[i][0]**2 + (255-pal[i][1])**2 + pal[i][2]**2)
+
+       if green_idx == 0:
+           # Already at 0, ensure exact value
+           data[54], data[55], data[56] = 0, 255, 0
+       else:
+           # Swap palette entries
+           old0 = pal[0]
+           data[54], data[55], data[56], data[57] = 0, 255, 0, 0
+           offg = 54 + green_idx * 4
+           data[offg], data[offg+1], data[offg+2], data[offg+3] = old0[2], old0[1], old0[0], 0
+
+           # Swap pixel indices (4bpp packed: high nibble = even col, low nibble = odd col)
+           row_bytes = (w * bpp + 31) // 32 * 4
+           for row in range(h):
+               row_start = data_offset + row * row_bytes
+               for col in range(w):
+                   byte_off = row_start + col // 2
+                   hi = (data[byte_off] >> 4) & 0x0F
+                   lo = data[byte_off] & 0x0F
+                   if col % 2 == 0:
+                       if hi == 0: hi = green_idx
+                       elif hi == green_idx: hi = 0
+                       data[byte_off] = (hi << 4) | lo
+                   else:
+                       if lo == 0: lo = green_idx
+                       elif lo == green_idx: lo = 0
+                       data[byte_off] = (hi << 4) | lo
+
+       with open(bmp_path, 'wb') as f:
+           f.write(data)
+   ```
+
+   この関数を全スプライトBMPに対して実行する。省略するとGBA上でスプライトの透過が効かず、緑色の矩形が表示される。
+
+**一括生成の判断基準:**
+- 同じカテゴリのスプライト（例: グー・チョキ・パーのカード）→ 必ずまとめる
+- 同じゲーム内で使うスプライト全般 → できるだけまとめる（1枚に7〜8個程度まで）
+- サイズが大きく異なるスプライトが混在しても問題ない（切り出し後に個別リサイズ）
+
 ## 依存ツール
 
 - `convert` (ImageMagick) — 背景色の単一色統一
