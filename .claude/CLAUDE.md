@@ -1,5 +1,5 @@
 - ユーザーには日本語で受け答えすること
-- ExitPlanModeを呼ぶ前に、計画内容を `docs/project_docs/{project名}/plan.md` に保存すること（チケット番号がある場合はそれを使用、なければタスク内容から適切な名前を付ける）
+- ExitPlanModeを呼ぶ前に、計画内容を `docs/project_docs/{project名}/plan.md` に保存し、PRにも含めること（チケット番号がある場合はそれを使用、なければタスク内容から適切な名前を付ける）
 - リポジトリに修正を入れる場合は、原則的に以下のskillsを使ってworktree上で作業すること。
     - skills/codex-review
     - codex-review-file
