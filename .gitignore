@@ -3,3 +3,6 @@
 .xmonad/xmonad.errors
 .xmonad/xmonad.hi
 .xmonad/xmonad.o
+
+# 進捗管理ファイル（Git管理から除外）
+.claude/progress/
