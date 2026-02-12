@@ -1,37 +1,26 @@
-# xai-web-search
+---
+name: xai-web-search
+description: xAI Grok APIでWeb検索。「Grokで検索」「Grokで調べて」「xAIで検索」「Grok web search」時に使用
+argument-hint: <検索クエリ>
+---
 
-xAI Grok APIを使ってWeb検索を行うOpenClaw Skill
+# Web検索スキル（xAI Grok）
 
-## 説明
+xAI GrokのWeb検索機能を使用してインターネット上の情報を検索します。
 
-このスキルは、xAI GrokのWeb検索機能を使用してインターネット上の情報を検索します。
-`grok-4-1-fast-reasoning`モデルと`web_search`ツールを使用して、最新のWeb情報を取得できます。
+## 実行方法
 
-## 使用例
+**このスキルはメインコンテキストを消費しないよう、必ずTaskツール（subagent_type=Bash）で実行すること。**
 
-```bash
-# Web上で情報を検索
-/xai-web-search "最新のAI技術動向"
-
-# 技術ドキュメントを検索
-/xai-web-search "React hooks best practices"
-
-# ニュースや記事を検索
-/xai-web-search "量子コンピュータの最新研究"
 ```
+Task tool:
+  subagent_type: Bash
+  prompt: |
+    bash /home/boxp/.claude/skills/xai-web-search/scripts/search.sh $ARGUMENTS
+```
+
+Taskの結果を受け取ったら、内容を日本語で要約してユーザーに提示する。
 
 ## 環境変数
 
 - `XAI_API_KEY`: xAI APIキー（必須）
-
-## 依存関係
-
-- curl
-- jq
-
-## 技術仕様
-
-- エンドポイント: https://api.x.ai/v1/responses
-- モデル: grok-4-1-fast-reasoning
-- ツール: web_search
-- 認証: Bearer token (XAI_API_KEY)
