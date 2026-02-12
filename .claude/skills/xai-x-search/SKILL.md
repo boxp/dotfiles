@@ -1,37 +1,26 @@
-# xai-x-search
+---
+name: xai-x-search
+description: xAI Grok APIでX（旧Twitter）を検索。「Xで検索」「Xで調べて」「ツイートを検索」「X上の投稿を探して」「Twitterで検索」時に使用
+argument-hint: <検索クエリ>
+---
 
-xAI Grok APIを使ってX（旧Twitter）を検索するOpenClaw Skill
+# X（旧Twitter）検索スキル
 
-## 説明
+xAI GrokのX検索機能を使用してX上の投稿を検索します。
 
-このスキルは、xAI GrokのX検索機能を使用してX（旧Twitter）上の投稿を検索します。
-`grok-4-1-fast-reasoning`モデルと`x_search`ツールを使用して、リアルタイムなX上の情報を取得できます。
+## 実行方法
 
-## 使用例
+**このスキルはメインコンテキストを消費しないよう、必ずTaskツール（subagent_type=Bash）で実行すること。**
 
-```bash
-# X上でトレンドを検索
-/xai-x-search "AI技術のトレンド"
-
-# 特定のトピックに関する投稿を検索
-/xai-x-search "Claude Code 使い方"
-
-# 最新ニュースを検索
-/xai-x-search "日本のテクノロジーニュース"
 ```
+Task tool:
+  subagent_type: Bash
+  prompt: |
+    bash /home/boxp/.claude/skills/xai-x-search/scripts/search.sh $ARGUMENTS
+```
+
+Taskの結果を受け取ったら、内容を日本語で要約してユーザーに提示する。
 
 ## 環境変数
 
 - `XAI_API_KEY`: xAI APIキー（必須）
-
-## 依存関係
-
-- curl
-- jq
-
-## 技術仕様
-
-- エンドポイント: https://api.x.ai/v1/responses
-- モデル: grok-4-1-fast-reasoning
-- ツール: x_search
-- 認証: Bearer token (XAI_API_KEY)

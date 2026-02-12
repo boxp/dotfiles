@@ -16,11 +16,8 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
-# 検索クエリ
-QUERY="$*"
-
-echo "🌐 Searching Web with Grok: $QUERY"
-echo ""
+# 検索クエリ（JSONエスケープ）
+QUERY=$(printf '%s' "$*" | jq -Rs .)
 
 # APIリクエスト
 RESPONSE=$(curl -s https://api.x.ai/v1/responses \
@@ -29,28 +26,28 @@ RESPONSE=$(curl -s https://api.x.ai/v1/responses \
   -d "{
     \"model\": \"grok-4-1-fast-reasoning\",
     \"tools\": [{\"type\": \"web_search\"}],
-    \"input\": \"$QUERY\"
+    \"input\": $QUERY
   }")
 
 # エラーチェック
 if echo "$RESPONSE" | jq -e '.error' >/dev/null 2>&1; then
-  echo "❌ API Error:" >&2
+  echo "API Error:" >&2
   echo "$RESPONSE" | jq -r '.error.message // .error' >&2
   exit 1
 fi
 
-# レスポンスの整形と表示
-echo "📊 Search Results:"
-echo "=================="
-echo ""
+# テキスト部分のみ抽出して表示
+TEXT=$(echo "$RESPONSE" | jq -r '
+  .output[]
+  | select(.type == "message")
+  | .content[]
+  | select(.type == "output_text")
+  | .text
+' 2>/dev/null)
 
-# outputフィールドから結果を抽出
-if echo "$RESPONSE" | jq -e '.output' >/dev/null 2>&1; then
-  echo "$RESPONSE" | jq -r '.output'
+if [ -n "$TEXT" ]; then
+  echo "$TEXT"
 else
-  # outputがない場合はレスポンス全体を表示
-  echo "$RESPONSE" | jq '.'
+  # フォールバック: output全体を表示
+  echo "$RESPONSE" | jq -r '.output // .'
 fi
-
-echo ""
-echo "✅ Search completed"
