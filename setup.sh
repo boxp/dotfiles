@@ -20,3 +20,9 @@ mkdir -p ~/.config
 mkdir -p ~/.claude
 [ -e ~/.claude/CLAUDE.md ] || ln -s ~/ghq/github.com/boxp/dotfiles/.claude/CLAUDE.md ~/.claude/CLAUDE.md
 [ -e ~/.claude/skills ] || ln -s ~/ghq/github.com/boxp/dotfiles/.claude/skills ~/.claude/skills
+mkdir -p ~/.codex/skills
+for skill_dir in ~/.claude/skills/*; do
+  [ -d "$skill_dir" ] || continue
+  skill_name="${skill_dir##*/}"
+  [ -e "$HOME/.codex/skills/$skill_name" ] || ln -s "$skill_dir" "$HOME/.codex/skills/$skill_name"
+done
