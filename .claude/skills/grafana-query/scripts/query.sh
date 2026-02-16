@@ -8,6 +8,14 @@ set -euo pipefail
 #   query.sh alerts                   - アラート一覧
 #   query.sh datasources              - データソース一覧
 
+# 依存コマンドチェック
+for cmd in curl jq; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "Error: Required command '$cmd' is not installed" >&2
+    exit 1
+  fi
+done
+
 # 環境変数チェック
 if [ -z "${GRAFANA_URL:-}" ]; then
   echo "Error: GRAFANA_URL environment variable is not set" >&2
@@ -29,6 +37,8 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
+# curl共通オプション（タイムアウト設定）
+CURL_OPTS=(--connect-timeout 10 --max-time 30 -sf)
 AUTH_HEADER="Authorization: Bearer ${GRAFANA_API_KEY}"
 SUBCOMMAND="$1"
 shift
@@ -42,15 +52,19 @@ case "$SUBCOMMAND" in
     fi
     QUERY="$*"
     DATASOURCE_ID="${GRAFANA_DATASOURCE_ID:-1}"
+    # データソースIDのバリデーション
+    if ! [[ "$DATASOURCE_ID" =~ ^[0-9]+$ ]]; then
+      echo "Error: GRAFANA_DATASOURCE_ID must be a positive integer" >&2
+      exit 1
+    fi
     ENCODED_QUERY=$(printf '%s' "$QUERY" | jq -sRr @uri)
-    RESPONSE=$(curl -sf \
+    RESPONSE=$(curl "${CURL_OPTS[@]}" \
       -H "$AUTH_HEADER" \
       "${GRAFANA_URL}/api/datasources/proxy/${DATASOURCE_ID}/api/v1/query?query=${ENCODED_QUERY}" 2>&1) || {
-      echo "Error: Grafana API request failed" >&2
-      echo "$RESPONSE" >&2
+      echo "Error: Grafana PromQL query failed" >&2
       exit 1
     }
-    echo "$RESPONSE" | jq '.'
+    echo "$RESPONSE" | jq '.' || echo "$RESPONSE"
     ;;
 
   dashboards)
@@ -61,36 +75,33 @@ case "$SUBCOMMAND" in
     else
       URL="${GRAFANA_URL}/api/search?type=dash-db"
     fi
-    RESPONSE=$(curl -sf \
+    RESPONSE=$(curl "${CURL_OPTS[@]}" \
       -H "$AUTH_HEADER" \
       "$URL" 2>&1) || {
-      echo "Error: Grafana API request failed" >&2
-      echo "$RESPONSE" >&2
+      echo "Error: Grafana dashboard search failed" >&2
       exit 1
     }
-    echo "$RESPONSE" | jq '.[] | {title, uid, url, tags}'
+    echo "$RESPONSE" | jq '.[] | {title, uid, url, tags}' || echo "$RESPONSE"
     ;;
 
   alerts)
-    RESPONSE=$(curl -sf \
+    RESPONSE=$(curl "${CURL_OPTS[@]}" \
       -H "$AUTH_HEADER" \
       "${GRAFANA_URL}/api/alerting/alerts" 2>&1) || {
-      echo "Error: Grafana API request failed" >&2
-      echo "$RESPONSE" >&2
+      echo "Error: Grafana alerts query failed" >&2
       exit 1
     }
-    echo "$RESPONSE" | jq '.'
+    echo "$RESPONSE" | jq '.' || echo "$RESPONSE"
     ;;
 
   datasources)
-    RESPONSE=$(curl -sf \
+    RESPONSE=$(curl "${CURL_OPTS[@]}" \
       -H "$AUTH_HEADER" \
       "${GRAFANA_URL}/api/datasources" 2>&1) || {
-      echo "Error: Grafana API request failed" >&2
-      echo "$RESPONSE" >&2
+      echo "Error: Grafana datasources query failed" >&2
       exit 1
     }
-    echo "$RESPONSE" | jq '.[] | {id, name, type, url}'
+    echo "$RESPONSE" | jq '.[] | {id, name, type, url}' || echo "$RESPONSE"
     ;;
 
   *)
