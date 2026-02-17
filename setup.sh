@@ -27,6 +27,7 @@ mkdir -p ~/.claude/skills
 # Enable only the skills listed here (one symlink per skill).
 ENABLED_CLAUDE_SKILLS="
 boxp-obsidian-search
+claude-delegate
 codex-review
 codex-review-file
 generate-image
