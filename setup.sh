@@ -33,10 +33,7 @@ codex-review-file
 generate-image
 generate-pixelart
 multi-repo-dev
-worktree-cleanup
-worktree-create
-worktree-dev
-worktree-status
+worktree
 xai-web-search
 xai-x-search
 "
