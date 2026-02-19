@@ -4,6 +4,4 @@
     - skills/codex-review
     - codex-review-file
     - multi-repo-dev
-    - worktree-cleanup
-    - worktree-create
-    - worktree-dev
+    - worktree
