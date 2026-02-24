@@ -28,6 +28,7 @@ mkdir -p ~/.claude/skills
 ENABLED_CLAUDE_SKILLS="
 boxp-obsidian-search
 claude-delegate
+codex-exec
 codex-review
 codex-review-file
 generate-image
@@ -37,6 +38,20 @@ worktree
 xai-web-search
 xai-x-search
 "
+
+# Skills that should NOT be symlinked to ~/.codex/skills/
+# (e.g. skills that invoke codex CLI from Claude Code)
+CODEX_EXCLUDED_SKILLS="
+codex-exec
+"
+
+skill_is_codex_excluded() {
+  skill_name="$1"
+  for excluded_skill in $CODEX_EXCLUDED_SKILLS; do
+    [ "$excluded_skill" = "$skill_name" ] && return 0
+  done
+  return 1
+}
 
 skill_is_enabled() {
   skill_name="$1"
@@ -81,5 +96,6 @@ done
 for skill_dir in "$HOME/.claude/skills"/*; do
   [ -d "$skill_dir" ] || continue
   skill_name="${skill_dir##*/}"
+  skill_is_codex_excluded "$skill_name" && continue
   [ -e "$HOME/.codex/skills/$skill_name" ] || ln -s "$skill_dir" "$HOME/.codex/skills/$skill_name"
 done
