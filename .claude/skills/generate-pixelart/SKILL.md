@@ -8,7 +8,17 @@ argument-hint: "<プロンプトまたは説明>"
 
 AI画像生成 → ドット絵風再生成 → true pixel art変換の3ステップでドット絵を生成します。
 
-**【重要】generate-imageスキルの呼び出し時は、必ず `-m gemini-3-pro-image-preview -s 1K` を指定してNano Banana Proモデルを使用すること。** デフォルトのNano Banana（gemini-2.5-flash-image）は参照画像ベースのスタイル変換（Step 2）が効かないため、ドット絵パイプラインには不向き。
+**【重要】generate-imageスキルの呼び出し時は、`-m gemini-3.1-flash-image-preview -s 1K` を指定してNano Banana 2（NB2）モデルを使用すること。** NB2はNB Proの約半額（$0.067/枚 vs $0.134/枚）で参照画像ベースのスタイル変換に対応しており、ドット絵パイプラインのコスト最適化に最適。
+
+**品質が不十分な場合のフォールバック:** NB2でスタイル変換の品質が許容できない場合は、`-m gemini-3-pro-image-preview -s 1K` でNano Banana Proに切り替えること。NB1（デフォルト: gemini-2.5-flash-image）は参照画像ベースのスタイル変換が効かないため、ドット絵パイプラインには不向き。
+
+### コスト比較（ドット絵1枚あたり、Step 1 + Step 2 の合計）
+
+| モデル | 1枚あたりコスト | 比較 |
+|---|---|---|
+| NB Pro (`gemini-3-pro-image-preview`) | $0.268 (= $0.134 x 2) | 基準 |
+| **NB2 (`gemini-3.1-flash-image-preview`)** | **$0.134 (= $0.067 x 2)** | **50%削減** |
+| NB2 (512px) | $0.090 (= $0.045 x 2) | 66%削減（小サイズ向け） |
 
 ## 引数
 - `$ARGUMENTS`: 生成したいドット絵の説明（日本語可）
@@ -30,7 +40,7 @@ generate-imageスキルを使い、まず高品質なイラストを生成する
 - アスペクト比はユーザー指定または用途に応じて選択
 - キャラクターやオブジェクトの画像を生成する場合、背景色をグリーン(#00FF00)にすること
 - **この段階ではドット絵ではなく高品質なイラストとして生成すること**
-- **generate-imageスキルに `-m gemini-3-pro-image-preview -s 1K` を必ず指定すること**
+- **generate-imageスキルに `-m gemini-3.1-flash-image-preview -s 1K` を必ず指定すること**（品質不足時は `-m gemini-3-pro-image-preview -s 1K` にフォールバック）
 - **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step1.png`）
 - 出力ファイルパスを控えておく（Step 2で使用）
 
@@ -45,7 +55,7 @@ generate-imageスキルを使い、Step 1の出力を参照画像として、ド
   - 例（汎用）: `16-bit pixel art style, limited color palette, no anti-aliasing, clean pixel edges`
   - 例（日本語）: 「GBA RPG風ピクセルアート、限定パレット、アンチエイリアスなし、ドット絵」
 - 設定ファイルが指定されている場合は、Step 1と同様にその全文をプロンプトに含める
-- **generate-imageスキルに `-m gemini-3-pro-image-preview -s 1K` を必ず指定すること**
+- **generate-imageスキルに `-m gemini-3.1-flash-image-preview -s 1K` を必ず指定すること**（品質不足時は `-m gemini-3-pro-image-preview -s 1K` にフォールバック）
 - **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step2.png`）
 - 出力ファイルパスを控えておく（Step 2.5で使用）
 
@@ -227,6 +237,7 @@ uvx --from proper-pixel-art ppa <unified-output> -o <final-output> -c <colors> -
 ## エラー時の対応
 
 - Step 1/2で画像が生成されない → プロンプトを変更して再試行
+- Step 1/2でNB2の品質が不十分 → `-m gemini-3-pro-image-preview` でNB Proにフォールバック
 - Step 2.5で前景のグリーン系の色まで置換される → `-fuzz` 値を下げて調整
 - Step 2.5で背景色の統一が不要 → ステップをスキップ
 - proper-pixel-artが見つからない → `uvx --from proper-pixel-art ppa --help` で確認

@@ -13,7 +13,7 @@
 (def cli-options
   [["-a" "--aspect-ratio RATIO" "アスペクト比"
     :default "1:1"]
-   ["-s" "--size SIZE" "画像サイズ 1K/2K/4K（gemini-3-pro-image-preview等で有効）"]
+   ["-s" "--size SIZE" "画像サイズ 512/1K/2K/4K（NB2・NB Pro等で有効）"]
    ["-m" "--model MODEL" "モデル名"
     :default "gemini-2.5-flash-image"]
    ["-o" "--output PATH" "出力ファイルパス"]
