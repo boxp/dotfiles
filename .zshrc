@@ -11,12 +11,47 @@ alias grf='git fetch origin $(git rev-parse --abbrev-ref HEAD) && git reset --ha
 alias gpr="git pull-request --browse"
 alias gs="git status"
 alias gt="tig"
-alias lg="lazygit"
 alias mux="tmuxinator"
 alias oplist="op list items | jq -c '.[] | {title: .overview.title, uuid: .uuid}' | peco | jq -r '.uuid' | xargs op get item | jq '.'"
 alias vis="vim -S ~/.vim.session"
 alias ssm_port_forwarder.sh="$HOME/go/src/github.com/eure/utility-scripts/aws/gateway/ssm_port_forwarder.sh"
 alias ssm_gateway_connector.sh="$HOME/go/src/github.com/eure/utility-scripts/aws/gateway/ssm_gateway_connector.sh"
+
+function lg() {
+  if [[ -n "$TMUX" ]]; then
+    tmux popup -h 80% -w 80% -d "$PWD" -E "lazygit -ucd ~/.config/lazygit"
+  else
+    lazygit -ucd ~/.config/lazygit
+  fi
+}
+
+function ck_popup_runner() {
+  local client state watcher
+  client="$(tmux display-message -p '#{client_tty}')"
+  state="$(tmux display-message -p -t "$client" '#{session_id}:#{window_id}:#{pane_id}')"
+
+  (
+    while :; do
+      [[ "$(tmux display-message -p -t "$client" '#{session_id}:#{window_id}:#{pane_id}')" != "$state" ]] && {
+        tmux display-popup -C -t "$client"
+        break
+      }
+      sleep 0.1
+    done
+  ) &
+  watcher=$!
+
+  ceeker
+  kill "$watcher" 2>/dev/null
+}
+
+function ck() {
+  if [[ -n "$TMUX" ]]; then
+    tmux popup -h 80% -w 80% -d "$PWD" -E "zsh -ic ck_popup_runner"
+  else
+    ceeker
+  fi
+}
 
 # prompt
 parse_git_branch()
@@ -179,3 +214,7 @@ function dev() {
         tmux rename-session "${repo_name//./-}"
     fi
 }
+
+### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+export PATH="/Users/keitaro.takeuchi/.rd/bin:$PATH"
+### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
