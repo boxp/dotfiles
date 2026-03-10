@@ -26,9 +26,9 @@ codex exec -C <directory> "<タスクの説明>"
 codex exec -C <directory> --skip-git-repo-check "<タスクの説明>"
 ```
 
-### 自動実行モード（承認プロンプトなし）
+### 自動実行モード（承認プロンプトなし、ネットワーク許可）
 ```bash
-codex exec --full-auto "<タスクの説明>"
+codex exec -s danger-full-access "<タスクの説明>"
 ```
 
 ### モデルを指定して実行
@@ -48,7 +48,7 @@ $ARGUMENTS
 - `-C <directory>`: 作業ディレクトリを指定
 - `--skip-git-repo-check`: Gitリポジトリ外での実行を許可
 - `-m <model>`: 使用モデルを指定
-- `--full-auto`: 自動実行モード（sandbox: workspace-write）
+- `-s danger-full-access`: 自動実行モード（sandbox無効、ネットワーク許可）
 - `--add-dir <DIR>`: 追加の書き込み可能ディレクトリを指定
 - `-i <image>`: 画像ファイルを添付（スクリーンショットベースの実装など）
 - `-o <file>`: 最終メッセージをファイルに出力
@@ -88,7 +88,7 @@ src/components/UserList.tsxでページネーションが正しく動作しな�
 
 ### リファクタリング
 ```bash
-codex exec -C ~/project --full-auto "src/legacy/配下のコードをTypeScriptに変換してください。
+codex exec -C ~/project -s danger-full-access "src/legacy/配下のコードをTypeScriptに変換してください。
 既存のsrc/modern/のコーディングスタイルに合わせてください。"
 ```
 
@@ -116,7 +116,8 @@ codex exec -C ~/project -o /tmp/result.md "src/配下のアーキテクチャを
 ## 注意事項
 
 - デフォルトではサンドボックス内で実行される（ファイル変更はworkspace内に限定）
-- `--full-auto`を使用すると承認なしで実行されるため、意図しない変更に注意
+- `-s danger-full-access`はサンドボックスを無効化しネットワークも許可する。`--full-auto`（workspace-write）はネットワーク遮断されるため`uv run`等が失敗する
+- 自動実行モードでは承認なしで実行されるため、意図しない変更に注意
 - Gitリポジトリ外で実行する場合は`--skip-git-repo-check`が必須
 - 長時間かかるタスクの場合、`claude-delegate`スキルでtmuxセッションに委譲することも検討
 - プロンプト内にシェル特殊文字（`$`, `` ` ``, `!`等）が含まれる場合はシングルクォートで囲むか適切にエスケープすること
