@@ -116,6 +116,24 @@ on-mode-changed = []
     alt-k = 'focus up'
     alt-l = 'focus right'
 
+    # See: https://nikitabobko.github.io/AeroSpace/commands#focus-monitor
+    alt-ctrl-h = 'focus-monitor left'
+    alt-ctrl-j = 'focus-monitor down'
+    alt-ctrl-k = 'focus-monitor up'
+    alt-ctrl-l = 'focus-monitor right'
+    alt-ctrl-tab = 'focus-monitor --wrap-around next'
+    alt-ctrl-shift-r = '''exec-and-forget /bin/bash -lc '
+focused_monitor="$(aerospace list-monitors --focused --format "%{monitor-name}")"
+monitor_count="$(aerospace list-monitors --count)"
+i=1
+while [ "$i" -le "$monitor_count" ] && [ "$i" -le 9 ]; do
+  aerospace focus-monitor "$i"
+  aerospace summon-workspace "$i"
+  i=$((i + 1))
+done
+[ -n "$focused_monitor" ] && aerospace focus-monitor "$focused_monitor"
+' '''
+
     # See: https://nikitabobko.github.io/AeroSpace/commands#move
     alt-shift-h = 'move left'
     alt-shift-j = 'move down'
@@ -126,16 +144,17 @@ on-mode-changed = []
     alt-minus = 'resize smart -50'
     alt-equal = 'resize smart +50'
 
-    # See: https://nikitabobko.github.io/AeroSpace/commands#workspace
-    alt-1 = 'workspace 1'
-    alt-2 = 'workspace 2'
-    alt-3 = 'workspace 3'
-    alt-4 = 'workspace 4'
-    alt-5 = 'workspace 5'
-    alt-6 = 'workspace 6'
-    alt-7 = 'workspace 7'
-    alt-8 = 'workspace 8'
-    alt-9 = 'workspace 9'
+    # See: https://nikitabobko.github.io/AeroSpace/commands#summon-workspace
+    # Xmonad-like behavior: show the requested workspace on the focused monitor.
+    alt-1 = 'summon-workspace 1'
+    alt-2 = 'summon-workspace 2'
+    alt-3 = 'summon-workspace 3'
+    alt-4 = 'summon-workspace 4'
+    alt-5 = 'summon-workspace 5'
+    alt-6 = 'summon-workspace 6'
+    alt-7 = 'summon-workspace 7'
+    alt-8 = 'summon-workspace 8'
+    alt-9 = 'summon-workspace 9'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#fullscreen
     alt-f = 'fullscreen'
