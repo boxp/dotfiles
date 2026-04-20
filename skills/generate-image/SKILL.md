@@ -11,7 +11,7 @@ Gemini 2.5 Flash Image (`gemini-2.5-flash-image`) を使って画像を生成・
 ## 使用方法
 
 ```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb [options] "プロンプト"
+bb ./generate-image.bb [options] "プロンプト"
 ```
 
 ## オプション
@@ -29,27 +29,27 @@ $ARGUMENTS
 
 ### テキストから画像生成
 ```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb "夕焼けの海辺の風景"
+bb ./generate-image.bb "夕焼けの海辺の風景"
 ```
 
 ### アスペクト比・サイズ指定
 ```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb -a 16:9 -s 4K -o banner.png "ヘッダー画像"
+bb ./generate-image.bb -a 16:9 -s 4K -o banner.png "ヘッダー画像"
 ```
 
 ### 入力画像を参照して生成
 ```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb -i ref.png "この画像をアニメ風にして"
+bb ./generate-image.bb -i ref.png "この画像をアニメ風にして"
 ```
 
 ### 複数の入力画像を融合
 ```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb -i ref1.png -i ref2.png "これらの画像を融合して"
+bb ./generate-image.bb -i ref1.png -i ref2.png "これらの画像を融合して"
 ```
 
 ### モデルを指定して生成（例: Nano Banana Pro）
 ```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb -m gemini-3-pro-image-preview -s 2K "夕焼けの海辺の風景"
+bb ./generate-image.bb -m gemini-3-pro-image-preview -s 2K "夕焼けの海辺の風景"
 ```
 
 ## 必要な環境変数

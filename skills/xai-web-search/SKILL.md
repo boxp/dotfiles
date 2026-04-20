@@ -1,12 +1,12 @@
 ---
-name: xai-x-search
-description: xAI Grok APIでX（旧Twitter）を検索。「Xで検索」「Xで調べて」「ツイートを検索」「X上の投稿を探して」「Twitterで検索」時に使用
+name: xai-web-search
+description: xAI Grok APIでWeb検索。「Grokで検索」「Grokで調べて」「xAIで検索」「Grok web search」時に使用
 argument-hint: <検索クエリ>
 ---
 
-# X（旧Twitter）検索スキル
+# Web検索スキル（xAI Grok）
 
-xAI GrokのX検索機能を使用してX上の投稿を検索します。
+xAI GrokのWeb検索機能を使用してインターネット上の情報を検索します。
 
 ## 実行方法
 
@@ -16,7 +16,7 @@ xAI GrokのX検索機能を使用してX上の投稿を検索します。
 Task tool:
   subagent_type: Bash
   prompt: |
-    bash /home/boxp/.claude/skills/xai-x-search/scripts/search.sh $ARGUMENTS
+    bash ./scripts/search.sh $ARGUMENTS
 ```
 
 Taskの結果を受け取ったら、内容を日本語で要約してユーザーに提示する。
