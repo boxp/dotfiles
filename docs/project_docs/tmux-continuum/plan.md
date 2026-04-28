@@ -38,7 +38,7 @@ set -g @continuum-save-interval '15'
 set -g @continuum-restore 'on'
 ```
 
-**注意:** `run '~/.tmux/plugins/tpm/tpm'` 行より前に配置すること。
+**注意:** `tmux-continuum` は `status-right` に自動保存用のコマンドを埋め込むため、`status-right` の設定を確定した後、かつ `run '~/.tmux/plugins/tpm/tpm'` 行より前に配置すること。`run` 後に `status-right` を上書きすると自動保存が動かなくなる。
 
 ### Claude Code セッション復元の仕組み
 
