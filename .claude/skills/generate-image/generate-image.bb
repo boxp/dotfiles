@@ -15,7 +15,7 @@
     :default "1:1"]
    ["-s" "--size SIZE" "画像サイズ 1K/2K/4K（gemini-3-pro-image-preview等で有効）"]
    ["-m" "--model MODEL" "モデル名"
-    :default "gemini-2.5-flash-image"]
+    :default "gemini-3.1-flash-image-preview"]
    ["-o" "--output PATH" "出力ファイルパス"]
    ["-i" "--image PATH" "入力画像パス（複数指定可）"
     :multi true
