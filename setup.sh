@@ -31,6 +31,7 @@ claude-delegate
 codex-exec
 codex-review
 codex-review-file
+drawio-svg-preview
 generate-image
 generate-pixelart
 multi-repo-dev
