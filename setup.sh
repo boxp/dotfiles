@@ -32,6 +32,7 @@ codex-review
 codex-review-file
 generate-image
 generate-pixelart
+end-of-day-ai-retro
 multi-repo-dev
 worktree
 xai-web-search
