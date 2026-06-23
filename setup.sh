@@ -30,6 +30,7 @@ claude-delegate
 codex-exec
 codex-review
 codex-review-file
+drawio-svg-preview
 generate-image
 generate-pixelart
 end-of-day-ai-retro
