@@ -1,8 +1,8 @@
-# end-of-day-ai-retro スキル作成計画
+# end-of-day-ai-retro / Langfuse retro 拡張計画
 
 ## Context
 
-一日の終わりに、その日の Claude Code / Codex のセッションを振り返り、翌日以降の設定改善につなげる skill を追加する。背景として、Confluence の `2026-05-27 僕のAIかんきょう！！共有会` では `session-retro-codex` のような運用例が共有されており、`history.persistence = "save-all"` を前提にセッション履歴から改善案を出す流れが示されている。
+一日の終わりに、その日の Claude Code / Codex のセッションを振り返り、翌日以降の設定改善につなげる skill を追加する。さらに、ローカル Langfuse trace を直接見ながら、感覚ではなく trace を根拠に振り返れるようにする。
 
 このリポジトリでは `.claude/skills/` 配下の skill を `setup.sh` で `~/.claude/skills/` と `~/.codex/skills/` に symlink する構成になっているため、repo 配下に skill を追加し、Claude/Codex の両方から使えるようにする。
 
@@ -35,18 +35,26 @@ SKILL 本文を軽く保つため、詳細な観点と出力テンプレート�
 - 変更提案の書き方
 - 翌日の検証項目テンプレート
 
-### 3. 変更: `setup.sh`
+### 3. 新規作成: `.claude/skills/end-of-day-ai-retro/references/langfuse-retro.md`
 
-`ENABLED_CLAUDE_SKILLS` に `end-of-day-ai-retro` を追加し、`setup.sh` 実行時に `~/.claude/skills` と `~/.codex/skills` へ symlink されるようにする。
+Langfuse trace を読む観点と、`list/get` から retro に落とすための見方を分離して持つ。
 
-## 変更しないもの
+### 4. 新規作成: `.claude/skills/end-of-day-ai-retro/scripts/langfuse-traces.sh`
 
-- **補助スクリプト**: 今回は設定改善提案のワークフロー定義が中心のため不要
-- **`CODEX_EXCLUDED_SKILLS`**: この skill は Codex 側でも使いたいため除外しない
+ローカル Langfuse API を叩いて trace 一覧・詳細を取る補助スクリプト。`~/.codex/langfuse.json` を自動で読む。
+
+### 5. 変更: `~/.codex/rules/default.rules`
+
+探索・調査系の長い turn を分割するための運用ルールを追加する。
+
+### 6. 変更: `langfuse-traces.sh`
+
+plugin は編集せず、retro 出力側で trace の input/output/name から作業種別を推定して見える化する。
 
 ## 検証方法
 
-1. `quick_validate.py` で skill frontmatter と命名規則を検証
-2. `generate_openai_yaml.py` で `agents/openai.yaml` を生成できることを確認
-3. `setup.sh` の `ENABLED_CLAUDE_SKILLS` に追加されたことを確認
-4. skill の文面が Claude/Codex 両方の設定改善フローとして自然かを目視確認
+1. `langfuse-traces.sh --help`, `list`, `retro`, `get` が動くこと
+2. `~/.codex/langfuse.json` だけで local Langfuse に疎通できること
+3. tracing plugin の build が通ること
+4. `retro` 出力で `workType` が見えること
+5. `~/.codex/rules/default.rules` の追加ルールが自然かを目視確認

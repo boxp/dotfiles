@@ -17,7 +17,7 @@ description: 一日の Claude Code / Codex セッションを振り返り、設�
 4. 一時的なプロンプト工夫ではなく、設定・skill・rules・hook に昇格させる候補を選ぶ
 5. 変更案、期待効果、検証方法を短くまとめる
 
-詳細な観点と出力テンプレートは `references/retro-checklist.md` を読む。
+詳細な観点と出力テンプレートは `references/retro-checklist.md` を読む。Langfuse trace を根拠に含める場合は `references/langfuse-retro.md` も読む。
 
 ## 事前確認
 
@@ -27,8 +27,65 @@ description: 一日の Claude Code / Codex セッションを振り返り、設�
   persistence = "save-all"
   ```
 - `Claude Code` 側も、セッション履歴や通知フックを見返せる構成になっているか確認する
+- `Langfuse` を使うなら、ローカルインスタンスにアクセスできることを確認する
+  - `~/.codex/langfuse.json` があれば、そこから `base_url` / `public_key` / `secret_key` を自動で読む
+  - 未指定時の `LANGFUSE_BASE_URL` は `http://localhost:3000`
+  - 手動指定する場合は `LANGFUSE_PUBLIC_KEY` と `LANGFUSE_SECRET_KEY` を使う
 - repo 内 skill を改善候補に含める場合は、既存の `.claude/skills/` と `setup.sh` の有効化リストを確認する
 - 単発の作業ミスではなく、再発しそうな摩擦を優先する
+
+## Langfuse を使った観察手順
+
+Codex / Claude の履歴だけでなく、ローカル Langfuse trace を観察根拠にしてよい。特に次のような場面では Langfuse を優先する。
+
+- どのセッション・trace に時間や token が偏ったか見たい
+- retry、tool call、長い待ち時間、エラー傾向を trace 単位で見たい
+- 感覚ではなく trace 名、時刻、latency、token 使用量を根拠に振り返りたい
+
+### 1. まず `retro` で一覧と上位 trace をまとめて見る
+
+まず標準フローを使う。
+
+```bash
+bash "$HOME/.claude/skills/end-of-day-ai-retro/scripts/langfuse-traces.sh" retro --limit 20 --top 3
+```
+
+これは `list` で今日の一覧を出し、その中から重い trace を 3 件選び、`input` / `output` の要約までまとめて確認するための入口として使う。まずは毎回これを叩く。
+
+必要に応じて絞り込む。
+
+```bash
+bash "$HOME/.claude/skills/end-of-day-ai-retro/scripts/langfuse-traces.sh" retro \
+  --name codex \
+  --environment dev \
+  --tag retro \
+  --limit 20 \
+  --top 3
+```
+
+### 2. 次に上位 3 件の詳細を見る
+
+`retro` で上位に出た trace は、少なくとも 3 件は `input` / `output` を先に見てから `get` で詳細を見る。いきなり大量に追わない。
+
+```bash
+bash "$HOME/.claude/skills/end-of-day-ai-retro/scripts/langfuse-traces.sh" get <trace-id>
+```
+
+入出力や observation も含めて見たい場合だけ field を広げる。
+
+```bash
+bash "$HOME/.claude/skills/end-of-day-ai-retro/scripts/langfuse-traces.sh" get <trace-id> --fields core,metrics,observations,io,scores
+```
+
+### 3. 振り返りへ落とし込む
+
+trace を見たら、単なる「重かった」ではなく、次の形に変換する。
+
+- どの trace / session で詰まったか
+- その trace の `input` は何を要求していたか
+- その trace の `output` は何を返して止まったか
+- 何がボトルネックだったか
+- それは skill / rules / prompt / hook / 運用のどこで改善できるか
 
 ## 観察対象
 
@@ -38,6 +95,8 @@ description: 一日の Claude Code / Codex セッションを振り返り、設�
 - 逆に、rules・skill・テンプレートで速く進んだ場面
 - セッション切り替え、通知、resume、worktree 運用で詰まった場面
 - レビュー品質、計画品質、出力フォーマットの揺れ
+- Langfuse 上で latency / token / error が偏った trace や session
+- 同じ種類の trace で繰り返し発生した失敗や retry
 
 ## 改善候補の切り分け
 
@@ -89,4 +148,4 @@ description: 一日の Claude Code / Codex セッションを振り返り、設�
 - 観察根拠なしに設定を増やさない
 - セキュリティや破壊的操作に関する緩和提案を、根拠なく推奨しない
 - repo ローカルで済むものをグローバル設定に広げない
-
+- Langfuse trace を見る場合も、単発の異常 1 件だけで恒久対応を決めない

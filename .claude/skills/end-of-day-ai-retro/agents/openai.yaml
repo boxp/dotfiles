@@ -1,4 +1,4 @@
 interface:
   display_name: "終業時AIリフレクション"
   short_description: "終業時にClaude/Codexの設定改善点を整理する"
-  default_prompt: "`$end-of-day-ai-retro` を使って、今日の Claude Code / Codex セッションを振り返り、明日入れる設定改善案を整理して。"
+  default_prompt: "`$end-of-day-ai-retro` を使って、今日の Claude Code / Codex セッションを振り返り、必要ならローカル Langfuse の trace も見て、明日入れる設定改善案を整理して。"
