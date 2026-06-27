@@ -17,6 +17,8 @@
 mkdir -p ~/.config
 [ -e ~/.config/ghostty ] || ln -s ~/ghq/github.com/boxp/dotfiles/.config/ghostty ~/.config/ghostty
 [ -e ~/.config/gwq ] || ln -s ~/ghq/github.com/boxp/dotfiles/.config/gwq ~/.config/gwq
+mkdir -p ~/.codex
+[ -e ~/.codex/AGENTS.md ] || ln -s ~/ghq/github.com/boxp/dotfiles/AGENTS.md ~/.codex/AGENTS.md
 mkdir -p ~/.claude
 [ -e ~/.claude/CLAUDE.md ] || ln -s ~/ghq/github.com/boxp/dotfiles/.claude/CLAUDE.md ~/.claude/CLAUDE.md
 mkdir -p ~/.pi/agent
