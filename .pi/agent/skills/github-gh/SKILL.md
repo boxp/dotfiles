@@ -80,10 +80,24 @@ git push -u origin BRANCH
 gh pr create --draft --title "Title" --body "Body"
 ```
 
-If a PR already exists for the branch, update or report it instead of creating a duplicate:
+### Updating an existing PR
+
+When a PR already exists for the branch, push new commits as separate commits (do NOT use `git commit --amend` or `--force` unless the user explicitly asks):
+
 ```bash
-gh pr view --web
+git add PATHS
+git commit -m "fixup: description"  # or descriptive message
+git push origin BRANCH
+```
+
+Then update the PR title/description if needed:
+```bash
 gh pr edit PR --title "Title" --body "Body"
+```
+
+For CI reruns:
+```bash
+github run rerun RUN_ID --repo OWNER/REPO --failed
 ```
 
 ### Comments, Labels, and Reviews
@@ -101,6 +115,7 @@ Before write actions, restate the exact target and action unless the user alread
 ## Safety Rules
 
 - Never use `--force` or `--force-with-lease` unless the user explicitly asks for it.
+- **Never use `git commit --amend` to update existing PRs.** Push new commits instead.
 - Do not close, merge, delete branches, edit labels, or submit reviews without clear user intent.
 - Prefer JSON output for parsing and summaries.
 - Preserve local dirty work that is unrelated to the requested GitHub operation.
