@@ -19,10 +19,13 @@ mkdir -p ~/.config
 [ -e ~/.config/gwq ] || ln -s ~/ghq/github.com/boxp/dotfiles/.config/gwq ~/.config/gwq
 mkdir -p ~/.claude
 [ -e ~/.claude/CLAUDE.md ] || ln -s ~/ghq/github.com/boxp/dotfiles/.claude/CLAUDE.md ~/.claude/CLAUDE.md
+mkdir -p ~/.pi/agent
+[ -e ~/.pi/agent/AGENTS.md ] || ln -s ~/ghq/github.com/boxp/dotfiles/AGENTS.md ~/.pi/agent/AGENTS.md
 if [ -L ~/.claude/skills ] && [ "$(readlink ~/.claude/skills)" = "$HOME/ghq/github.com/boxp/dotfiles/.claude/skills" ]; then
   rm ~/.claude/skills
 fi
 mkdir -p ~/.claude/skills
+mkdir -p ~/.pi/agent/skills
 
 # Enable only the skills listed here (one symlink per skill).
 ENABLED_CLAUDE_SKILLS="
@@ -77,6 +80,25 @@ done
 for skill_name in $ENABLED_CLAUDE_SKILLS; do
   src="$HOME/ghq/github.com/boxp/dotfiles/.claude/skills/$skill_name"
   dst="$HOME/.claude/skills/$skill_name"
+  [ -d "$src" ] || continue
+  [ -e "$dst" ] || ln -s "$src" "$dst"
+done
+
+for skill_link in "$HOME/.pi/agent/skills"/*; do
+  [ -L "$skill_link" ] || continue
+  skill_name="${skill_link##*/}"
+  skill_is_enabled "$skill_name" && continue
+  skill_target="$(readlink "$skill_link")"
+  case "$skill_target" in
+    "$HOME/.claude/skills/"*|"$HOME/ghq/github.com/boxp/dotfiles/.claude/skills/"*)
+      rm "$skill_link"
+      ;;
+  esac
+done
+
+for skill_name in $ENABLED_CLAUDE_SKILLS; do
+  src="$HOME/.claude/skills/$skill_name"
+  dst="$HOME/.pi/agent/skills/$skill_name"
   [ -d "$src" ] || continue
   [ -e "$dst" ] || ln -s "$src" "$dst"
 done
