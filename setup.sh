@@ -45,6 +45,11 @@ xai-web-search
 xai-x-search
 "
 
+# Pi Agent-only skills, stored under .pi/agent/skills/ in this repository.
+ENABLED_PI_AGENT_SKILLS="
+github-gh
+"
+
 # Skills that should NOT be symlinked to ~/.codex/skills/
 # (e.g. skills that invoke codex CLI from Claude Code)
 CODEX_EXCLUDED_SKILLS="
@@ -62,6 +67,15 @@ skill_is_codex_excluded() {
 skill_is_enabled() {
   skill_name="$1"
   for enabled_skill in $ENABLED_CLAUDE_SKILLS; do
+    [ "$enabled_skill" = "$skill_name" ] && return 0
+  done
+  return 1
+}
+
+skill_is_pi_enabled() {
+  skill_name="$1"
+  skill_is_enabled "$skill_name" && return 0
+  for enabled_skill in $ENABLED_PI_AGENT_SKILLS; do
     [ "$enabled_skill" = "$skill_name" ] && return 0
   done
   return 1
@@ -89,10 +103,10 @@ done
 for skill_link in "$HOME/.pi/agent/skills"/*; do
   [ -L "$skill_link" ] || continue
   skill_name="${skill_link##*/}"
-  skill_is_enabled "$skill_name" && continue
+  skill_is_pi_enabled "$skill_name" && continue
   skill_target="$(readlink "$skill_link")"
   case "$skill_target" in
-    "$HOME/.claude/skills/"*|"$HOME/ghq/github.com/boxp/dotfiles/.claude/skills/"*)
+    "$HOME/.claude/skills/"*|"$HOME/ghq/github.com/boxp/dotfiles/.claude/skills/"*|"$HOME/ghq/github.com/boxp/dotfiles/.pi/agent/skills/"*)
       rm "$skill_link"
       ;;
   esac
@@ -100,6 +114,13 @@ done
 
 for skill_name in $ENABLED_CLAUDE_SKILLS; do
   src="$HOME/.claude/skills/$skill_name"
+  dst="$HOME/.pi/agent/skills/$skill_name"
+  [ -d "$src" ] || continue
+  [ -e "$dst" ] || ln -s "$src" "$dst"
+done
+
+for skill_name in $ENABLED_PI_AGENT_SKILLS; do
+  src="$HOME/ghq/github.com/boxp/dotfiles/.pi/agent/skills/$skill_name"
   dst="$HOME/.pi/agent/skills/$skill_name"
   [ -d "$src" ] || continue
   [ -e "$dst" ] || ln -s "$src" "$dst"
