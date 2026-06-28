@@ -47,7 +47,6 @@ xai-x-search
 
 # Pi Agent-only skills, stored under .pi/agent/skills/ in this repository.
 ENABLED_PI_AGENT_SKILLS="
-clojure-paren-repair
 github-gh
 "
 
