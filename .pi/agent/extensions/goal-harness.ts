@@ -298,8 +298,7 @@ export default function goalHarnessExtension(pi: ExtensionAPI) {
 		activeTurnStartedAt = undefined;
 	});
 
-	pi.on("agent_end", (_event, ctx) => {
-		restore(ctx);
+	pi.on("agent_end", () => {
 		if (currentGoal?.status !== "active") return;
 		queueGoalAuditTurn(pi, currentGoal);
 	});
