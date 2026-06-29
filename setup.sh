@@ -28,6 +28,7 @@ if [ -L ~/.claude/skills ] && [ "$(readlink ~/.claude/skills)" = "$HOME/ghq/gith
 fi
 mkdir -p ~/.claude/skills
 mkdir -p ~/.pi/agent/skills
+mkdir -p ~/.pi/agent/extensions
 
 # Enable only the skills listed here (one symlink per skill).
 ENABLED_CLAUDE_SKILLS="
@@ -48,6 +49,11 @@ xai-x-search
 # Pi Agent-only skills, stored under .pi/agent/skills/ in this repository.
 ENABLED_PI_AGENT_SKILLS="
 github-gh
+"
+
+# Pi Agent extensions, stored under .pi/agent/extensions/ in this repository.
+ENABLED_PI_AGENT_EXTENSIONS="
+goal-harness.ts
 "
 
 # Skills that should NOT be symlinked to ~/.codex/skills/
@@ -123,6 +129,35 @@ for skill_name in $ENABLED_PI_AGENT_SKILLS; do
   src="$HOME/ghq/github.com/boxp/dotfiles/.pi/agent/skills/$skill_name"
   dst="$HOME/.pi/agent/skills/$skill_name"
   [ -d "$src" ] || continue
+  [ -e "$dst" ] || ln -s "$src" "$dst"
+done
+
+for extension_link in "$HOME/.pi/agent/extensions"/*; do
+  [ -L "$extension_link" ] || continue
+  extension_name="${extension_link##*/}"
+  extension_is_enabled=false
+  for enabled_extension in $ENABLED_PI_AGENT_EXTENSIONS; do
+    if [ "$enabled_extension" = "$extension_name" ]; then
+      extension_is_enabled=true
+      break
+    fi
+  done
+  $extension_is_enabled && continue
+  extension_target="$(readlink "$extension_link")"
+  case "$extension_target" in
+    "$HOME/ghq/github.com/boxp/dotfiles/.pi/agent/extensions/"*)
+      rm "$extension_link"
+      ;;
+  esac
+done
+
+for extension_name in $ENABLED_PI_AGENT_EXTENSIONS; do
+  src="$HOME/ghq/github.com/boxp/dotfiles/.pi/agent/extensions/$extension_name"
+  dst="$HOME/.pi/agent/extensions/$extension_name"
+  [ -f "$src" ] || continue
+  if [ -f "$dst" ] && [ ! -L "$dst" ] && cmp -s "$src" "$dst"; then
+    rm "$dst"
+  fi
   [ -e "$dst" ] || ln -s "$src" "$dst"
 done
 
