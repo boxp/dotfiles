@@ -46,6 +46,7 @@ interface GoalState {
 const STATE_ENTRY = "goal-harness-state";
 const CONTEXT_ENTRY = "goal-harness-context";
 const AUDIT_ENTRY = "goal-harness-audit";
+const AUDIT_REQUEST_ENTRY = "goal-harness-audit-request";
 
 const GET_GOAL_PARAMS = Type.Object({});
 
@@ -189,19 +190,53 @@ Tool use:
 </pi_internal_context>`;
 }
 
+function makeGoalContextMessage(goal: GoalState) {
+	return {
+		customType: CONTEXT_ENTRY,
+		content: buildContinuationContext(goal),
+		display: false,
+		details: {
+			schemaVersion: 1,
+			goalId: goal.goalId,
+			injectedAt: nowSeconds(),
+		},
+	};
+}
+
 function injectGoalContext(pi: ExtensionAPI, goal: GoalState, triggerTurn: boolean) {
+	pi.sendMessage(makeGoalContextMessage(goal), triggerTurn ? { triggerTurn: true } : undefined);
+}
+
+function buildGoalAuditRequest(goal: GoalState): string {
+	return `<pi_internal_context source="goal-audit">
+Audit the active thread goal now.
+
+Objective:
+${goal.objective}
+
+Required behavior:
+- First decide whether the objective is fully complete from current evidence.
+- If complete, call update_goal with status "complete" and a concrete evidenceSummary.
+- If not complete, do not claim completion. Continue making concrete progress toward the same objective.
+- If the same blocker has repeated for at least three consecutive goal turns and no meaningful progress is possible, call update_goal with status "blocked".
+- Otherwise leave the goal active and keep working.
+</pi_internal_context>`;
+}
+
+function queueGoalAuditTurn(pi: ExtensionAPI, goal: GoalState) {
+	pi.sendMessage(makeGoalContextMessage(goal), { deliverAs: "followUp" });
 	pi.sendMessage(
 		{
-			customType: CONTEXT_ENTRY,
-			content: buildContinuationContext(goal),
+			customType: AUDIT_REQUEST_ENTRY,
+			content: buildGoalAuditRequest(goal),
 			display: false,
 			details: {
 				schemaVersion: 1,
 				goalId: goal.goalId,
-				injectedAt: nowSeconds(),
+				queuedAt: nowSeconds(),
 			},
 		},
-		triggerTurn ? { triggerTurn: true } : undefined,
+		{ triggerTurn: true, deliverAs: "followUp" },
 	);
 }
 
@@ -243,6 +278,12 @@ export default function goalHarnessExtension(pi: ExtensionAPI) {
 		if (currentGoal?.status === "active") activeTurnStartedAt = nowSeconds();
 	});
 
+	pi.on("before_agent_start", async (_event, ctx) => {
+		restore(ctx);
+		if (currentGoal?.status !== "active") return;
+		return { message: makeGoalContextMessage(currentGoal) };
+	});
+
 	pi.on("turn_end", (event) => {
 		if (currentGoal?.status !== "active") return;
 		const ts = nowSeconds();
@@ -255,6 +296,12 @@ export default function goalHarnessExtension(pi: ExtensionAPI) {
 			}),
 		);
 		activeTurnStartedAt = undefined;
+	});
+
+	pi.on("agent_end", (_event, ctx) => {
+		restore(ctx);
+		if (currentGoal?.status !== "active") return;
+		queueGoalAuditTurn(pi, currentGoal);
 	});
 
 	pi.registerCommand("goal", {
