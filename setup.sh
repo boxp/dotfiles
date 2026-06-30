@@ -49,6 +49,7 @@ xai-x-search
 # Pi Agent-only skills, stored under .pi/agent/skills/ in this repository.
 ENABLED_PI_AGENT_SKILLS="
 github-gh
+hitohako-novel-writer
 "
 
 # Pi Agent extensions, stored under .pi/agent/extensions/ in this repository.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hitohako Novel Writer"
+  short_description: "Draft hitohako-san universe novels with approvals"
+  default_prompt: "Use $hitohako-novel-writer to create a hitohako-san universe novel from an approved plot."
