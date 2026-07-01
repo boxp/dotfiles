@@ -254,6 +254,18 @@ function allPlannedChaptersAccepted(state: HitohakoNovelState, acceptedChapters:
 	return true;
 }
 
+function isAffirmativeReviewResponse(text: string): boolean {
+	const normalized = text.trim().toLowerCase();
+	return ["はい", "ok", "okay", "yes", "y", "承認", "問題ない", "問題ありません", "これでいい", "これで良い"].includes(
+		normalized,
+	);
+}
+
+function additionalPromptFromReviewResponse(text: string): string {
+	const trimmed = text.trim();
+	return trimmed.replace(/^追加プロンプト\s*[:：]?\s*/u, "").trim();
+}
+
 function summarizeState(state: HitohakoNovelState | undefined): string {
 	if (!state) return "No hitohako novel harness state is recorded in this branch.";
 	const lines = [
@@ -376,6 +388,70 @@ export default function hitohakoNovelHarnessExtension(pi: ExtensionAPI) {
 		pi.sendMessage(makeContextMessage(state, universe), triggerTurn ? { triggerTurn: true } : undefined);
 	}
 
+	function acceptPlot(state: HitohakoNovelState) {
+		if (!existsSync(state.plotPath)) return textResult(`Plot file does not exist: ${state.plotPath}`, undefined, true);
+		const next = transition(state, { phase: "chapter_drafting", currentChapter: 1 });
+		save(next);
+		inject(next, true, false);
+		return textResult("Accepted plot and moved to chapter drafting.", { state: next });
+	}
+
+	function revisePlot(state: HitohakoNovelState, additionalPrompt: string) {
+		const next = transition(state, {
+			phase: "plot_revision",
+			revisionPrompts: {
+				...state.revisionPrompts,
+				plot: [...state.revisionPrompts.plot, additionalPrompt],
+			},
+		});
+		save(next);
+		inject(next, true, false);
+		return textResult("Recorded plot revision prompt.", { state: next });
+	}
+
+	function acceptChapter(state: HitohakoNovelState, chapterNumber: number) {
+		const chapterError = requireCurrentChapter(state, chapterNumber);
+		if (chapterError) return chapterError;
+		const path = state.chapterPaths[String(chapterNumber)] ?? chapterPath(state, chapterNumber);
+		if (!existsSync(path)) return textResult(`Chapter file does not exist: ${path}`, undefined, true);
+		const acceptedChapters = Array.from(new Set([...state.acceptedChapters, chapterNumber])).sort((a, b) => a - b);
+		const plannedChapterCount = state.plannedChapterCount ?? chapterNumber;
+		const stateWithPlan = transition(state, { plannedChapterCount });
+		const allAccepted = allPlannedChaptersAccepted(stateWithPlan, acceptedChapters);
+		const next = transition(state, {
+			acceptedChapters,
+			plannedChapterCount,
+			currentChapter: allAccepted ? chapterNumber : chapterNumber + 1,
+			phase: allAccepted ? "final_review" : "chapter_drafting",
+		});
+		save(next);
+		inject(next, true, false);
+		return textResult(
+			allAccepted ? "Accepted final planned chapter and moved to final review." : `Accepted chapter ${chapterNumber}.`,
+			{ state: next },
+		);
+	}
+
+	function reviseChapter(state: HitohakoNovelState, chapterNumber: number, additionalPrompt: string) {
+		const chapterError = requireCurrentChapter(state, chapterNumber);
+		if (chapterError) return chapterError;
+		const key = String(chapterNumber);
+		const next = transition(state, {
+			phase: "chapter_revision",
+			currentChapter: chapterNumber,
+			revisionPrompts: {
+				...state.revisionPrompts,
+				chapters: {
+					...state.revisionPrompts.chapters,
+					[key]: [...(state.revisionPrompts.chapters[key] ?? []), additionalPrompt],
+				},
+			},
+		});
+		save(next);
+		inject(next, true, false);
+		return textResult(`Recorded chapter ${chapterNumber} revision prompt.`, { state: next });
+	}
+
 	pi.on("session_start", (_event, ctx) => {
 		restore(ctx);
 	});
@@ -388,6 +464,37 @@ export default function hitohakoNovelHarnessExtension(pi: ExtensionAPI) {
 		restore(ctx);
 		if (!currentState || ["final_saved", "cancelled"].includes(currentState.phase)) return;
 		return { message: makeContextMessage(currentState) };
+	});
+
+	pi.on("input", (event, ctx) => {
+		restore(ctx);
+		if (!currentState) return { action: "continue" };
+		const text = event.text.trim();
+		if (!text) return { action: "continue" };
+
+		if (currentState.phase === "plot_review") {
+			if (isAffirmativeReviewResponse(text)) {
+				acceptPlot(currentState);
+				return { action: "handled" };
+			}
+			const additionalPrompt = additionalPromptFromReviewResponse(text);
+			if (!additionalPrompt) return { action: "continue" };
+			revisePlot(currentState, additionalPrompt);
+			return { action: "handled" };
+		}
+
+		if (currentState.phase === "chapter_review") {
+			if (isAffirmativeReviewResponse(text)) {
+				acceptChapter(currentState, currentState.currentChapter);
+				return { action: "handled" };
+			}
+			const additionalPrompt = additionalPromptFromReviewResponse(text);
+			if (!additionalPrompt) return { action: "continue" };
+			reviseChapter(currentState, currentState.currentChapter, additionalPrompt);
+			return { action: "handled" };
+		}
+
+		return { action: "continue" };
 	});
 
 	pi.registerCommand("hitohako-novel", {
@@ -521,16 +628,7 @@ export default function hitohakoNovelHarnessExtension(pi: ExtensionAPI) {
 			if (phaseError) return phaseError;
 			const additionalPrompt = params.additionalPrompt.trim();
 			if (!additionalPrompt) return textResult("additionalPrompt is required.", undefined, true);
-			const state = transition(currentState, {
-				phase: "plot_revision",
-				revisionPrompts: {
-					...currentState.revisionPrompts,
-					plot: [...currentState.revisionPrompts.plot, additionalPrompt],
-				},
-			});
-			save(state);
-			inject(state, true, false);
-			return textResult("Recorded plot revision prompt.", { state });
+			return revisePlot(currentState, additionalPrompt);
 		},
 	});
 
@@ -545,11 +643,7 @@ export default function hitohakoNovelHarnessExtension(pi: ExtensionAPI) {
 			if (!currentState) return textResult("No hitohako novel harness is active.", undefined, true);
 			const phaseError = requirePhase(currentState, ["plot_review"]);
 			if (phaseError) return phaseError;
-			if (!existsSync(currentState.plotPath)) return textResult(`Plot file does not exist: ${currentState.plotPath}`, undefined, true);
-			const state = transition(currentState, { phase: "chapter_drafting", currentChapter: 1 });
-			save(state);
-			inject(state, true, false);
-			return textResult("Accepted plot and moved to chapter drafting.", { state });
+			return acceptPlot(currentState);
 		},
 	});
 
@@ -594,25 +688,9 @@ export default function hitohakoNovelHarnessExtension(pi: ExtensionAPI) {
 			const phaseError = requirePhase(currentState, ["chapter_review"]);
 			if (phaseError) return phaseError;
 			const chapterNumber = Math.max(1, Math.floor(params.chapterNumber ?? currentState.currentChapter));
-			const chapterError = requireCurrentChapter(currentState, chapterNumber);
-			if (chapterError) return chapterError;
 			const additionalPrompt = params.additionalPrompt.trim();
 			if (!additionalPrompt) return textResult("additionalPrompt is required.", undefined, true);
-			const key = String(chapterNumber);
-			const state = transition(currentState, {
-				phase: "chapter_revision",
-				currentChapter: chapterNumber,
-				revisionPrompts: {
-					...currentState.revisionPrompts,
-					chapters: {
-						...currentState.revisionPrompts.chapters,
-						[key]: [...(currentState.revisionPrompts.chapters[key] ?? []), additionalPrompt],
-					},
-				},
-			});
-			save(state);
-			inject(state, true, false);
-			return textResult(`Recorded chapter ${chapterNumber} revision prompt.`, { state });
+			return reviseChapter(currentState, chapterNumber, additionalPrompt);
 		},
 	});
 
@@ -628,26 +706,7 @@ export default function hitohakoNovelHarnessExtension(pi: ExtensionAPI) {
 			const phaseError = requirePhase(currentState, ["chapter_review"]);
 			if (phaseError) return phaseError;
 			const chapterNumber = Math.max(1, Math.floor(params.chapterNumber ?? currentState.currentChapter));
-			const chapterError = requireCurrentChapter(currentState, chapterNumber);
-			if (chapterError) return chapterError;
-			const path = currentState.chapterPaths[String(chapterNumber)] ?? chapterPath(currentState, chapterNumber);
-			if (!existsSync(path)) return textResult(`Chapter file does not exist: ${path}`, undefined, true);
-			const acceptedChapters = Array.from(new Set([...currentState.acceptedChapters, chapterNumber])).sort((a, b) => a - b);
-			const plannedChapterCount = currentState.plannedChapterCount ?? chapterNumber;
-			const stateWithPlan = transition(currentState, { plannedChapterCount });
-			const allAccepted = allPlannedChaptersAccepted(stateWithPlan, acceptedChapters);
-			const state = transition(currentState, {
-				acceptedChapters,
-				plannedChapterCount,
-				currentChapter: allAccepted ? chapterNumber : chapterNumber + 1,
-				phase: allAccepted ? "final_review" : "chapter_drafting",
-			});
-			save(state);
-			inject(state, true, false);
-			return textResult(
-				allAccepted ? "Accepted final planned chapter and moved to final review." : `Accepted chapter ${chapterNumber}.`,
-				{ state },
-			);
+			return acceptChapter(currentState, chapterNumber);
 		},
 	});
 

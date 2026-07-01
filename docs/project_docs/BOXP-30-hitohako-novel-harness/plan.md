@@ -17,6 +17,7 @@ Move the Pi Agent hitohako novel writing workflow from a manual skill-only proce
 5. Implement harness tools for request capture, plot save/revise/accept, chapter save/revise/accept, final save, and state inspection.
 6. Collect hitohako-san universe markdown notes at workflow start and inject them as hidden context.
 7. Use `はい` / `追加プロンプト` as the plot and chapter review flow.
+8. Handle plot/chapter review replies in the extension `input` hook so the model cannot skip approval transition tools.
 
 ## Verification
 
@@ -24,3 +25,4 @@ Move the Pi Agent hitohako novel writing workflow from a manual skill-only proce
 - TypeScript syntax/type sanity check for the new extension
 - `git diff --check`
 - Confirm the new extension is listed in `ENABLED_PI_AGENT_EXTENSIONS`
+- Confirm the extension loads through `pi -e`

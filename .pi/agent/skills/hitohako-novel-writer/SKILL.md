@@ -21,6 +21,13 @@ If the user already gave the writing request, pass it directly:
 
 Do not run the old manual save flow. The extension owns session state, file paths, plot/chapter/final saving, approval transitions, and SFW/NSFW output routing. The model's job is to write or revise the plot and prose, then call the harness tools.
 
+When the harness is waiting for plot or chapter review, user replies are handled by the extension input hook:
+
+- `はい` advances the harness to the next phase.
+- Any other non-empty review reply is treated as an additional prompt for revising the current plot or chapter.
+
+Do not start the next chapter from a review response unless the harness state has advanced to `chapter_drafting`.
+
 ## Source Material
 
 The extension collects the hitohako-san universe notes from the Obsidian vault and injects them into the agent context at the start of the workflow:
@@ -59,14 +66,14 @@ The extension collects the hitohako-san universe notes from the Obsidian vault a
 2. If the workflow was started without an inline request, call `set_hitohako_novel_request` after the user answers.
 3. Draft a plot from the injected universe context and user request.
 4. Call `save_hitohako_plot`.
-5. Ask the user to choose `はい` or `追加プロンプト`.
-6. If `追加プロンプト`, call `revise_hitohako_plot`, rewrite the plot, call `save_hitohako_plot`, and ask again.
-7. If `はい`, call `accept_hitohako_plot`.
+5. Ask the user to choose `はい` or enter `追加プロンプト`.
+6. Wait for the extension to process the user's review response and inject the next harness state.
+7. If the harness returns to `plot_revision`, rewrite the plot, call `save_hitohako_plot`, and ask again.
 8. Draft the current chapter requested by harness state.
 9. Call `save_hitohako_chapter`.
-10. Ask the user to choose `はい` or `追加プロンプト`.
-11. If `追加プロンプト`, call `revise_hitohako_chapter`, rewrite the same chapter, call `save_hitohako_chapter`, and ask again.
-12. If `はい`, call `accept_hitohako_chapter`.
+10. Ask the user to choose `はい` or enter `追加プロンプト`.
+11. Wait for the extension to process the user's review response and inject the next harness state.
+12. If the harness returns to `chapter_revision`, rewrite the same chapter, call `save_hitohako_chapter`, and ask again.
 13. Repeat chapter drafting until the harness moves to final review.
 14. Output the complete novel body in chat.
 15. Ask the user to choose `SFW` or `NSFW`.
