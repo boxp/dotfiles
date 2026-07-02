@@ -14,9 +14,10 @@ tmux の statusline で `tmux-ccusage` を表示したいが、実際には何�
 ## 修正方針
 
 1. `status-right` を 1 箇所に統合し、battery・ccusage・日時を同時表示する
-2. TPM 初期化行を `.tmux.conf` の最下部へ移し、各プラグインが最終的な `status-right` に対して補間できるようにする
-3. battery の色変数を実装に合わせて修正し、表示長も増やして切れにくくする
-4. `tmux source-file ~/.tmux.conf` 後の `status-right` を確認し、`#(...)` へ展開されていることを検証する
+2. ccusage は当日分に加えて当月累計 (`#{ccusage_month_cost}`) も表示する
+3. TPM 初期化行を `.tmux.conf` の最下部へ移し、各プラグインが最終的な `status-right` に対して補間できるようにする
+4. battery の色変数を実装に合わせて修正し、表示長も増やして切れにくくする
+5. `tmux source-file ~/.tmux.conf` 後の `status-right` を確認し、`#(...)` へ展開されていることを検証する
 
 ## 対象ファイル
 
@@ -27,4 +28,4 @@ tmux の statusline で `tmux-ccusage` を表示したいが、実際には何�
 
 1. `tmux source-file ~/.tmux.conf`
 2. `tmux show-options -g status-right` で battery/ccusage 由来の `#(...)` が含まれること
-3. tmux の status bar 上で battery・ccusage・日時が同時に見えること
+3. tmux の status bar 上で battery・月額 ccusage・当日 ccusage・日時が同時に見えること
