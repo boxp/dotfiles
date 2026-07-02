@@ -6,19 +6,28 @@ import difflib
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Compare two files and post the diff as a GitHub PR comment."
+        description="Compare two files and post the diff as a GitHub PR review comment."
     )
     parser.add_argument("--repo", required=True, help="GitHub repository in owner/repo form")
     parser.add_argument("--pr", required=True, type=int, help="Pull request number")
     parser.add_argument("--reference-path", required=True, help="Path to the reference file")
     parser.add_argument(
         "--implementation-path", required=True, help="Path to the implementation file"
+    )
+    parser.add_argument(
+        "--comment-path", required=True, help="Repository path in the PR where the review comment is attached"
+    )
+    parser.add_argument("--line", required=True, type=int, help="Line number for the review comment")
+    parser.add_argument(
+        "--side",
+        choices=("LEFT", "RIGHT"),
+        default="RIGHT",
+        help="Diff side for the review comment",
     )
     parser.add_argument("--reference-label", help="Label shown for the reference file")
     parser.add_argument("--implementation-label", help="Label shown for the implementation file")
@@ -152,18 +161,45 @@ def ensure_prerequisites(reference_path: Path, implementation_path: Path, dry_ru
         raise SystemExit("`gh` command not found")
 
 
-def post_comment(repo: str, pr_number: int, body: str) -> None:
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False) as tmp:
-        tmp.write(body)
-        tmp_path = tmp.name
+def get_pr_head_sha(repo: str, pr_number: int) -> str:
+    result = subprocess.run(
+        ["gh", "pr", "view", str(pr_number), "--repo", repo, "--json", "headRefOid", "--jq", ".headRefOid"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
 
-    try:
-        subprocess.run(
-            ["gh", "pr", "comment", str(pr_number), "--repo", repo, "--body-file", tmp_path],
-            check=True,
-        )
-    finally:
-        Path(tmp_path).unlink(missing_ok=True)
+
+def post_review_comment(
+    repo: str,
+    pr_number: int,
+    body: str,
+    comment_path: str,
+    line: int,
+    side: str,
+) -> None:
+    commit_id = get_pr_head_sha(repo, pr_number)
+    subprocess.run(
+        [
+            "gh",
+            "api",
+            f"repos/{repo}/pulls/{pr_number}/comments",
+            "--method",
+            "POST",
+            "-f",
+            f"body={body}",
+            "-f",
+            f"commit_id={commit_id}",
+            "-f",
+            f"path={comment_path}",
+            "-F",
+            f"line={line}",
+            "-f",
+            f"side={side}",
+        ],
+        check=True,
+    )
 
 
 def main() -> int:
@@ -197,8 +233,17 @@ def main() -> int:
         sys.stdout.write(body)
         return 0
 
-    post_comment(args.repo, args.pr, body)
-    print(f"Posted comment to {args.repo} PR #{args.pr}")
+    post_review_comment(
+        args.repo,
+        args.pr,
+        body,
+        args.comment_path,
+        args.line,
+        args.side,
+    )
+    print(
+        f"Posted review comment to {args.repo} PR #{args.pr} at {args.comment_path}:{args.line} ({args.side})"
+    )
     return 0
 
 
