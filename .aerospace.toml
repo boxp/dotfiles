@@ -117,11 +117,17 @@ on-mode-changed = []
     alt-l = 'focus right'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#focus-monitor
-    alt-ctrl-h = 'focus-monitor left'
-    alt-ctrl-j = 'focus-monitor down'
-    alt-ctrl-k = 'focus-monitor up'
-    alt-ctrl-l = 'focus-monitor right'
-    alt-ctrl-tab = 'focus-monitor --wrap-around next'
+    alt-hyper-h = 'focus-monitor left'
+    alt-hyper-j = 'focus-monitor down'
+    alt-hyper-k = 'focus-monitor up'
+    alt-hyper-l = 'focus-monitor right'
+    alt-hyper-tab = 'focus-monitor --wrap-around next'
+
+    # XMonad-like physical monitor selection: Alt+q/w/e/r -> monitor 1/2/3/4
+    alt-q = 'focus-monitor 1'
+    alt-w = 'focus-monitor 2'
+    alt-e = 'focus-monitor 3'
+    alt-r = 'focus-monitor 4'
     alt-ctrl-shift-r = '''exec-and-forget /bin/bash -lc '
 focused_monitor="$(aerospace list-monitors --focused --format "%{monitor-name}")"
 monitor_count="$(aerospace list-monitors --count)"
