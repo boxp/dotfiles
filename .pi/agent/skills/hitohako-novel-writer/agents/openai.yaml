@@ -1,4 +1,4 @@
 interface:
-  display_name: "Hitohako Novel Writer"
-  short_description: "Draft hitohako-san universe novels with approvals"
-  default_prompt: "Use $hitohako-novel-writer to create a hitohako-san universe novel from an approved plot."
+  display_name: "Hitohako Novel Reference"
+  short_description: "Find and read hitohako-san universe setting notes"
+  default_prompt: "Use $hitohako-novel-writer to search and read relevant hitohako-san universe setting notes before answering."
