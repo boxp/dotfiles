@@ -62,6 +62,8 @@ goal-harness.ts
 # (e.g. skills that invoke codex CLI from Claude Code)
 CODEX_EXCLUDED_SKILLS="
 codex-exec
+codex-review
+codex-review-file
 "
 
 skill_is_codex_excluded() {
@@ -167,7 +169,9 @@ mkdir -p ~/.codex/skills
 for skill_link in "$HOME/.codex/skills"/*; do
   [ -L "$skill_link" ] || continue
   skill_name="${skill_link##*/}"
-  skill_is_enabled "$skill_name" && continue
+  if skill_is_enabled "$skill_name" && ! skill_is_codex_excluded "$skill_name"; then
+    continue
+  fi
   skill_target="$(readlink "$skill_link")"
   case "$skill_target" in
     "$HOME/.claude/skills/"*)
