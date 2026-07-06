@@ -41,6 +41,7 @@ generate-image
 generate-pixelart
 end-of-day-ai-retro
 multi-repo-dev
+obsidian-task-board
 pr-diff-comment
 worktree
 xai-web-search
