@@ -1,0 +1,6 @@
+interface:
+  display_name: "Pi Agent委譲"
+  short_description: "Pi Agentへ実装とDraft PR作成だけを委譲する"
+  default_prompt: "`$delegate-to-pi-agent` を使って、Pi Agent に対象 worktree で実装・push・Draft PR 作成だけを委譲して。PR 本文は指定ファイルをそのまま使わせて。"
+policy:
+  allow_implicit_invocation: false
