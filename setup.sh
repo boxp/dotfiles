@@ -36,6 +36,7 @@ claude-delegate
 codex-exec
 codex-review
 codex-review-file
+delegate-to-cursor-composer
 delegate-to-pi-agent
 drawio-svg-preview
 generate-image

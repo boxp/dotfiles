@@ -1,0 +1,6 @@
+interface:
+  display_name: "Cursor Composer委譲"
+  short_description: "Cursor Composerへ実装とDraft PR作成だけを委譲する"
+  default_prompt: "`$delegate-to-cursor-composer` を使って、Cursor Composer に対象 worktree で実装・push・Draft PR 作成だけを委譲して。PR 本文は指定ファイルをそのまま使わせて。"
+policy:
+  allow_implicit_invocation: false
