@@ -33,18 +33,18 @@
 - 毎回同じ社内情報源を探したか
 - 参照先は決まっているのに探索コストが高かったか
 - Confluence / Jira / Glean / GitHub のどこを見るべきか迷ったか
-- Langfuse trace を見れば分かることを、感覚や記憶だけで判断していないか
+- セッションファイルを見れば分かることを、感覚や記憶だけで判断していないか
 
 この系統は専用 skill、検索テンプレート、参照順序の明文化候補。
 
-### 5. Langfuse trace の摩擦
+### 5. セッションファイル上の摩擦
 
-- latency が高い trace はどれか
-- token 使用量が大きい trace はどれか
-- retry / error / warning が繰り返されていないか
-- name / sessionId / tag の付け方が弱く、あとから追いにくくないか
+- 大きい JSONL や長い transcript はどれか
+- tool error、承認待ち、同じ確認質問、やり直しが繰り返されていないか
+- session file の場所や agent 種別が追いにくくないか
+- Codex / Claude / Pi agent / Cursor の使い分けが曖昧で、同じ作業を重複していないか
 
-この系統は tracing 設計、タグ設計、skill 事前確認、プロンプトの分割候補。
+この系統は agent 使い分け、skill 事前確認、プロンプト分割、セッション保存運用の見直し候補。
 
 ## 変更施策の分類
 
@@ -58,6 +58,8 @@
 - `~/.codex/config.toml`
 - `~/.codex/rules/*.rules`
 - `~/.claude/CLAUDE.md`
+- `~/.pi/agent/settings.json`
+- Cursor の global / managed rules
 - 通知 hook
 
 ### repo ローカルに向くもの
@@ -70,6 +72,7 @@
 - repo の `AGENTS.md`
 - `.claude/skills/<repo-specific-skill>`
 - `docs/project_docs/...`
+- Cursor project rules
 
 ## 提案の優先順位付け
 
@@ -97,8 +100,9 @@
 ## 今日つまずいた運用
 - ...
 
-## Langfuse で確認した事実
-- trace:
+## セッションファイルで確認した事実
+- agent:
+- file:
 - 観察内容:
 - そこから分かること:
 
