@@ -31,7 +31,7 @@ user/assistantの通常message、完了event、raw prompt/responseは分類入�
 | 3 | `permission` | `sandbox`、`filesystem`、`forbidden` | approval/policyまたはfilesystem権限 |
 | 4 | `timeout` | `deadline`、`network`、`operation` | deadline、network、処理timeout |
 | 5 | `network` | `dns`、`connection-refused`、`tls`、`host-unreachable`、`connection` | 名前解決、接続先、証明書、経路 |
-| 6 | `not-found` / `dependency` | `command`、`file`、`http-resource`、`dependency:missing` | executable、path/resource、依存導入 |
+| 6 | `not-found` / `dependency` | `command`、`file`、`http-resource`、`resource`、`dependency:missing` | executable、path/resource、依存導入 |
 | 7 | nonzero fallback | `nonzero-exit:code-N:signature-<12hex>` | 同じexit codeと正規化原因本文の調査 |
 | 8 | unknown fallback | `unknown:signature-<12hex>` | 同じ正規化構造化errorの調査 |
 
@@ -84,6 +84,7 @@ reportには候補外のsingletonも含む「分類別集計」を同じ決定�
 - `message` / `payload.message` がobjectの場合は既知の原因fieldを抽出し、異なる原因を同じunknownへ集約しない。
 - `exit_code` はtool/function output型のrecordだけで失敗判定し、通常messageやtelemetryの同名fieldは分類しない。
 - 直接fieldまたは埋め込みJSONの小数 `exit_code` は整数へ丸めず、失敗分類から除外する。
+- command/file/HTTP 404に特定できない汎用 `not found` も `not-found:resource` として対処単位を維持する。
 - 優先timestampがnull・不正でもnested wrapperに有効なtimestampがあれば当日recordとして分類する。
 - 既知規則に一致しない失敗はstableな `unknown:signature-*` fallbackになる。
 - 複数分類は件数降順・分類キー昇順、最大3候補になる。

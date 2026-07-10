@@ -231,6 +231,8 @@ failure_categories_for_file() {
       category="not-found:file:signature-$digest"
     elif [[ "$normalized" =~ http[^0-9]*404 ]]; then
       category="not-found:http-resource:signature-$digest"
+    elif [[ "$normalized" =~ not[[:space:]_-]+found ]]; then
+      category="not-found:resource:signature-$digest"
     else
       if [ "$kind" = nonzero ]; then
         category="nonzero-exit:code-${exit_code}:signature-$digest"

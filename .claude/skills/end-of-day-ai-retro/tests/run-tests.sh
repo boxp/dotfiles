@@ -120,6 +120,20 @@ AI_RETRO_TASK_BOARD_ROOT="$distinct_home/missing-task-board" \
 assert "different one-off failure categories do not produce a recurring-failure proposal" \
   bash -c "! grep -q '^### 候補[0-9]*: structured-failure-review' '$distinct_home/output/2026-07-10/report.md'"
 
+generic_not_found_home="$temp_home/generic-not-found"
+mkdir -p "$generic_not_found_home/codex" "$generic_not_found_home/claude"
+cp "$FIXTURES_DIR/generic-not-found-session.jsonl" "$generic_not_found_home/codex/model-a.jsonl"
+cp "$FIXTURES_DIR/generic-not-found-session.jsonl" "$generic_not_found_home/claude/model-b.jsonl"
+HOME="$generic_not_found_home" \
+AI_RETRO_CODEX_ROOT="$generic_not_found_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$generic_not_found_home/claude" \
+AI_RETRO_PI_ROOT="$generic_not_found_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$generic_not_found_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$generic_not_found_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$generic_not_found_home/output" >/dev/null
+assert "generic not-found failures retain a remediation-oriented recurring category" \
+  grep -Eq '^- 分類キー: not-found:resource:signature-[0-9a-f]{12}$' "$generic_not_found_home/output/2026-07-10/report.md"
+
 same_cause_home="$temp_home/same-cause"
 mkdir -p "$same_cause_home/codex" "$same_cause_home/claude"
 cp "$FIXTURES_DIR/nonzero-same-cause-a.jsonl" "$same_cause_home/codex/cache-a.jsonl"
