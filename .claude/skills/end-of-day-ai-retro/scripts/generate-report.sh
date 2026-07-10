@@ -180,36 +180,121 @@ increment_count() {
 }
 
 failure_categories_for_file() {
-  local file="$1" record lowered digest category
-  while IFS= read -r record; do
-    [ -n "$record" ] || continue
-    lowered="$(printf '%s' "$record" | tr '[:upper:]' '[:lower:]')"
-    case "$lowered" in
-      __nonzero_exit__) category="nonzero-exit" ;;
-      *permission*|*access\ denied*|*operation\ not\ permitted*|*forbidden*) category="permission" ;;
-      *unauthorized*|*authentication*|*credential*) category="authentication" ;;
-      *timed\ out*|*timeout*|*deadline\ exceeded*) category="timeout" ;;
-      *rate\ limit*|*too\ many\ requests*|*quota*|*'"429"'*) category="rate-limit" ;;
-      *connection*|*network*|*dns*|*host\ unreachable*) category="network" ;;
-      *not\ found*|*no\ such\ file*|*'"404"'*) category="not-found" ;;
-      *)
-        digest="$(printf '%s' "$record" | { sha256sum 2>/dev/null || shasum -a 256; } | awk '{print substr($1,1,12)}')"
-        category="error-signature-$digest"
-        ;;
-    esac
+  local file="$1" kind exit_code cause normalized digest category
+  while IFS=$'\t' read -r kind exit_code cause; do
+    [ -n "$kind" ] || continue
+    normalized="$(normalize_failure_text "$cause")"
+    digest="$(printf '%s' "$normalized" | { sha256sum 2>/dev/null || shasum -a 256; } | awk '{print substr($1,1,12)}')"
+
+    # Order matters: choose one remediation-oriented cause before considering
+    # broad families such as permission, timeout, or nonzero exit.
+    if [[ "$normalized" =~ (missing|required|not[[:space:]]+(set|found|provided)).*(credential|api[[:space:]_-]*key|auth[[:space:]_-]*token) ]] ||
+       [[ "$normalized" =~ (credential|api[[:space:]_-]*key|auth[[:space:]_-]*token).*(missing|required|not[[:space:]]+(set|found|provided)) ]]; then
+      category="authentication:missing-credential:signature-$digest"
+    elif [[ "$normalized" =~ (invalid|expired|revoked).*(credential|api[[:space:]_-]*key|auth[[:space:]_-]*token) ]] ||
+         [[ "$normalized" =~ (credential|api[[:space:]_-]*key|auth[[:space:]_-]*token).*(invalid|expired|revoked) ]]; then
+      category="authentication:invalid-credential:signature-$digest"
+    elif [[ "$normalized" =~ unauthorized|unauthenticated|authentication[[:space:]_-]*failed|http[^0-9]*401 ]]; then
+      category="authentication:unauthorized:signature-$digest"
+    elif [[ "$normalized" =~ quota ]]; then
+      category="rate-limit:quota:signature-$digest"
+    elif [[ "$normalized" =~ rate[[:space:]_-]*limit|too[[:space:]]+many[[:space:]]+requests|http[^0-9]*429 ]]; then
+      category="rate-limit:requests:signature-$digest"
+    elif [[ "$normalized" =~ sandbox|approval[[:space:]_-]*(required|denied)|denied[[:space:]]+by[[:space:]]+policy ]]; then
+      category="permission:sandbox:signature-$digest"
+    elif [[ "$normalized" =~ permission[[:space:]]+denied|access[[:space:]]+denied|operation[[:space:]]+not[[:space:]]+permitted|read-only[[:space:]]+file[[:space:]]+system ]]; then
+      category="permission:filesystem:signature-$digest"
+    elif [[ "$normalized" =~ forbidden|http[^0-9]*403 ]]; then
+      category="permission:forbidden:signature-$digest"
+    elif [[ "$normalized" =~ deadline[[:space:]_-]*exceeded ]]; then
+      category="timeout:deadline:signature-$digest"
+    elif [[ "$normalized" =~ (timeout|timed[[:space:]]+out).*(connection|network|dns|host) ]] ||
+         [[ "$normalized" =~ (connection|network|dns|host).*(timeout|timed[[:space:]]+out) ]]; then
+      category="timeout:network:signature-$digest"
+    elif [[ "$normalized" =~ timeout|timed[[:space:]]+out ]]; then
+      category="timeout:operation:signature-$digest"
+    elif [[ "$normalized" =~ dns|name[[:space:]]+resolution|resolve[[:space:]]+host ]]; then
+      category="network:dns:signature-$digest"
+    elif [[ "$normalized" =~ connection[[:space:]_-]*refused ]]; then
+      category="network:connection-refused:signature-$digest"
+    elif [[ "$normalized" =~ tls|ssl|certificate[[:space:]_-]*(verify|verification|expired|invalid|error|failed) ]]; then
+      category="network:tls:signature-$digest"
+    elif [[ "$normalized" =~ host[[:space:]_-]*unreachable|no[[:space:]]+route[[:space:]]+to[[:space:]]+host ]]; then
+      category="network:host-unreachable:signature-$digest"
+    elif [[ "$normalized" =~ connection[[:space:]_-]*(reset|failed|error)|network[[:space:]_-]*unreachable ]]; then
+      category="network:connection:signature-$digest"
+    elif [[ "$normalized" =~ module[[:space:]]+not[[:space:]]+found|cannot[[:space:]]+find[[:space:]]+module|missing[[:space:]_-]*dependency|package.*not[[:space:]]+found ]]; then
+      category="dependency:missing:signature-$digest"
+    elif [[ "$normalized" =~ command[[:space:]]+not[[:space:]]+found|executable[[:space:]]+file.*not[[:space:]]+found|no[[:space:]]+such[[:space:]]+command ]]; then
+      category="not-found:command:signature-$digest"
+    elif [[ "$normalized" =~ no[[:space:]]+such[[:space:]]+(file|directory)|file[[:space:]]+not[[:space:]]+found ]]; then
+      category="not-found:file:signature-$digest"
+    elif [[ "$normalized" =~ http[^0-9]*404 ]]; then
+      category="not-found:http-resource:signature-$digest"
+    else
+      if [ "$kind" = nonzero ]; then
+        category="nonzero-exit:code-${exit_code}:signature-$digest"
+      else
+        category="unknown:signature-$digest"
+      fi
+    fi
     printf '%s\n' "$category"
-  done < <(jq -scr '.[] |
+  done < <(jq -scr '
+    def embedded_exit_code:
+      ((.payload.output? // .output? // "") | tostring) as $output |
+      (try ($output | capture("\\\"exit_code\\\"[[:space:]]*:[[:space:]]*(?<code>[1-9][0-9]*)").code) catch null) // null;
+    def nonzero_exit_code:
+      if ((.exit_code? | type) == "number" and .exit_code > 0) then (.exit_code | floor | tostring)
+      elif ((.payload.exit_code? | type) == "number" and .payload.exit_code > 0) then (.payload.exit_code | floor | tostring)
+      else embedded_exit_code
+      end;
+    def cause_text:
+      . as $record |
+      [
+        .error?,
+        (if (.message? | type) == "string" then .message else empty end),
+        .content?, .output?, .stderr?, .reason?, .detail?, .details?,
+        .payload.error?,
+        (if (.payload.message? | type) == "string" then .payload.message else empty end),
+        .payload.content?, .payload.output?, .payload.stderr?, .payload.reason?, .payload.detail?, .payload.details?,
+        (.message.content[]? |
+          select(.type? == "tool_result" and .is_error? == true) |
+          (.content? // .text? // .output? // .message? // empty))
+      ] |
+      map(select(. != null) | if type == "string" then . else tojson end) |
+      if length > 0 then join(" ")
+      else "record-type=" + (($record.type? // $record.payload.type? // "unknown") | tostring) +
+        " status=" + (($record.status? // $record.payload.status? // "unknown") | tostring)
+      end;
+    .[] |
+    nonzero_exit_code as $exit_code |
     select(
       (.type? == "error") or (.payload.type? == "error") or
-      (.status? == "failed") or (.payload.status? == "failed") or (.is_error? == true) or
-      any(.message.content[]?; .type == "tool_result" and .is_error == true) or
-      ((.type? == "response_item") and ((.payload.type? // "") | test("tool.*output")) and
-        ((.payload.output // "") | tostring | test("\\\"exit_code\\\":[1-9]")))) |
-    if ((.type? == "response_item") and ((.payload.type? // "") | test("tool.*output")) and
-      ((.payload.output // "") | tostring | test("\\\"exit_code\\\":[1-9]")))
-    then "__NONZERO_EXIT__"
-    else (walk(if type == "object" then del(.timestamp, .created_at, .updated_at, .id, .uuid) else . end) | @json)
-    end' "$file" | sort -u)
+      (.status? == "failed") or (.payload.status? == "failed") or
+      (.is_error? == true) or (.payload.is_error? == true) or
+      any(.message.content[]?; .type? == "tool_result" and .is_error? == true) or
+      ($exit_code != null)) |
+    [(if $exit_code != null then "nonzero" else "structured" end), ($exit_code // "-"), cause_text] |
+    @tsv
+  ' "$file" | sort -u)
+}
+
+normalize_failure_text() {
+  local value="$1"
+  printf '%s' "$value" |
+    tr '[:upper:]' '[:lower:]' |
+    sed -E \
+      -e 's/[0-9]{4}-[0-9]{2}-[0-9]{2}t[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?(z|[+-][0-9]{2}:?[0-9]{2})/<timestamp>/g' \
+      -e 's/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/<uuid>/g' \
+      -e "s/(request|record|session|trace|task|run)[_ -]?id[=:][[:space:]]*[\"']?[-a-z0-9_.]{6,}/\1_id=<id>/g" \
+      -e "s#/var/folders/[^[:space:]\"']+#<tmp-path>#g" \
+      -e "s#/tmp/[^[:space:]\"']+#<tmp-path>#g" \
+      -e 's/0x[0-9a-f]+/<address>/g' \
+      -e 's/[0-9a-f]{12,}/<hex-id>/g' \
+      -e 's/[0-9]+([.][0-9]+)?[[:space:]]*(milliseconds?|ms|seconds?|secs?)/<duration>/g' \
+      -e 's/[0-9]{6,}/<number>/g' \
+      -e 's/[[:space:]]+/ /g' \
+      -e 's/^ //; s/ $//'
 }
 
 add_sessions() {
@@ -369,22 +454,37 @@ if [ "${#evidence_ids[@]}" -gt 0 ]; then
   evidence="$(printf '%s\n' "${evidence_ids[@]}" | head -n 3 | awk 'BEGIN{ORS=""} {if(NR>1)printf ", "; printf "%s",$0}')"
 fi
 
-proposals=()
-recurring_failure_category=""
-recurring_failure_count=0
-recurring_failure_evidence=""
-recurring_failure_record="$(awk -F '\t' '
-  { count[$1]++; ids[$1] = (ids[$1] ? ids[$1] ", " : "") $2 }
-  END { for (category in count) if (count[category] >= 2) printf "%d\t%s\t%s\n", count[category], category, ids[category] }
-' "$failure_category_log" | sort -t $'\t' -k1,1nr -k2,2 | head -n 1)"
-if [ -n "$recurring_failure_record" ]; then
-  IFS=$'\t' read -r recurring_failure_count recurring_failure_category recurring_failure_evidence <<< "$recurring_failure_record"
+failure_category_summary="$work_dir/failure-category-summary.tsv"
+sort -u -t $'\t' -k1,1 -k2,2 "$failure_category_log" | awk -F '\t' '
+  NF >= 2 {
+    count[$1]++
+    ids[$1] = (ids[$1] ? ids[$1] ", " : "") $2
+  }
+  END {
+    for (category in count) printf "%d\t%s\t%s\n", count[category], category, ids[category]
+  }
+' | sort -t $'\t' -k1,1nr -k2,2 > "$failure_category_summary"
+
+proposal_kinds=()
+proposal_categories=()
+proposal_counts=()
+proposal_evidences=()
+while IFS=$'\t' read -r recurring_count recurring_category recurring_evidence; do
+  [ -n "$recurring_category" ] || continue
+  [ "$recurring_count" -ge 2 ] || continue
+  [ "${#proposal_kinds[@]}" -lt 3 ] || break
+  proposal_kinds+=("structured-failure-review")
+  proposal_categories+=("$recurring_category")
+  proposal_counts+=("$recurring_count")
+  proposal_evidences+=("$recurring_evidence")
+done < "$failure_category_summary"
+if [ "$invalid_json" -gt 0 ] && [ "${#proposal_kinds[@]}" -lt 3 ]; then
+  proposal_kinds+=("broken-jsonl"); proposal_categories+=(""); proposal_counts+=(""); proposal_evidences+=("")
 fi
-if [ -n "$recurring_failure_category" ]; then proposals+=("structured-failure-review"); fi
-if [ "$invalid_json" -gt 0 ]; then proposals+=("broken-jsonl"); fi
-if [ "$missing_count" -gt 0 ]; then proposals+=("missing-source"); fi
-proposal_count="${#proposals[@]}"
-[ "$proposal_count" -le 3 ] || proposal_count=3
+if [ "$missing_count" -gt 0 ] && [ "${#proposal_kinds[@]}" -lt 3 ]; then
+  proposal_kinds+=("missing-source"); proposal_categories+=(""); proposal_counts+=(""); proposal_evidences+=("")
+fi
+proposal_count="${#proposal_kinds[@]}"
 
 report="$artifact/report.md"
 {
@@ -410,18 +510,31 @@ report="$artifact/report.md"
   echo "- 識別子: $evidence"
   echo "- 集計根拠: input-inventory.tsv（raw prompt / responseは記録しない）"
   echo
+  echo "## 構造化失敗の分類別集計"
+  if [ -s "$failure_category_summary" ]; then
+    while IFS=$'\t' read -r category_count category_key category_evidence; do
+      echo "- 分類キー: $category_key / distinct session件数: $category_count / 識別子: $category_evidence"
+    done < "$failure_category_summary"
+  else
+    echo "- 構造化された失敗分類はなかった。"
+  fi
+  echo
   echo "## 恒久化すべき変更候補（最大3件）"
   if [ "$proposal_count" -eq 0 ]; then
     echo "- 今回は恒久化条件（同種の再発、または高い失敗コスト）を満たす候補なし。"
   else
     index=0
-    for proposal in "${proposals[@]}"; do
-      index=$((index + 1)); [ "$index" -le 3 ] || break
+    while [ "$index" -lt "$proposal_count" ]; do
+      proposal="${proposal_kinds[$index]}"
+      recurring_failure_category="${proposal_categories[$index]}"
+      recurring_failure_count="${proposal_counts[$index]}"
+      recurring_failure_evidence="${proposal_evidences[$index]}"
+      index=$((index + 1))
       echo
       echo "### 候補$index: $proposal"
       case "$proposal" in
         structured-failure-review)
-          echo "- 対象: 複数agent"; echo "- 変更場所: private daily-review prompt（承認後に別ticketで分類設計）"; echo "- 変更内容: 同じ失敗分類のsessionを日次レビューでまとめ、2件以上再発した分類だけを恒久化候補として提示する"; echo "- 根拠識別子: $recurring_failure_evidence"; echo "- 観察根拠: 同じ失敗分類 $recurring_failure_category を持つsessionが複数（$recurring_failure_count 件）"; echo "- 期待効果: error種別を再発単位へ分け、恒久化に値する摩擦だけを選べる"; echo "- リスク: 同じ構造分類でも文脈が異なる可能性"; echo "- 優先度: P1"; echo "- 検証方法: 次回3営業日はerror種別別の件数を記録し、同分類2件以上のみ候補化する" ;;
+          echo "- 対象: 複数agent"; echo "- 変更場所: 原因分類に対応するskill / rules / adapter（人間承認後に別ticketで特定）"; echo "- 変更内容: 同じ原因分類を持つsessionの共通対処を人間が調査し、恒久化の採否を判断する"; echo "- 分類キー: $recurring_failure_category"; echo "- distinct session件数: $recurring_failure_count"; echo "- 根拠識別子: $recurring_failure_evidence"; echo "- 観察根拠: 同じ原因分類を持つ異なるsessionが $recurring_failure_count 件"; echo "- 期待効果: 対処を共有できる再発だけを恒久化候補として扱える"; echo "- リスク: 同じ正規化signatureでも文脈が異なる可能性"; echo "- 優先度: P1"; echo "- 検証方法: 次回3営業日の分類別件数と根拠識別子を比較し、同分類2件以上だけが候補になることを確認" ;;
         broken-jsonl)
           echo "- 対象: 履歴adapter"; echo "- 変更場所: .claude/skills/end-of-day-ai-retro/scripts/"; echo "- 変更内容: 壊れたJSONLをsource単位で隔離し、欠損理由をartifactへ記録したうえで正常な履歴の集計を継続する"; echo "- 根拠識別子: input-inventory.tsv の invalid-jsonl 行"; echo "- 観察根拠: 壊れたJSONLが $invalid_json 件"; echo "- 期待効果: 欠損理由の明確化と部分処理の安定"; echo "- リスク: producer側障害を見逃す可能性"; echo "- 優先度: P2"; echo "- 検証方法: 壊れたfixtureと正常fixtureを混在させて正常分が残ることを確認" ;;
         missing-source)

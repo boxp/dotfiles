@@ -1,0 +1,1 @@
+{"type":"response_item","id":"record-fixture-a-111111","payload":{"type":"function_call_output","output":"{\"exit_code\":17,\"output\":\"fixture cache index corrupt at /tmp/ai-retro-a-111/cache.bin request_id=req-fixture-a-111111 observed=2026-07-10T11:00:01Z\"}"},"timestamp":"2026-07-10T11:00:02Z"}
