@@ -97,7 +97,7 @@ AI_RETRO_PI_ROOT="$incomplete_home/missing-pi" \
 AI_RETRO_CURSOR_ROOT="$incomplete_home/missing-cursor" \
 AI_RETRO_TASK_BOARD_ROOT="$incomplete_home/missing-task-board" \
   "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$incomplete_home/output" >/dev/null
-assert "assistant progress response is not counted as completion" \
+assert "assistant progress and turn_completed are not counted as task completion" \
   grep -q ':completed-sessions 0' "$incomplete_home/output/2026-07-10/run-summary.edn"
 
 if [ "$failed" -eq 0 ]; then echo "All tests passed"; else echo "$failed tests failed"; fi

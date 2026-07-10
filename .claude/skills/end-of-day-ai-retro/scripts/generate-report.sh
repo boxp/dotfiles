@@ -154,10 +154,9 @@ add_sessions() {
         done <<< "$file_failure_categories"
       fi
       if jq -se 'any(.[];
-        ((.type? == "event_msg") and (.payload.type? == "task_complete")) or
+        ((.type? == "task_complete") or (.payload.type? == "task_complete")) or
         ((.type? == "result") and (((.subtype? // "") == "success") or ((.status? // "") == "success")) and ((.is_error? // false) == false)) or
-        ((.type? // "") | test("^(task_complete|turn_completed|session_completed|run_completed)$")) or
-        ((.payload.type? // "") | test("^(task_complete|turn_completed|session_completed|run_completed)$")))' "$file" >/dev/null 2>&1; then
+        ((.payload.type? == "result") and (((.payload.subtype? // "") == "success") or ((.payload.status? // "") == "success")) and ((.payload.is_error? // false) == false)))' "$file" >/dev/null 2>&1; then
         success_files=$((success_files + 1))
       fi
     fi
