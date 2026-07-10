@@ -1,2 +1,2 @@
-{"type":"event_msg","message":"fixture ordinary string status","payload":"fixture legacy payload","timestamp":"2026-07-10T13:59:59Z"}
-{"type":"response_item","exit_code":"17","message":"fixture opaque string message fault","timestamp":"2026-07-10T14:00:00Z"}
+{"type":"event_msg","exit_code":17,"message":"fixture ordinary string status","payload":"fixture legacy payload","timestamp":"2026-07-10T13:59:59Z"}
+{"type":"response_item","message":"fixture opaque string message fault","payload":{"type":"function_call_output","exit_code":"17"},"timestamp":"2026-07-10T14:00:00Z"}

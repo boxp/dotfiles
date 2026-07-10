@@ -248,10 +248,18 @@ failure_categories_for_file() {
       elif type == "string" and test("^[1-9][0-9]*$") then (tonumber | tostring)
       else null
       end;
+    def is_tool_output_type:
+      type == "string" and test("(^|_)(tool|function)[a-z0-9_-]*output($|_)");
+    def is_tool_output_record:
+      ((.type? // "") | is_tool_output_type) or
+      ((.payload.type? // "") | is_tool_output_type);
     def nonzero_exit_code:
-      (.exit_code? | positive_exit_code) //
-      (.payload.exit_code? | positive_exit_code) //
-      embedded_exit_code;
+      if is_tool_output_record then
+        (.exit_code? | positive_exit_code) //
+        (.payload.exit_code? | positive_exit_code) //
+        embedded_exit_code
+      else null
+      end;
     def message_content:
       .message? |
       select(type == "object") |

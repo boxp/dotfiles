@@ -199,9 +199,8 @@ AI_RETRO_PI_ROOT="$string_message_home/missing-pi" \
 AI_RETRO_CURSOR_ROOT="$string_message_home/missing-cursor" \
 AI_RETRO_TASK_BOARD_ROOT="$string_message_home/missing-task-board" \
   "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$string_message_home/output" >/dev/null
-assert "string-valued payloads/messages are safe and numeric string exits are classified" \
-  grep -Eq '^- 分類キー: nonzero-exit:code-17:signature-[0-9a-f]{12} / distinct session件数: 1 ' \
-    "$string_message_home/output/2026-07-10/report.md"
+assert "string-valued payloads/messages are safe and numeric string tool exits are classified once" \
+  bash -c "[ \"\$(grep -Ec '^- 分類キー: nonzero-exit:code-17:signature-[0-9a-f]{12} / distinct session件数: 1 ' '$string_message_home/output/2026-07-10/report.md')\" -eq 1 ]"
 
 ranking_home="$temp_home/ranking"
 mkdir -p "$ranking_home/codex" "$ranking_home/claude"
