@@ -3,6 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
+session-files.sh sources
 session-files.sh list [--date YYYY-MM-DD] [--agent codex|claude|pi|cursor|all] [--limit N]
 session-files.sh retro [--date YYYY-MM-DD] [--limit N] [--top N]
 session-files.sh show <session-file> [--lines N]
@@ -23,6 +24,11 @@ agent_arg="all"
 limit_arg=40
 top_arg=12
 show_lines=40
+
+codex_root="${AI_RETRO_CODEX_ROOT:-$HOME/.codex/sessions}"
+claude_root="${AI_RETRO_CLAUDE_ROOT:-$HOME/.claude/projects}"
+pi_root="${AI_RETRO_PI_ROOT:-$HOME/.pi/agent/sessions}"
+cursor_root="${AI_RETRO_CURSOR_ROOT:-$HOME/.cursor/projects}"
 
 day_start_epoch() {
   local day="$1"
@@ -48,21 +54,38 @@ file_size() {
 
 agent_for_path() {
   case "$1" in
-    "$HOME/.codex/sessions/"*) echo "codex" ;;
-    "$HOME/.claude/projects/"*) echo "claude" ;;
-    "$HOME/.pi/agent/sessions/"*) echo "pi" ;;
-    "$HOME/.cursor/projects/"*) echo "cursor" ;;
+    "$codex_root/"*) echo "codex" ;;
+    "$claude_root/"*) echo "claude" ;;
+    "$pi_root/"*) echo "pi" ;;
+    "$cursor_root/"*) echo "cursor" ;;
     *) echo "unknown" ;;
   esac
 }
 
 find_sessions() {
   {
-    [ -d "$HOME/.codex/sessions" ] && find "$HOME/.codex/sessions" -type f -name "*.jsonl" ! -name "*.langfuse"
-    [ -d "$HOME/.claude/projects" ] && find "$HOME/.claude/projects" -type f -name "*.jsonl"
-    [ -d "$HOME/.pi/agent/sessions" ] && find "$HOME/.pi/agent/sessions" -type f -name "*.jsonl"
-    [ -d "$HOME/.cursor/projects" ] && find "$HOME/.cursor/projects" -path "*/agent-transcripts/*.jsonl" -type f
+    [ -d "$codex_root" ] && find "$codex_root" -type f -name "*.jsonl" ! -name "*.langfuse"
+    [ -d "$claude_root" ] && find "$claude_root" -type f -name "*.jsonl"
+    [ -d "$pi_root" ] && find "$pi_root" -type f -name "*.jsonl"
+    [ -d "$cursor_root" ] && find "$cursor_root" -path "*/agent-transcripts/*.jsonl" -type f
   } 2>/dev/null
+}
+
+print_sources() {
+  printf 'source\tstatus\tlocation\n'
+  local source root
+  while IFS=$'\t' read -r source root; do
+    if [ -d "$root" ]; then
+      printf '%s\tavailable\t%s\n' "$source" "$root"
+    else
+      printf '%s\tmissing\t%s\n' "$source" "$root"
+    fi
+  done <<EOF
+codex	$codex_root
+claude	$claude_root
+pi	$pi_root
+cursor	$cursor_root
+EOF
 }
 
 print_table_header() {
@@ -175,6 +198,10 @@ parse_common_options() {
 }
 
 case "$command" in
+  sources)
+    [ "$#" -eq 0 ] || { usage; exit 1; }
+    print_sources
+    ;;
   list)
     parse_common_options "$@"
     list_sessions

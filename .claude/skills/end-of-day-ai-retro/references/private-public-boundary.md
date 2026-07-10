@@ -34,6 +34,6 @@
 改善提案に根拠を記録する際は、raw sessionの内容ではなく識別子と秘匿済み要約を使う:
 
 ```
-観察根拠: session ~/.claude/projects/.../abc123.jsonl (2026-07-10 14:30)
+観察根拠: session claude:3f1a2b4c5d6e (2026-07-10)
 観察内容: codex-execへの委譲で同じパラメータを3回繰り返し指定した（内容は非公開）
 ```

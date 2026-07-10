@@ -11,11 +11,12 @@ description: 一日の Claude Code / Codex / Pi agent / Cursor セッション�
 
 ## 進め方
 
-1. 今日の対象セッションファイルを確定する
+1. 今日の対象セッションファイルとsource別欠損を確定する
 2. セッションの摩擦と成功パターンを集める
 3. Claude Code / Codex / Pi agent / Cursor のどこに寄せる改善かを分ける
 4. 一時的なプロンプト工夫ではなく、設定・skill・rules・hook に昇格させる候補を選ぶ
-5. 変更案、期待効果、検証方法を短くまとめる
+5. 変更案、期待効果、risk、優先度、検証方法を最大3件にまとめる
+6. 日次自動実行ではprivate report/run artifactだけを保存し、変更は行わない
 
 詳細な観点と出力テンプレートは `references/retro-checklist.md` を読む。セッションファイルの見方は `references/session-files-retro.md` も読む。
 
@@ -29,8 +30,22 @@ description: 一日の Claude Code / Codex / Pi agent / Cursor セッション�
 - `Claude Code` 側も、`~/.claude/projects/**/*.jsonl` や通知フックを見返せる構成になっているか確認する
 - `Pi agent` は `~/.pi/agent/sessions/**/*.jsonl` にセッションが残っているか確認する
 - `Cursor` は `~/.cursor/projects/**/agent-transcripts/*.jsonl` にセッションが残っているか確認する
+- Task Boardは `~/.codex-task-board/workspaces/*/<YYYYMMDD>T*`、Langfuseは利用可能なcredential/configとadapterを確認する
 - repo 内 skill を改善候補に含める場合は、既存の `.claude/skills/` と `setup.sh` の有効化リストを確認する
 - 単発の作業ミスではなく、再発しそうな摩擦を優先する
+
+## 日次artifactを生成する
+
+```bash
+bash "$HOME/.claude/skills/end-of-day-ai-retro/scripts/generate-report.sh" \
+  --date "$(TZ=Asia/Tokyo date +%F)" \
+  --time-zone "Asia/Tokyo" \
+  --output-root "/private/vault/path/AI Retro/runs"
+```
+
+同じ対象日は同じdirectoryを置換する。`report.md`、`run-summary.edn`、`missing-sources.tsv`、`input-inventory.tsv` を確認する。欠損・壊れたJSONLがあっても利用可能なsourceを残す。
+
+日次自動実行が変更してよいのはprivate artifactだけ。repo、`~/.claude`、`~/.codex`、skill、rules、Task Board、clusterを変更しない。候補の採用は人間承認後に別ticketとPRで行う。
 
 ## セッションファイルを使った観察手順
 
@@ -146,12 +161,15 @@ bash "$HOME/.claude/skills/end-of-day-ai-retro/scripts/session-files.sh" show <s
 5. 明日入れる変更
 6. 変更後の確認方法
 
-変更候補ごとに、少なくとも以下を含める。
+変更候補は最大3件とし、少なくとも以下を含める。
 
 - 対象: `Claude Code` / `Codex` / `Pi agent` / `Cursor` / `複数`
 - 変更場所: 例 `~/.codex/config.toml`, `~/.codex/rules/*.rules`, `.claude/skills/...`, `CLAUDE.md`, `~/.pi/agent/settings.json`, `~/.cursor/projects/.../rules`
 - 変更内容: 1-2文
 - 期待効果: 1文
+- 観察根拠: session / trace / ticketの秘匿済み識別子
+- リスク: 1文
+- 優先度: P1/P2/P3
 - 検証方法: 1文
 
 ## 禁止事項
@@ -161,3 +179,5 @@ bash "$HOME/.claude/skills/end-of-day-ai-retro/scripts/session-files.sh" show <s
 - セキュリティや破壊的操作に関する緩和提案を、根拠なく推奨しない
 - repo ローカルで済むものをグローバル設定に広げない
 - セッションファイル 1 件だけの単発異常で恒久対応を決めない
+- raw prompt/response、secret、token、個人情報、cluster固有値をpublic dotfilesや提案へ転載しない
+- 日次runからrepo、agent設定、skill、rules、clusterを自動変更しない

@@ -6,54 +6,69 @@ SCRIPTS_DIR="$(cd "$TESTS_DIR/../scripts" && pwd)"
 FIXTURES_DIR="$TESTS_DIR/fixtures"
 failed=0
 
-pass() {
-  echo "PASS: $1"
-}
-
-fail() {
-  echo "FAIL: $1"
-  failed=$((failed + 1))
+pass() { echo "PASS: $1"; }
+fail() { echo "FAIL: $1"; failed=$((failed + 1)); }
+assert() {
+  local name="$1"; shift
+  if "$@"; then pass "$name"; else fail "$name"; fi
 }
 
 temp_home="$(mktemp -d)"
 trap 'rm -rf "$temp_home"' EXIT
+mkdir -p "$temp_home/sessions/codex" "$temp_home/sessions/claude" "$temp_home/task-board/BOXP-TEST/20260710T120000Z"
+cp "$FIXTURES_DIR/success-session.jsonl" "$temp_home/sessions/codex/success.jsonl"
+cp "$FIXTURES_DIR/failed-session.jsonl" "$temp_home/sessions/codex/failed-1.jsonl"
+cp "$FIXTURES_DIR/failed-session.jsonl" "$temp_home/sessions/claude/failed-2.jsonl"
+cp "$FIXTURES_DIR/broken.jsonl" "$temp_home/sessions/claude/broken.jsonl"
+cp "$FIXTURES_DIR/sensitive.jsonl" "$temp_home/sessions/codex/sensitive.jsonl"
+find "$temp_home/sessions" -type f -exec touch -d '2026-07-10 12:00:00 UTC' {} +
+cp "$FIXTURES_DIR/success-session.jsonl" "$temp_home/sessions/codex/jst-boundary.jsonl"
+touch -d '2026-07-09 16:30:00 UTC' "$temp_home/sessions/codex/jst-boundary.jsonl"
 
-if HOME="$temp_home" "$SCRIPTS_DIR/session-files.sh" retro >/dev/null; then
-  pass "session-files.sh retro succeeds without session directories"
+run_report() {
+  HOME="$temp_home" \
+  AI_RETRO_CODEX_ROOT="$temp_home/sessions/codex" \
+  AI_RETRO_CLAUDE_ROOT="$temp_home/sessions/claude" \
+  AI_RETRO_PI_ROOT="$temp_home/sessions/pi-missing" \
+  AI_RETRO_CURSOR_ROOT="$temp_home/sessions/cursor-missing" \
+  AI_RETRO_TASK_BOARD_ROOT="$temp_home/task-board" \
+    "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$temp_home/output"
+}
+
+assert "source inventory reports unavailable sources without failing" \
+  bash -c "HOME='$temp_home' AI_RETRO_CODEX_ROOT='$temp_home/sessions/codex' AI_RETRO_PI_ROOT='$temp_home/missing' '$SCRIPTS_DIR/session-files.sh' sources | grep -q $'pi\\tmissing'"
+
+assert "mixed fixtures generate an artifact" run_report
+artifact="$temp_home/output/2026-07-10"
+assert "report contains successful operation section" grep -q '^## うまくいった運用' "$artifact/report.md"
+assert "repeated failures produce a grounded proposal" grep -q '構造化された失敗記録を持つsessionが複数' "$artifact/report.md"
+assert "broken JSONL is isolated and reported" grep -q ':invalid-jsonl 1' "$artifact/run-summary.edn"
+assert "target-day boundary uses the requested time zone" grep -q ':session-count {:codex 4 ' "$artifact/run-summary.edn"
+assert "available token and latency metrics are aggregated" grep -q ':metrics {:files 2 :token-total 200 :duration-ms-total 500}' "$artifact/run-summary.edn"
+assert "missing histories are explicit" grep -q $'pi\tdirectory not found' "$artifact/missing-sources.tsv"
+assert "sensitive fixture body is not copied" bash -c "! grep -q 'abcdefghijklmnopqrstuvwxyz12345678' '$artifact/report.md'"
+assert "report passes public-output sanitizer" "$SCRIPTS_DIR/sanitize-check.sh" "$artifact/report.md"
+assert "proposal count never exceeds three" bash -c "[ \"\$(grep -c '^### 候補' '$artifact/report.md')\" -le 3 ]"
+assert "run records that automatic changes are disabled" grep -q ':automatic-changes false' "$artifact/run-summary.edn"
+
+before_count="$(grep -c '^### 候補' "$artifact/report.md")"
+assert "same-day rerun succeeds" run_report
+after_count="$(grep -c '^### 候補' "$artifact/report.md")"
+if [ "$before_count" = "$after_count" ] && [ "$(find "$temp_home/output" -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1 ]; then
+  pass "same-day rerun replaces one artifact without duplicate proposals"
 else
-  fail "session-files.sh retro succeeds without session directories"
+  fail "same-day rerun replaces one artifact without duplicate proposals"
 fi
 
-if HOME="$temp_home" "$SCRIPTS_DIR/generate-report.sh" --dry-run | grep -q '日次振り返りレポート'; then
-  pass "generate-report.sh --dry-run produces a report"
+empty_home="$temp_home/empty"
+mkdir -p "$empty_home"
+if HOME="$empty_home" AI_RETRO_TASK_BOARD_ROOT="$empty_home/missing" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --dry-run > "$temp_home/empty-report.md"; then
+  pass "no-history run degrades to a report"
 else
-  fail "generate-report.sh --dry-run produces a report"
+  fail "no-history run degrades to a report"
 fi
+assert "no-history report explains missing sources" grep -q '欠損ソース数: 6' "$temp_home/empty-report.md"
 
-if "$SCRIPTS_DIR/sanitize-check.sh" "$FIXTURES_DIR/sensitive.jsonl" >/dev/null 2>&1; then
-  fail "sanitize-check.sh rejects sensitive fixture"
-else
-  pass "sanitize-check.sh rejects sensitive fixture"
-fi
-
-if "$SCRIPTS_DIR/sanitize-check.sh" "$FIXTURES_DIR/success-session.jsonl" >/dev/null; then
-  pass "sanitize-check.sh accepts safe fixture"
-else
-  fail "sanitize-check.sh accepts safe fixture"
-fi
-
-mkdir -p "$temp_home/.codex/sessions/fake"
-cp "$FIXTURES_DIR/broken.jsonl" "$temp_home/.codex/sessions/fake/broken.jsonl"
-if HOME="$temp_home" "$SCRIPTS_DIR/session-files.sh" retro >/dev/null; then
-  pass "session-files.sh retro tolerates broken JSONL"
-else
-  fail "session-files.sh retro tolerates broken JSONL"
-fi
-
-if [ "$failed" -eq 0 ]; then
-  echo "All tests passed"
-else
-  echo "$failed tests failed"
-fi
-
+if [ "$failed" -eq 0 ]; then echo "All tests passed"; else echo "$failed tests failed"; fi
 exit "$failed"
