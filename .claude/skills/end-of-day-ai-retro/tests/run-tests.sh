@@ -50,6 +50,8 @@ assert "missing histories are explicit" grep -q $'pi\tdirectory not found' "$art
 assert "sensitive fixture body is not copied" bash -c "! grep -q 'abcdefghijklmnopqrstuvwxyz12345678' '$artifact/report.md'"
 assert "report passes public-output sanitizer" "$SCRIPTS_DIR/sanitize-check.sh" "$artifact/report.md"
 assert "proposal count never exceeds three" bash -c "[ \"\$(grep -c '^### 候補' '$artifact/report.md')\" -le 3 ]"
+assert "every generated proposal describes the concrete change" \
+  bash -c "[ \"\$(grep -c '^### 候補' '$artifact/report.md')\" -eq \"\$(grep -c '^- 変更内容: ' '$artifact/report.md')\" ]"
 assert "run records that automatic changes are disabled" grep -q ':automatic-changes false' "$artifact/run-summary.edn"
 
 if HOME="$temp_home" "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Not/A-Real-Zone --dry-run > /dev/null 2>&1; then

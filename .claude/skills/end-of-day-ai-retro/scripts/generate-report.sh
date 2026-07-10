@@ -411,11 +411,11 @@ report="$artifact/report.md"
       echo "### 候補$index: $proposal"
       case "$proposal" in
         structured-failure-review)
-          echo "- 対象: 複数agent"; echo "- 変更場所: private daily-review prompt（承認後に別ticketで分類設計）"; echo "- 根拠識別子: $recurring_failure_evidence"; echo "- 観察根拠: 同じ失敗分類 $recurring_failure_category を持つsessionが複数（$recurring_failure_count 件）"; echo "- 期待効果: error種別を再発単位へ分け、恒久化に値する摩擦だけを選べる"; echo "- リスク: 同じ構造分類でも文脈が異なる可能性"; echo "- 優先度: P1"; echo "- 検証方法: 次回3営業日はerror種別別の件数を記録し、同分類2件以上のみ候補化する" ;;
+          echo "- 対象: 複数agent"; echo "- 変更場所: private daily-review prompt（承認後に別ticketで分類設計）"; echo "- 変更内容: 同じ失敗分類のsessionを日次レビューでまとめ、2件以上再発した分類だけを恒久化候補として提示する"; echo "- 根拠識別子: $recurring_failure_evidence"; echo "- 観察根拠: 同じ失敗分類 $recurring_failure_category を持つsessionが複数（$recurring_failure_count 件）"; echo "- 期待効果: error種別を再発単位へ分け、恒久化に値する摩擦だけを選べる"; echo "- リスク: 同じ構造分類でも文脈が異なる可能性"; echo "- 優先度: P1"; echo "- 検証方法: 次回3営業日はerror種別別の件数を記録し、同分類2件以上のみ候補化する" ;;
         broken-jsonl)
-          echo "- 対象: 履歴adapter"; echo "- 変更場所: .claude/skills/end-of-day-ai-retro/scripts/"; echo "- 根拠識別子: input-inventory.tsv の invalid-jsonl 行"; echo "- 観察根拠: 壊れたJSONLが $invalid_json 件"; echo "- 期待効果: 欠損理由の明確化と部分処理の安定"; echo "- リスク: producer側障害を見逃す可能性"; echo "- 優先度: P2"; echo "- 検証方法: 壊れたfixtureと正常fixtureを混在させて正常分が残ることを確認" ;;
+          echo "- 対象: 履歴adapter"; echo "- 変更場所: .claude/skills/end-of-day-ai-retro/scripts/"; echo "- 変更内容: 壊れたJSONLをsource単位で隔離し、欠損理由をartifactへ記録したうえで正常な履歴の集計を継続する"; echo "- 根拠識別子: input-inventory.tsv の invalid-jsonl 行"; echo "- 観察根拠: 壊れたJSONLが $invalid_json 件"; echo "- 期待効果: 欠損理由の明確化と部分処理の安定"; echo "- リスク: producer側障害を見逃す可能性"; echo "- 優先度: P2"; echo "- 検証方法: 壊れたfixtureと正常fixtureを混在させて正常分が残ることを確認" ;;
         missing-source)
-          echo "- 対象: 履歴収集運用"; echo "- 変更場所: private vault / lolice（公開dotfilesへ固有値を置かない）"; echo "- 根拠識別子: missing-sources.tsv"; echo "- 観察根拠: 欠損sourceが $missing_count 件"; echo "- 期待効果: 観察範囲の拡大"; echo "- リスク: 保存対象増加によるprivateデータ量の増加"; echo "- 優先度: P3"; echo "- 検証方法: 翌日runのsource別入力件数と欠損理由を確認" ;;
+          echo "- 対象: 履歴収集運用"; echo "- 変更場所: private vault / lolice（公開dotfilesへ固有値を置かない）"; echo "- 変更内容: 欠損sourceの保存設定・mount・権限をprivate環境で見直し、取得不能時は理由をrun artifactへ残す"; echo "- 根拠識別子: missing-sources.tsv"; echo "- 観察根拠: 欠損sourceが $missing_count 件"; echo "- 期待効果: 観察範囲の拡大"; echo "- リスク: 保存対象増加によるprivateデータ量の増加"; echo "- 優先度: P3"; echo "- 検証方法: 翌日runのsource別入力件数と欠損理由を確認" ;;
       esac
     done
   fi
