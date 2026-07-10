@@ -61,7 +61,10 @@ day_start_epoch() {
   TZ="$time_zone" date -j -f '%Y-%m-%d %H:%M:%S' "$1 00:00:00" '+%s' 2>/dev/null || TZ="$time_zone" date -d "$1 00:00:00" '+%s'
 }
 day_end_epoch() {
-  TZ="$time_zone" date -j -v+1d -f '%Y-%m-%d %H:%M:%S' "$1 00:00:00" '+%s' 2>/dev/null || TZ="$time_zone" date -d "$1 00:00:00 + 1 day" '+%s'
+  local next_day
+  next_day="$(TZ="$time_zone" date -j -v+1d -f '%Y-%m-%d' "$1" '+%F' 2>/dev/null || \
+    TZ="$time_zone" date -d "$1 tomorrow" '+%F')"
+  day_start_epoch "$next_day"
 }
 mtime_epoch() { stat -c '%Y' "$1" 2>/dev/null || stat -f '%m' "$1"; }
 identifier_for_file() {
