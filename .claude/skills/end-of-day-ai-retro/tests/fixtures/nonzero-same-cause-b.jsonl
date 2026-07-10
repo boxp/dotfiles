@@ -1,0 +1,1 @@
+{"type":"response_item","id":"record-fixture-b-222222","payload":{"type":"function_call_output","output":"{\"exit_code\":17,\"output\":\"fixture cache index corrupt at /tmp/ai-retro-b-222/cache.bin request_id=req-fixture-b-222222 observed=2026-07-10T12:30:45+00:00\"}"},"timestamp":"2026-07-10T12:30:46Z"}
