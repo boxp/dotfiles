@@ -110,16 +110,16 @@ classify_jsonl_for_period() {
   # jq's mktime/strftime use the process timezone. ISO timestamps represent an
   # absolute instant, so keep their calendar conversion independent of the host.
   TZ=UTC jq -c --argjson start "$start" --argjson end "$end" '
-    def timestamp_field:
-      if has("timestamp") then {present: true, value: .timestamp}
-      elif ((.payload? | type) == "object" and (.payload | has("timestamp"))) then {present: true, value: .payload.timestamp}
-      elif ((.message? | type) == "object" and (.message | has("timestamp"))) then {present: true, value: .message.timestamp}
-      elif has("created_at") then {present: true, value: .created_at}
-      elif has("createdAt") then {present: true, value: .createdAt}
-      elif has("startTime") then {present: true, value: .startTime}
-      elif has("time") then {present: true, value: .time}
-      else {present: false, value: null}
-      end;
+    def timestamp_fields:
+      [
+        (if has("timestamp") then .timestamp else empty end),
+        (if ((.payload? | type) == "object" and (.payload | has("timestamp"))) then .payload.timestamp else empty end),
+        (if ((.message? | type) == "object" and (.message | has("timestamp"))) then .message.timestamp else empty end),
+        (if has("created_at") then .created_at else empty end),
+        (if has("createdAt") then .createdAt else empty end),
+        (if has("startTime") then .startTime else empty end),
+        (if has("time") then .time else empty end)
+      ];
     def timestamp_epoch:
       if type == "number" then (if . >= 100000000000 then . / 1000 else . end | floor)
       elif type == "string" and test("^[0-9]+(?:\\.[0-9]+)?$") then
@@ -143,9 +143,9 @@ classify_jsonl_for_period() {
       else null
       end;
     select(type == "object") as $record |
-    timestamp_field as $timestamp |
-    if ($timestamp.present | not) then {kind: "absent"}
-    else ($timestamp.value | timestamp_epoch) as $epoch |
+    timestamp_fields as $timestamps |
+    if ($timestamps | length) == 0 then {kind: "absent"}
+    else ([$timestamps[] | timestamp_epoch | select(. != null)] | .[0] // null) as $epoch |
       if $epoch == null then {kind: "invalid"}
       elif $epoch >= $start and $epoch < $end then {kind: "selected", record: $record}
       else {kind: "outside"}
@@ -242,7 +242,7 @@ failure_categories_for_file() {
   done < <(jq -scr '
     def embedded_exit_code:
       ((.payload.output? // .output? // "") | tostring) as $output |
-      (try ($output | capture("\\\"exit_code\\\"[[:space:]]*:[[:space:]]*(?<code>[1-9][0-9]*)").code) catch null) // null;
+      (try ($output | capture("\\\"exit_code\\\"[[:space:]]*:[[:space:]]*\\\"?(?<code>[1-9][0-9]*)\\\"?").code) catch null) // null;
     def positive_exit_code:
       if type == "number" and . > 0 then (floor | tostring)
       elif type == "string" and test("^[1-9][0-9]*$") then (tonumber | tostring)

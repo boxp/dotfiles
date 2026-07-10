@@ -16,7 +16,7 @@ BOXP-87から、同日artifactの置換、欠損sourceと壊れたJSONLの部分
 - `status` または `payload.status` が `failed`
 - recordまたはpayloadの `is_error` が `true`
 - message content内の `tool_result` が `is_error: true`
-- tool output recordがJSON numberまたは10進数文字列の正の `exit_code` を持つ
+- tool output recordが直接またはJSON化されたoutput内に、JSON numberまたは10進数文字列の正の `exit_code` を持つ
 
 user/assistantの通常message、完了event、raw prompt/responseは分類入力にしない。失敗recordから `error`、`message`、`content`、`output`、`stderr`、`reason`、`detail(s)` の既知fieldだけを原因本文として抽出し、record全体や同sessionの別messageをfingerprintへ混ぜない。
 
@@ -82,6 +82,7 @@ reportには候補外のsingletonも含む「分類別集計」を同じ決定�
 - `error` / `payload.error` がobjectの場合も、JSON化された `request_id` / `call_id` の差を除去できる。
 - `payload` / `message` が文字列でもmetrics・tool result探索を停止せず、数値文字列の非0終了を分類する。
 - `exit_code` はtool/function output型のrecordだけで失敗判定し、通常messageやtelemetryの同名fieldは分類しない。
+- 優先timestampがnull・不正でもnested wrapperに有効なtimestampがあれば当日recordとして分類する。
 - 既知規則に一致しない失敗はstableな `unknown:signature-*` fallbackになる。
 - 複数分類は件数降順・分類キー昇順、最大3候補になる。
 - 既存permission/timeout、欠損source、壊れたJSONL、秘匿check、時刻filter、同日置換を回帰させない。

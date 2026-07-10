@@ -1,1 +1,1 @@
-{"type":"response_item","payload":{"type":"function_call_output","output":"{\"exit_code\":5,\"output\":\"fixture assertion mismatch in suite beta\"}"},"timestamp":"2026-07-10T13:05:00Z"}
+{"type":"response_item","payload":{"type":"function_call_output","output":"{\"exit_code\":\"5\",\"output\":\"fixture assertion mismatch in suite beta\"}"},"timestamp":"2026-07-10T13:05:00Z"}
