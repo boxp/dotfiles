@@ -1,0 +1,3 @@
+{"type":"message","role":"user","content":[{"type":"text","text":"codex-execでBOXP-87の実装をお願いします"}],"timestamp":"2026-07-10T10:00:00Z"}
+{"type":"message","role":"assistant","content":[{"type":"text","text":"了解しました。実装を開始します。"}],"timestamp":"2026-07-10T10:00:05Z"}
+{"type":"message","role":"user","content":[{"type":"text","text":"ありがとう、完了しました"}],"timestamp":"2026-07-10T10:30:00Z"}

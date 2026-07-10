@@ -35,15 +35,15 @@ day_end_epoch() {
 }
 
 mtime_epoch() {
-  stat -f "%m" "$1" 2>/dev/null || stat -c "%Y" "$1"
+  stat -c "%Y" "$1" 2>/dev/null || stat -f "%m" "$1"
 }
 
 mtime_human() {
-  stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$1" 2>/dev/null || stat -c "%y" "$1" | cut -d. -f1
+  stat -c "%y" "$1" 2>/dev/null | cut -d. -f1 || stat -f "%Sm" -t "%Y-%m-%d %H:%M:%S" "$1"
 }
 
 file_size() {
-  stat -f "%z" "$1" 2>/dev/null || stat -c "%s" "$1"
+  stat -c "%s" "$1" 2>/dev/null || stat -f "%z" "$1"
 }
 
 agent_for_path() {
