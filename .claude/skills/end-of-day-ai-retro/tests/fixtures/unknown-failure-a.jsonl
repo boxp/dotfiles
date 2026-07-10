@@ -1,1 +1,1 @@
-{"type":"error","id":"record-unknown-a-111111","content":"fixture opaque subsystem fault frost at /tmp/unknown-a-111/state.bin request_id=req-unknown-a-111111 observed=2026-07-10T14:00:01Z","timestamp":"2026-07-10T14:00:02Z"}
+{"type":"error","id":"record-unknown-a-111111","error":{"message":"fixture opaque subsystem fault frost at /tmp/unknown-a-111/state.bin observed=2026-07-10T14:00:01Z","request_id":"req-unknown-a-111111"},"timestamp":"2026-07-10T14:00:02Z"}

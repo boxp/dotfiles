@@ -286,7 +286,7 @@ normalize_failure_text() {
     sed -E \
       -e 's/[0-9]{4}-[0-9]{2}-[0-9]{2}t[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?(z|[+-][0-9]{2}:?[0-9]{2})/<timestamp>/g' \
       -e 's/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/<uuid>/g' \
-      -e "s/(request|record|session|trace|task|run)[_ -]?id[=:][[:space:]]*[\"']?[-a-z0-9_.]{6,}/\1_id=<id>/g" \
+      -e "s/(request|record|session|trace|task|run)[_ -]?id[\"']?[[:space:]]*[=:][[:space:]]*[\"']?[-a-z0-9_.]{6,}/\1_id=<id>/g" \
       -e "s#/var/folders/[^[:space:]\"']+#<tmp-path>#g" \
       -e "s#/tmp/[^[:space:]\"']+#<tmp-path>#g" \
       -e 's/0x[0-9a-f]+/<address>/g' \

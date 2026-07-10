@@ -184,7 +184,7 @@ AI_RETRO_CURSOR_ROOT="$unknown_home/missing-cursor" \
 AI_RETRO_TASK_BOARD_ROOT="$unknown_home/missing-task-board" \
   "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$unknown_home/output" >/dev/null
 unknown_report="$unknown_home/output/2026-07-10/report.md"
-assert "unknown failures use a stable normalized fallback" \
+assert "object-valued error causes normalize JSON-quoted request IDs into one unknown fallback" \
   grep -Eq '^- 分類キー: unknown:signature-[0-9a-f]{12} / distinct session件数: 2 ' "$unknown_report"
 assert "unknown fallback output does not expose the raw failure" \
   bash -c "! grep -R -Eq 'opaque subsystem fault|/tmp/unknown' '$unknown_home/output/2026-07-10'"
