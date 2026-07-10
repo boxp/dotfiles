@@ -135,6 +135,7 @@ touch -d '2026-07-10 12:00:00 UTC' "$timestamp_home/codex/cross-day.jsonl"
 cp "$FIXTURES_DIR/success-session.jsonl" "$timestamp_home/codex/restored-later.jsonl"
 # A restored file with an out-of-day mtime must still be selected by event time.
 touch -d '2026-07-12 12:00:00 UTC' "$timestamp_home/codex/restored-later.jsonl"
+TZ=Asia/Tokyo \
 HOME="$timestamp_home" \
 AI_RETRO_CODEX_ROOT="$timestamp_home/codex" \
 AI_RETRO_CLAUDE_ROOT="$timestamp_home/missing-claude" \
@@ -145,6 +146,8 @@ AI_RETRO_TASK_BOARD_ROOT="$timestamp_home/missing-task-board" \
 timestamp_artifact="$timestamp_home/output/2026-07-10"
 assert "ISO offsets, fractional seconds, and numeric epoch milliseconds are included" \
   grep -q ':metrics {:files 2 :token-total 175 :duration-ms-total 375}' "$timestamp_artifact/run-summary.edn"
+assert "ISO timestamps are converted as UTC even when the host timezone is not UTC" \
+  grep -q ':session-count {:codex 2 ' "$timestamp_artifact/run-summary.edn"
 assert "records outside the target day do not contribute completion state" \
   grep -q ':completed-sessions 1' "$timestamp_artifact/run-summary.edn"
 assert "event time includes a target-day session restored on a later day" \

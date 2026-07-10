@@ -99,7 +99,9 @@ timestamp_epoch() {
 
 classify_jsonl_for_period() {
   local file="$1" destination="$2"
-  jq -c --argjson start "$start" --argjson end "$end" '
+  # jq's mktime/strftime use the process timezone. ISO timestamps represent an
+  # absolute instant, so keep their calendar conversion independent of the host.
+  TZ=UTC jq -c --argjson start "$start" --argjson end "$end" '
     def timestamp_field:
       if has("timestamp") then {present: true, value: .timestamp}
       elif ((.payload? | type) == "object" and (.payload | has("timestamp"))) then {present: true, value: .payload.timestamp}

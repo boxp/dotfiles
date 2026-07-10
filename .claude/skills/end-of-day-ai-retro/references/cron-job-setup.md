@@ -23,13 +23,14 @@ bb ~/.codex/skills/codex-workspace-cron/scripts/codex_cron_jobs.bb add \
   --name "End-of-day AI retrospective" \
   --schedule "0 22 * * *" \
   --time-zone "Asia/Tokyo" \
-  --workdir "/home/boxp" \
-  --output-root "/home/boxp/.codex-cron/runs" \
+  --workdir "<workspace directory>" \
+  --output-root "<private scheduler artifact root>" \
   --bypass-approvals false \
   --prompt-source "/private/path/end-of-day-ai-retro.md"
 ```
 
 `output-root` はscheduler自身のevents/stderr/last-message/summary保存先であり、日次reportの保存先はprompt内の `generate-report.sh --output-root` で指定する。
+実環境の絶対path、cluster固有のmount先、user名はpublic dotfilesへ記録せず、private vault側の運用手順で管理する。
 
 ## Manual validationと有効化
 
