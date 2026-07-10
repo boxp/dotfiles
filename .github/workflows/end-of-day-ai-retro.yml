@@ -1,0 +1,34 @@
+name: End-of-day AI retro
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/end-of-day-ai-retro/**"
+      - ".github/workflows/end-of-day-ai-retro.yml"
+      - "docs/project_docs/BOXP-87/plan.md"
+      - "setup.sh"
+  push:
+    branches:
+      - master
+    paths:
+      - ".claude/skills/end-of-day-ai-retro/**"
+      - ".github/workflows/end-of-day-ai-retro.yml"
+      - "docs/project_docs/BOXP-87/plan.md"
+      - "setup.sh"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
+        run: |
+          bash -n .claude/skills/end-of-day-ai-retro/scripts/*.sh
+          bash -n .claude/skills/end-of-day-ai-retro/tests/run-tests.sh
+          sh -n setup.sh
+      - name: Run fixture tests
+        run: bash .claude/skills/end-of-day-ai-retro/tests/run-tests.sh
