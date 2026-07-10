@@ -242,9 +242,9 @@ failure_categories_for_file() {
   done < <(jq -scr '
     def embedded_exit_code:
       ((.payload.output? // .output? // "") | tostring) as $output |
-      (try ($output | capture("\\\"exit_code\\\"[[:space:]]*:[[:space:]]*\\\"?(?<code>[1-9][0-9]*)\\\"?").code) catch null) // null;
+      (try ($output | capture("\\\"exit_code\\\"[[:space:]]*:[[:space:]]*\\\"?(?<code>[1-9][0-9]*)\\\"?[[:space:]]*[,}]").code) catch null) // null;
     def positive_exit_code:
-      if type == "number" and . > 0 then (floor | tostring)
+      if type == "number" and . > 0 and . == floor then tostring
       elif type == "string" and test("^[1-9][0-9]*$") then (tonumber | tostring)
       else null
       end;

@@ -202,6 +202,22 @@ AI_RETRO_TASK_BOARD_ROOT="$string_message_home/missing-task-board" \
 assert "string-valued payloads/messages are safe and numeric string tool exits are classified once" \
   bash -c "[ \"\$(grep -Ec '^- 分類キー: nonzero-exit:code-17:signature-[0-9a-f]{12} / distinct session件数: 1 ' '$string_message_home/output/2026-07-10/report.md')\" -eq 1 ]"
 
+fractional_exit_home="$temp_home/fractional-exit"
+mkdir -p "$fractional_exit_home/codex"
+cp "$FIXTURES_DIR/fractional-exit-codes.jsonl" "$fractional_exit_home/codex/fractional.jsonl"
+HOME="$fractional_exit_home" \
+AI_RETRO_CODEX_ROOT="$fractional_exit_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$fractional_exit_home/missing-claude" \
+AI_RETRO_PI_ROOT="$fractional_exit_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$fractional_exit_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$fractional_exit_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$fractional_exit_home/output" >/dev/null
+fractional_exit_report="$fractional_exit_home/output/2026-07-10/report.md"
+assert "fractional number and embedded JSON exit codes are not failures" \
+  grep -q '^- 構造化された失敗記録を持つセッションはなかった。$' "$fractional_exit_report"
+assert "fractional exit codes never produce integer nonzero classifications" \
+  bash -c "! grep -q 'nonzero-exit:code-' '$fractional_exit_report'"
+
 ranking_home="$temp_home/ranking"
 mkdir -p "$ranking_home/codex" "$ranking_home/claude"
 cp "$FIXTURES_DIR/failed-session.jsonl" "$ranking_home/codex/permission-a.jsonl"

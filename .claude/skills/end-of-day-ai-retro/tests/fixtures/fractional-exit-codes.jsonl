@@ -1,0 +1,2 @@
+{"type":"function_call_output","exit_code":0.5,"output":"fixture fractional direct exit","timestamp":"2026-07-10T14:10:00Z"}
+{"type":"response_item","payload":{"type":"function_call_output","output":"{\"exit_code\":1.9,\"output\":\"fixture fractional embedded exit\"}"},"timestamp":"2026-07-10T14:11:00Z"}
