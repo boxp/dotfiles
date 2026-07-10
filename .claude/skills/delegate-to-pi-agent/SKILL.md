@@ -1,18 +1,18 @@
 ---
 name: delegate-to-pi-agent
-description: Pi Agent へ実装作業を委譲し、push と Draft PR 作成までを別 tmux セッションで実行させる skill。Claude Code / Codex から「Pi Agent に任せたい」「別セッションで実装させたい」「作業 branch で実装して Draft PR だけ作らせたい」ときに使う。PR description は委任元が作成し、Pi Agent には指定済み PR 本文ファイルを使わせる。merge、close、branch delete、force-push、amend、Jira やチケットへのコメントはさせない。
+description: Pi Agent へ実装作業を委譲し、push と Draft PR 作成までを tmux 右ペイン（既定）または detached セッション（fallback）で実行させる skill。Claude Code / Codex から「Pi Agent に任せたい」「別ペインで実装させたい」「作業 branch で実装して Draft PR だけ作らせたい」ときに使う。PR description は委任元が作成し、Pi Agent には指定済み PR 本文ファイルを使わせる。merge、close、branch delete、force-push、amend、Jira やチケットへのコメントはさせない。
 ---
 
 # Pi Agent への委譲
 
-Pi Agent を tmux セッションで起動し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。
+Pi Agent を tmux 右ペイン（既定）または detached セッション（fallback）で起動し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。
 
 PR 本文は委任元が用意したファイルを Pi Agent にそのまま使わせる。Pi Agent に PR 本文の創作や運用判断をさせない。
 
 ## 入力の基本形
 
 - `$ARGUMENTS`: `<session-name> <target-repo-or-worktree> <task-or-prompt-file>`
-- `session-name`: tmux と Pi Agent の識別名
+- `session-name`: 委譲先 Pi Agent の識別名。`/tmp/pi-agent-delegate/<session-name>/` のディレクトリ名にも使う。fallback ルートでは tmux セッション名にもなる
 - `target-repo-or-worktree`: 作業対象ディレクトリ
 - `task-or-prompt-file`: 委譲タスク本文。直接テキストでもファイルでもよい
 - 例:
@@ -24,6 +24,25 @@ PR 本文は委任元が用意したファイルを Pi Agent にそのまま使�
 1. 対象ディレクトリの `git` 状態から repo、現在 branch、default branch、既存 dirty work を読む
 2. タスク本文から成功条件、検証コマンド、PR title、PR body source を読む
 3. 補完できない要素だけ委任元ユーザーへ確認する
+
+## 実行環境の分岐
+
+委譲先の tmux ターゲットは、呼び出し元の環境で決める。
+
+- **pane ルート**（`$TMUX` と `$TMUX_PANE` が両方ある）: 現在のセッションに右側 50% の背景ペインを作り、その `pane_id` を以降の操作対象にする
+- **fallback ルート**（上記のいずれかが無い）: detached な named session を作り、セッション名を操作対象にする。tmux 環境変数が無いだけで失敗させない
+
+以降の手順では、次の分岐で `TARGET` と終了方法を決める。
+
+```bash
+if [ -n "${TMUX:-}" ] && [ -n "${TMUX_PANE:-}" ]; then
+  # pane ルート
+  ...
+else
+  # fallback ルート
+  ...
+fi
+```
 
 ## 実行手順
 
@@ -121,14 +140,27 @@ test -e ~/.pi/agent/skills/github-gh
 
 無ければ委任元側で対象 repo の `./setup.sh` を実行して symlink を整える。その後に再確認する。
 
-### 5. tmux セッションで Pi Agent を起動する
+### 5. 委譲先 tmux ターゲットを作り Pi Agent を起動する
 
-同名セッションの衝突を避ける。
+#### pane ルート（tmux 内）
+
+右側 50% の背景ペインを作り、元のペインはフォーカスを維持する。出力された `pane_id` を保存する。
+
+```bash
+PANE_ID="$(tmux split-window -h -d -p 50 -c <target-repo-or-worktree> -P -F '#{pane_id}')"
+TARGET="$PANE_ID"
+tmux send-keys -t "$TARGET" 'pi --approve --name <session-name> --skill ~/.pi/agent/skills/github-gh @"<prompt-file>"' Enter
+```
+
+#### fallback ルート（tmux 外）
+
+同名セッションの衝突を避け、detached session を作る。
 
 ```bash
 tmux has-session -t <session-name> 2>/dev/null && exit 1
 tmux new-session -d -s <session-name> -c <target-repo-or-worktree>
-tmux send-keys -t <session-name> 'pi --approve --name <session-name> --skill ~/.pi/agent/skills/github-gh @"<prompt-file>"' Enter
+TARGET="<session-name>"
+tmux send-keys -t "$TARGET" 'pi --approve --name <session-name> --skill ~/.pi/agent/skills/github-gh @"<prompt-file>"' Enter
 ```
 
 `pi --print` のような一回実行より、tmux の対話セッションを既定にする。長時間実装、承認待ち、失敗時の介入を追いやすいため。
@@ -138,7 +170,7 @@ tmux send-keys -t <session-name> 'pi --approve --name <session-name> --skill ~/.
 必要に応じて出力を確認する。
 
 ```bash
-tmux capture-pane -t <session-name> -p | tail -50
+tmux capture-pane -t "$TARGET" -p | tail -50
 ```
 
 途中で Pi Agent が禁止事項に触れそうなら停止させ、prompt を修正して再実行する。
@@ -157,7 +189,7 @@ tmux capture-pane -t <session-name> -p | tail -50
 委任元は少なくとも次を確認する。
 
 ```bash
-tmux capture-pane -t <session-name> -p | tail -80
+tmux capture-pane -t "$TARGET" -p | tail -80
 git -C <target-repo-or-worktree> status --short --branch
 ```
 
@@ -168,6 +200,21 @@ git -C <target-repo-or-worktree> status --short --branch
 - `origin/<working-branch>` へ push 済み
 - Draft PR が 1 件作成されている
 - 禁止事項に触れていない
+
+## 委譲先の終了
+
+作業完了後、不要なら委譲先を閉じる。
+
+```bash
+tmux send-keys -t "$TARGET" "/exit" Enter
+sleep 2
+
+# pane ルート
+tmux kill-pane -t "$PANE_ID"
+
+# fallback ルート
+tmux kill-session -t <session-name>
+```
 
 ## 例外対応
 
