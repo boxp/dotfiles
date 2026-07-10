@@ -81,6 +81,7 @@ reportには候補外のsingletonも含む「分類別集計」を同じ決定�
 - timestamp、record ID、一時pathだけ異なる同一原因は同じ分類になる。
 - `error` / `payload.error` がobjectの場合も、JSON化された `request_id` / `call_id` の差を除去できる。
 - `payload` / `message` が文字列でもmetrics・tool result探索を停止せず、数値文字列の非0終了を分類する。
+- `message` / `payload.message` がobjectの場合は既知の原因fieldを抽出し、異なる原因を同じunknownへ集約しない。
 - `exit_code` はtool/function output型のrecordだけで失敗判定し、通常messageやtelemetryの同名fieldは分類しない。
 - 優先timestampがnull・不正でもnested wrapperに有効なtimestampがあれば当日recordとして分類する。
 - 既知規則に一致しない失敗はstableな `unknown:signature-*` fallbackになる。

@@ -1,2 +1,2 @@
 {"type":"message","role":"user","content":[{"type":"text","text":"処理を実行してください"}],"timestamp":"2026-07-10T11:00:00Z"}
-{"type":"error","content":"operation timed out","timestamp":"2026-07-10T11:00:10Z"}
+{"type":"error","message":{"content":"operation timed out"},"timestamp":"2026-07-10T11:00:10Z"}

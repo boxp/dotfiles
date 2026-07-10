@@ -269,6 +269,11 @@ failure_categories_for_file() {
     def failed_tool_result:
       message_content |
       select(.type? == "tool_result" and .is_error? == true);
+    def message_cause_fields:
+      .error?, .content?, .text?, .output?, .stderr?, .reason?, .detail?, .details?;
+    def object_message_cause:
+      (.message? | select(type == "object") | message_cause_fields),
+      (.payload.message? | select(type == "object") | message_cause_fields);
     def cause_text:
       . as $record |
       [
@@ -278,6 +283,7 @@ failure_categories_for_file() {
         .payload.error?,
         (if (.payload.message? | type) == "string" then .payload.message else empty end),
         .payload.content?, .payload.output?, .payload.stderr?, .payload.reason?, .payload.detail?, .payload.details?,
+        object_message_cause,
         (failed_tool_result |
           (.content? // .text? // .output? // .message? // empty))
       ] |

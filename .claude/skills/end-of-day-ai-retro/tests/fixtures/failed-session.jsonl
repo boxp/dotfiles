@@ -1,4 +1,4 @@
 {"type":"message","role":"user","content":[{"type":"text","text":"同じ指示を繰り返します"}],"timestamp":"2026-07-10T11:00:00Z"}
-{"type":"error","content":"tool call failed: permission denied","timestamp":"2026-07-10T11:00:10Z"}
+{"type":"error","message":{"content":"tool call failed: permission denied"},"timestamp":"2026-07-10T11:00:10Z"}
 {"type":"message","role":"user","content":[{"type":"text","text":"同じ指示を繰り返します"}],"timestamp":"2026-07-10T11:05:00Z"}
-{"type":"error","content":"tool call failed: permission denied","timestamp":"2026-07-10T11:05:10Z"}
+{"type":"error","message":{"content":"tool call failed: permission denied"},"timestamp":"2026-07-10T11:05:10Z"}
