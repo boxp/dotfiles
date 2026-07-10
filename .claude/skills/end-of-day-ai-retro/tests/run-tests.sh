@@ -41,7 +41,8 @@ assert "source inventory reports unavailable sources without failing" \
 assert "mixed fixtures generate an artifact" run_report
 artifact="$temp_home/output/2026-07-10"
 assert "report contains successful operation section" grep -q '^## うまくいった運用' "$artifact/report.md"
-assert "repeated failures produce a grounded proposal" grep -q '構造化された失敗記録を持つsessionが複数' "$artifact/report.md"
+assert "explicit completion events are counted" grep -q ':completed-sessions 2' "$artifact/run-summary.edn"
+assert "same failure category produces a grounded proposal" grep -q '同じ失敗分類 permission を持つsessionが複数（2 件）' "$artifact/report.md"
 assert "broken JSONL is isolated and reported" grep -q ':invalid-jsonl 1' "$artifact/run-summary.edn"
 assert "target-day boundary uses the requested time zone" grep -q ':session-count {:codex 4 ' "$artifact/run-summary.edn"
 assert "available token and latency metrics are aggregated" grep -q ':metrics {:files 2 :token-total 200 :duration-ms-total 500}' "$artifact/run-summary.edn"
@@ -69,6 +70,35 @@ else
   fail "no-history run degrades to a report"
 fi
 assert "no-history report explains missing sources" grep -q '欠損ソース数: 6' "$temp_home/empty-report.md"
+
+distinct_home="$temp_home/distinct"
+mkdir -p "$distinct_home/codex" "$distinct_home/claude"
+cp "$FIXTURES_DIR/failed-session.jsonl" "$distinct_home/codex/permission.jsonl"
+cp "$FIXTURES_DIR/timeout-session.jsonl" "$distinct_home/claude/timeout.jsonl"
+find "$distinct_home" -type f -exec touch -d '2026-07-10 12:00:00 UTC' {} +
+HOME="$distinct_home" \
+AI_RETRO_CODEX_ROOT="$distinct_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$distinct_home/claude" \
+AI_RETRO_PI_ROOT="$distinct_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$distinct_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$distinct_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$distinct_home/output" >/dev/null
+assert "different one-off failure categories do not produce a recurring-failure proposal" \
+  bash -c "! grep -q '^### 候補[0-9]*: structured-failure-review' '$distinct_home/output/2026-07-10/report.md'"
+
+incomplete_home="$temp_home/incomplete"
+mkdir -p "$incomplete_home/codex"
+cp "$FIXTURES_DIR/incomplete-session.jsonl" "$incomplete_home/codex/incomplete.jsonl"
+touch -d '2026-07-10 12:00:00 UTC' "$incomplete_home/codex/incomplete.jsonl"
+HOME="$incomplete_home" \
+AI_RETRO_CODEX_ROOT="$incomplete_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$incomplete_home/missing-claude" \
+AI_RETRO_PI_ROOT="$incomplete_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$incomplete_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$incomplete_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$incomplete_home/output" >/dev/null
+assert "assistant progress response is not counted as completion" \
+  grep -q ':completed-sessions 0' "$incomplete_home/output/2026-07-10/run-summary.edn"
 
 if [ "$failed" -eq 0 ]; then echo "All tests passed"; else echo "$failed tests failed"; fi
 exit "$failed"

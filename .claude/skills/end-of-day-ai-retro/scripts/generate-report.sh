@@ -42,8 +42,10 @@ artifact="$work_dir/$target_date"
 mkdir -p "$artifact"
 inventory="$artifact/input-inventory.tsv"
 missing="$artifact/missing-sources.tsv"
+failure_category_log="$work_dir/failure-categories.tsv"
 printf 'source\tidentifier\tstatus\n' > "$inventory"
 printf 'source\treason\n' > "$missing"
+: > "$failure_category_log"
 
 day_start_epoch() {
   TZ="$time_zone" date -j -f '%Y-%m-%d %H:%M:%S' "$1 00:00:00" '+%s' 2>/dev/null || TZ="$time_zone" date -d "$1 00:00:00" '+%s'
@@ -83,13 +85,46 @@ increment_count() {
   esac
 }
 
+failure_categories_for_file() {
+  local file="$1" record lowered digest category
+  while IFS= read -r record; do
+    [ -n "$record" ] || continue
+    lowered="$(printf '%s' "$record" | tr '[:upper:]' '[:lower:]')"
+    case "$lowered" in
+      __nonzero_exit__) category="nonzero-exit" ;;
+      *permission*|*access\ denied*|*operation\ not\ permitted*|*forbidden*) category="permission" ;;
+      *unauthorized*|*authentication*|*credential*) category="authentication" ;;
+      *timed\ out*|*timeout*|*deadline\ exceeded*) category="timeout" ;;
+      *rate\ limit*|*too\ many\ requests*|*quota*|*'"429"'*) category="rate-limit" ;;
+      *connection*|*network*|*dns*|*host\ unreachable*) category="network" ;;
+      *not\ found*|*no\ such\ file*|*'"404"'*) category="not-found" ;;
+      *)
+        digest="$(printf '%s' "$record" | { sha256sum 2>/dev/null || shasum -a 256; } | awk '{print substr($1,1,12)}')"
+        category="error-signature-$digest"
+        ;;
+    esac
+    printf '%s\n' "$category"
+  done < <(jq -scr '.[] |
+    select(
+      (.type? == "error") or (.payload.type? == "error") or
+      (.status? == "failed") or (.payload.status? == "failed") or (.is_error? == true) or
+      any(.message.content[]?; .type == "tool_result" and .is_error == true) or
+      ((.type? == "response_item") and ((.payload.type? // "") | test("tool.*output")) and
+        ((.payload.output // "") | tostring | test("\\\"exit_code\\\":[1-9]")))) |
+    if ((.type? == "response_item") and ((.payload.type? // "") | test("tool.*output")) and
+      ((.payload.output // "") | tostring | test("\\\"exit_code\\\":[1-9]")))
+    then "__NONZERO_EXIT__"
+    else (walk(if type == "object" then del(.timestamp, .created_at, .updated_at, .id, .uuid) else . end) | @json)
+    end' "$file" | sort -u)
+}
+
 add_sessions() {
   local source="$1" root="$2" glob_kind="${3:-all}"
   if [ ! -d "$root" ]; then
     printf '%s\t%s\n' "$source" "directory not found" >> "$missing"
     return
   fi
-  local found=0 file mtime identifier status file_tokens file_duration
+  local found=0 file mtime identifier status file_tokens file_duration file_failure_categories category
   while IFS= read -r file; do
     mtime="$(mtime_epoch "$file")"
     [ "$mtime" -ge "$start" ] && [ "$mtime" -lt "$end" ] || continue
@@ -109,19 +144,20 @@ add_sessions() {
         token_total=$((token_total + file_tokens))
         duration_ms_total=$((duration_ms_total + file_duration))
       fi
-      if jq -se 'any(.[];
-        (.type == "error") or (.payload.type == "error") or
-        (.status == "failed") or (.payload.status == "failed") or (.is_error == true) or
-        any(.message.content[]?; .type == "tool_result" and .is_error == true) or
-        ((.type == "response_item") and ((.payload.type // "") | test("tool.*output")) and
-          ((.payload.output // "") | tostring | test("\\\"exit_code\\\":[1-9]"))))' "$file" >/dev/null 2>&1; then
+      file_failure_categories="$(failure_categories_for_file "$file" | sort -u)"
+      if [ -n "$file_failure_categories" ]; then
         failure_files=$((failure_files + 1))
         status="${status},friction"
+        while IFS= read -r category; do
+          [ -n "$category" ] || continue
+          printf '%s\t%s\n' "$category" "$identifier" >> "$failure_category_log"
+        done <<< "$file_failure_categories"
       fi
       if jq -se 'any(.[];
-        ((.type == "event_msg") and (.payload.type == "task_complete")) or
-        ((.type == "message") and (.role == "assistant")) or
-        (.type == "assistant"))' "$file" >/dev/null 2>&1; then
+        ((.type? == "event_msg") and (.payload.type? == "task_complete")) or
+        ((.type? == "result") and (((.subtype? // "") == "success") or ((.status? // "") == "success")) and ((.is_error? // false) == false)) or
+        ((.type? // "") | test("^(task_complete|turn_completed|session_completed|run_completed)$")) or
+        ((.payload.type? // "") | test("^(task_complete|turn_completed|session_completed|run_completed)$")))' "$file" >/dev/null 2>&1; then
         success_files=$((success_files + 1))
       fi
     fi
@@ -164,7 +200,17 @@ if [ "${#evidence_ids[@]}" -gt 0 ]; then
 fi
 
 proposals=()
-if [ "$failure_files" -ge 2 ]; then proposals+=("structured-failure-review"); fi
+recurring_failure_category=""
+recurring_failure_count=0
+recurring_failure_evidence=""
+recurring_failure_record="$(awk -F '\t' '
+  { count[$1]++; ids[$1] = (ids[$1] ? ids[$1] ", " : "") $2 }
+  END { for (category in count) if (count[category] >= 2) printf "%d\t%s\t%s\n", count[category], category, ids[category] }
+' "$failure_category_log" | sort -t $'\t' -k1,1nr -k2,2 | head -n 1)"
+if [ -n "$recurring_failure_record" ]; then
+  IFS=$'\t' read -r recurring_failure_count recurring_failure_category recurring_failure_evidence <<< "$recurring_failure_record"
+fi
+if [ -n "$recurring_failure_category" ]; then proposals+=("structured-failure-review"); fi
 if [ "$invalid_json" -gt 0 ]; then proposals+=("broken-jsonl"); fi
 if [ "$missing_count" -gt 0 ]; then proposals+=("missing-source"); fi
 proposal_count="${#proposals[@]}"
@@ -183,7 +229,7 @@ report="$artifact/report.md"
   echo "- 安全境界: レポートと提案のみ。リポジトリ、agent設定、skill、rules、クラスタは変更していない。"
   echo
   echo "## うまくいった運用"
-  if [ "$success_files" -gt 0 ]; then echo "- 完了またはレビュー到達を示す記録が $success_files セッションで確認できた。"; else echo "- 当日入力から機械判定できる完了記録はなかった。人間レビューで補完する。"; fi
+  if [ "$success_files" -gt 0 ]; then echo "- 明示的な完了イベントが $success_files セッションで確認できた。"; else echo "- 当日入力から機械判定できる明示的な完了イベントはなかった。人間レビューで補完する。"; fi
   echo
   echo "## つまずいた運用"
   if [ "$failure_files" -gt 0 ]; then echo "- 構造化されたerror / failed status / tool errorを持つセッションが $failure_files 件あった（本文は転載しない）。"; else echo "- 構造化された失敗記録を持つセッションはなかった。"; fi
@@ -205,7 +251,7 @@ report="$artifact/report.md"
       echo "### 候補$index: $proposal"
       case "$proposal" in
         structured-failure-review)
-          echo "- 対象: 複数agent"; echo "- 変更場所: private daily-review prompt（承認後に別ticketで分類設計）"; echo "- 根拠識別子: $evidence"; echo "- 観察根拠: 構造化された失敗記録を持つsessionが複数（$failure_files 件）"; echo "- 期待効果: error種別を再発単位へ分け、恒久化に値する摩擦だけを選べる"; echo "- リスク: 文脈の異なる失敗を一括りにする可能性"; echo "- 優先度: P1"; echo "- 検証方法: 次回3営業日はerror種別別の件数を記録し、同分類2件以上のみ候補化する" ;;
+          echo "- 対象: 複数agent"; echo "- 変更場所: private daily-review prompt（承認後に別ticketで分類設計）"; echo "- 根拠識別子: $recurring_failure_evidence"; echo "- 観察根拠: 同じ失敗分類 $recurring_failure_category を持つsessionが複数（$recurring_failure_count 件）"; echo "- 期待効果: error種別を再発単位へ分け、恒久化に値する摩擦だけを選べる"; echo "- リスク: 同じ構造分類でも文脈が異なる可能性"; echo "- 優先度: P1"; echo "- 検証方法: 次回3営業日はerror種別別の件数を記録し、同分類2件以上のみ候補化する" ;;
         broken-jsonl)
           echo "- 対象: 履歴adapter"; echo "- 変更場所: .claude/skills/end-of-day-ai-retro/scripts/"; echo "- 根拠識別子: input-inventory.tsv の invalid-jsonl 行"; echo "- 観察根拠: 壊れたJSONLが $invalid_json 件"; echo "- 期待効果: 欠損理由の明確化と部分処理の安定"; echo "- リスク: producer側障害を見逃す可能性"; echo "- 優先度: P2"; echo "- 検証方法: 壊れたfixtureと正常fixtureを混在させて正常分が残ることを確認" ;;
         missing-source)
@@ -233,6 +279,7 @@ cat > "$artifact/run-summary.edn" <<EOF
  :task-board-runs $task_board_count
  :langfuse-traces $langfuse_count
  :invalid-jsonl $invalid_json
+ :completed-sessions $success_files
  :metrics {:files $metric_files :token-total $token_total :duration-ms-total $duration_ms_total}
  :missing-sources $missing_edn
  :proposal-count $proposal_count
