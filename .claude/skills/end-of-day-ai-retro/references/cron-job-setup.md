@@ -43,10 +43,11 @@ bb ~/.codex/skills/codex-workspace-cron/scripts/codex_cron_jobs.bb run end-of-da
 確認項目:
 
 1. scheduler runが終了し、private report artifactが作られた。
-2. 候補は0〜3件で、各候補に対象、変更場所、根拠identifier、期待効果、risk、優先度、検証方法がある。
+2. 候補は0〜3件で、各候補に対象、変更場所、根拠identifier、期待効果、risk、優先度、検証方法がある。`structured-failure-review` は分類キー、distinct session件数、該当する秘匿済み識別子も持つ。
 3. 欠損sourceが明示され、利用可能sourceの処理は残る。
 4. sensitive checkerが通り、`:automatic-changes false` である。
 5. 同じ対象日を再実行して対象日directoryが1つ、候補数が増殖しない。
+6. 構造化失敗の分類別集計は件数降順・分類キー昇順で、distinct sessionが2件未満の分類は候補にならない。
 
 確認後に一日1回のjobを有効化する。
 

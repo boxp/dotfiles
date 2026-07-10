@@ -42,7 +42,12 @@ assert "mixed fixtures generate an artifact" run_report
 artifact="$temp_home/output/2026-07-10"
 assert "report contains successful operation section" grep -q '^## うまくいった運用' "$artifact/report.md"
 assert "explicit completion events are counted" grep -q ':completed-sessions 2' "$artifact/run-summary.edn"
-assert "same failure category produces a grounded proposal" grep -q '同じ失敗分類 permission を持つsessionが複数（2 件）' "$artifact/report.md"
+assert "same failure category produces a grounded proposal" \
+  grep -Eq '^- 分類キー: permission:filesystem:signature-[0-9a-f]{12}$' "$artifact/report.md"
+assert "grounded proposal includes the distinct session count" \
+  grep -q '^- distinct session件数: 2$' "$artifact/report.md"
+assert "grounded proposal includes only sanitized session identifiers" \
+  grep -Eq '^- 根拠識別子: (codex|claude):[0-9a-f]{12}, (codex|claude):[0-9a-f]{12}$' "$artifact/report.md"
 assert "broken JSONL is isolated and reported" grep -q ':invalid-jsonl 1' "$artifact/run-summary.edn"
 assert "target-day boundary uses the requested time zone" grep -q ':session-count {:codex 4 ' "$artifact/run-summary.edn"
 assert "available token and latency metrics are aggregated" grep -q ':metrics {:files 2 :token-total 200 :duration-ms-total 500}' "$artifact/run-summary.edn"
@@ -114,6 +119,118 @@ AI_RETRO_TASK_BOARD_ROOT="$distinct_home/missing-task-board" \
   "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$distinct_home/output" >/dev/null
 assert "different one-off failure categories do not produce a recurring-failure proposal" \
   bash -c "! grep -q '^### 候補[0-9]*: structured-failure-review' '$distinct_home/output/2026-07-10/report.md'"
+
+same_cause_home="$temp_home/same-cause"
+mkdir -p "$same_cause_home/codex" "$same_cause_home/claude"
+cp "$FIXTURES_DIR/nonzero-same-cause-a.jsonl" "$same_cause_home/codex/cache-a.jsonl"
+cp "$FIXTURES_DIR/nonzero-same-cause-b.jsonl" "$same_cause_home/claude/cache-b.jsonl"
+HOME="$same_cause_home" \
+AI_RETRO_CODEX_ROOT="$same_cause_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$same_cause_home/claude" \
+AI_RETRO_PI_ROOT="$same_cause_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$same_cause_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$same_cause_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$same_cause_home/output" >/dev/null
+same_cause_report="$same_cause_home/output/2026-07-10/report.md"
+assert "volatile timestamps, record IDs, and temp paths normalize to one nonzero cause" \
+  grep -Eq '^- 分類キー: nonzero-exit:code-17:signature-[0-9a-f]{12} / distinct session件数: 2 / 識別子: (codex|claude):[0-9a-f]{12}, (codex|claude):[0-9a-f]{12}$' "$same_cause_report"
+assert "the normalized nonzero cause becomes a grounded proposal" \
+  grep -Eq '^- 分類キー: nonzero-exit:code-17:signature-[0-9a-f]{12}$' "$same_cause_report"
+assert "raw nonzero output and temp paths are not written to artifacts" \
+  bash -c "! grep -R -Eq 'cache index corrupt|/tmp/ai-retro' '$same_cause_home/output/2026-07-10'"
+
+different_exit_home="$temp_home/different-exit"
+mkdir -p "$different_exit_home/codex" "$different_exit_home/claude"
+cp "$FIXTURES_DIR/nonzero-different-cause-a.jsonl" "$different_exit_home/codex/compiler.jsonl"
+cp "$FIXTURES_DIR/nonzero-different-cause-b.jsonl" "$different_exit_home/claude/tests.jsonl"
+HOME="$different_exit_home" \
+AI_RETRO_CODEX_ROOT="$different_exit_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$different_exit_home/claude" \
+AI_RETRO_PI_ROOT="$different_exit_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$different_exit_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$different_exit_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$different_exit_home/output" >/dev/null
+different_exit_report="$different_exit_home/output/2026-07-10/report.md"
+assert "different nonzero causes have two distinct singleton signatures" \
+  bash -c "[ \"\$(grep -Ec '^- 分類キー: nonzero-exit:code-5:signature-[0-9a-f]{12} / distinct session件数: 1 ' '$different_exit_report')\" -eq 2 ]"
+assert "different singleton nonzero causes do not become recurring proposals" \
+  bash -c "! grep -q '^### 候補[0-9]*: structured-failure-review' '$different_exit_report'"
+
+repeated_home="$temp_home/repeated-session"
+mkdir -p "$repeated_home/codex"
+cp "$FIXTURES_DIR/nonzero-repeated-session.jsonl" "$repeated_home/codex/repeated.jsonl"
+HOME="$repeated_home" \
+AI_RETRO_CODEX_ROOT="$repeated_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$repeated_home/missing-claude" \
+AI_RETRO_PI_ROOT="$repeated_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$repeated_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$repeated_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$repeated_home/output" >/dev/null
+repeated_report="$repeated_home/output/2026-07-10/report.md"
+assert "duplicate records in one session count once" \
+  grep -Eq '^- 分類キー: nonzero-exit:code-17:signature-[0-9a-f]{12} / distinct session件数: 1 ' "$repeated_report"
+assert "one session repeating a failure does not become a recurring proposal" \
+  bash -c "! grep -q '^### 候補[0-9]*: structured-failure-review' '$repeated_report'"
+
+unknown_home="$temp_home/unknown-fallback"
+mkdir -p "$unknown_home/codex" "$unknown_home/claude"
+cp "$FIXTURES_DIR/unknown-failure-a.jsonl" "$unknown_home/codex/unknown-a.jsonl"
+cp "$FIXTURES_DIR/unknown-failure-b.jsonl" "$unknown_home/claude/unknown-b.jsonl"
+HOME="$unknown_home" \
+AI_RETRO_CODEX_ROOT="$unknown_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$unknown_home/claude" \
+AI_RETRO_PI_ROOT="$unknown_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$unknown_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$unknown_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$unknown_home/output" >/dev/null
+unknown_report="$unknown_home/output/2026-07-10/report.md"
+assert "object-valued error causes normalize JSON-quoted request and call IDs into one unknown fallback" \
+  grep -Eq '^- 分類キー: unknown:signature-[0-9a-f]{12} / distinct session件数: 2 ' "$unknown_report"
+assert "unknown fallback output does not expose the raw failure" \
+  bash -c "! grep -R -Eq 'opaque subsystem fault|/tmp/unknown' '$unknown_home/output/2026-07-10'"
+
+string_message_home="$temp_home/string-message"
+mkdir -p "$string_message_home/codex"
+cp "$FIXTURES_DIR/string-message-failure.jsonl" "$string_message_home/codex/failure.jsonl"
+HOME="$string_message_home" \
+AI_RETRO_CODEX_ROOT="$string_message_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$string_message_home/missing-claude" \
+AI_RETRO_PI_ROOT="$string_message_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$string_message_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$string_message_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$string_message_home/output" >/dev/null
+assert "string-valued payloads/messages are safe and numeric string tool exits are classified once" \
+  bash -c "[ \"\$(grep -Ec '^- 分類キー: nonzero-exit:code-17:signature-[0-9a-f]{12} / distinct session件数: 1 ' '$string_message_home/output/2026-07-10/report.md')\" -eq 1 ]"
+
+ranking_home="$temp_home/ranking"
+mkdir -p "$ranking_home/codex" "$ranking_home/claude"
+cp "$FIXTURES_DIR/failed-session.jsonl" "$ranking_home/codex/permission-a.jsonl"
+cp "$FIXTURES_DIR/failed-session.jsonl" "$ranking_home/claude/permission-b.jsonl"
+cp "$FIXTURES_DIR/failed-session.jsonl" "$ranking_home/claude/permission-c.jsonl"
+cp "$FIXTURES_DIR/timeout-session.jsonl" "$ranking_home/codex/timeout-a.jsonl"
+cp "$FIXTURES_DIR/timeout-session.jsonl" "$ranking_home/claude/timeout-b.jsonl"
+cp "$FIXTURES_DIR/nonzero-same-cause-a.jsonl" "$ranking_home/codex/cache-a.jsonl"
+cp "$FIXTURES_DIR/nonzero-same-cause-b.jsonl" "$ranking_home/claude/cache-b.jsonl"
+cp "$FIXTURES_DIR/unknown-failure-a.jsonl" "$ranking_home/codex/unknown-a.jsonl"
+cp "$FIXTURES_DIR/unknown-failure-b.jsonl" "$ranking_home/claude/unknown-b.jsonl"
+HOME="$ranking_home" \
+AI_RETRO_CODEX_ROOT="$ranking_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$ranking_home/claude" \
+AI_RETRO_PI_ROOT="$ranking_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$ranking_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$ranking_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$ranking_home/output" >/dev/null
+ranking_report="$ranking_home/output/2026-07-10/report.md"
+ranking_keys="$(awk '
+  /^### 候補[0-9]+: structured-failure-review$/ { candidate = 1; next }
+  candidate && /^- 分類キー: / { sub(/^- 分類キー: /, ""); print; candidate = 0 }
+' "$ranking_report")"
+assert "recurring categories consume no more than the three proposal slots" \
+  bash -c "[ \"\$(printf '%s\\n' '$ranking_keys' | grep -c .)\" -eq 3 ]"
+assert "recurring categories sort by count descending first" \
+  bash -c "printf '%s\\n' '$ranking_keys' | sed -n '1p' | grep -Eq '^permission:filesystem:signature-[0-9a-f]{12}$'"
+assert "equal-count recurring categories then sort by category key" \
+  bash -c "printf '%s\\n' '$ranking_keys' | sed -n '2p' | grep -Eq '^nonzero-exit:code-17:signature-[0-9a-f]{12}$' && printf '%s\\n' '$ranking_keys' | sed -n '3p' | grep -Eq '^timeout:operation:signature-[0-9a-f]{12}$'"
 
 incomplete_home="$temp_home/incomplete"
 mkdir -p "$incomplete_home/codex"

@@ -1,0 +1,1 @@
+{"type":"error","id":"record-unknown-b-222222","payload":{"timestamp":"2026-07-10T14:30:02Z","error":{"message":"fixture opaque subsystem fault frost at /tmp/unknown-b-222/state.bin observed=2026-07-10T14:30:01+00:00","request_id":"req-unknown-b-222222","call_id":"call-unknown-b-222222"}},"timestamp":null}
