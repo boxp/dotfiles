@@ -17,6 +17,20 @@ alias vis="vim -S ~/.vim.session"
 alias ssm_port_forwarder.sh="$HOME/go/src/github.com/eure/utility-scripts/aws/gateway/ssm_port_forwarder.sh"
 alias ssm_gateway_connector.sh="$HOME/go/src/github.com/eure/utility-scripts/aws/gateway/ssm_gateway_connector.sh"
 
+function codex() {
+  local arg
+  for arg in "$@"; do
+    case "$arg" in
+      -m|--model|--model=*|-m?*)
+        command codex "$@"
+        return $?
+        ;;
+    esac
+  done
+
+  command codex --model gpt-5.6-terra "$@"
+}
+
 function lg() {
   if [[ -n "$TMUX" ]]; then
     tmux popup -h 80% -w 80% -d "$PWD" -E "lazygit -ucd ~/.config/lazygit"
