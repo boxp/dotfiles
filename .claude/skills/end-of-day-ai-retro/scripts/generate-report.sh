@@ -257,7 +257,11 @@ failure_categories_for_file() {
         .payload.error?,
         (if (.payload.message? | type) == "string" then .payload.message else empty end),
         .payload.content?, .payload.output?, .payload.stderr?, .payload.reason?, .payload.detail?, .payload.details?,
-        (.message.content[]? |
+        (.message? |
+          select(type == "object") |
+          .content? |
+          select(type == "array") |
+          .[] |
           select(.type? == "tool_result" and .is_error? == true) |
           (.content? // .text? // .output? // .message? // empty))
       ] |

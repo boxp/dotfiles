@@ -189,6 +189,20 @@ assert "object-valued error causes normalize JSON-quoted request IDs into one un
 assert "unknown fallback output does not expose the raw failure" \
   bash -c "! grep -R -Eq 'opaque subsystem fault|/tmp/unknown' '$unknown_home/output/2026-07-10'"
 
+string_message_home="$temp_home/string-message"
+mkdir -p "$string_message_home/codex"
+cp "$FIXTURES_DIR/string-message-failure.jsonl" "$string_message_home/codex/failure.jsonl"
+HOME="$string_message_home" \
+AI_RETRO_CODEX_ROOT="$string_message_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$string_message_home/missing-claude" \
+AI_RETRO_PI_ROOT="$string_message_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$string_message_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$string_message_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$string_message_home/output" >/dev/null
+assert "string-valued error messages are classified without breaking tool-result traversal" \
+  grep -Eq '^- 分類キー: unknown:signature-[0-9a-f]{12} / distinct session件数: 1 ' \
+    "$string_message_home/output/2026-07-10/report.md"
+
 ranking_home="$temp_home/ranking"
 mkdir -p "$ranking_home/codex" "$ranking_home/claude"
 cp "$FIXTURES_DIR/failed-session.jsonl" "$ranking_home/codex/permission-a.jsonl"
