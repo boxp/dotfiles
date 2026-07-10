@@ -76,6 +76,8 @@ AI_RETRO_TASK_BOARD_ROOT="$langfuse_home/missing-task-board" \
 langfuse_artifact="$langfuse_home/output/2026-07-10"
 assert "available Langfuse adapter is executed and target-day traces are counted" \
   grep -q ':langfuse-traces 1' "$langfuse_artifact/run-summary.edn"
+assert "Langfuse timestamps with out-of-range UTC offsets are rejected" \
+  grep -q $'^langfuse\tadapter returned 1 invalid records$' "$langfuse_artifact/missing-sources.tsv"
 assert "Langfuse raw trace identifiers are not persisted" \
   bash -c "! grep -R -q 'private-trace-id' '$langfuse_artifact'"
 

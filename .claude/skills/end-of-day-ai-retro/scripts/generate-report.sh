@@ -86,6 +86,14 @@ timestamp_epoch() {
       printf "%.0f\n", int(value)
     }'
   else
+    [[ "$value" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?(Z|[+-][0-9]{2}:?[0-9]{2})$ ]] || return 1
+    if [[ "$value" =~ ([+-])([0-9]{2}):?([0-9]{2})$ ]]; then
+      local offset_hours="${BASH_REMATCH[2]}" offset_minutes="${BASH_REMATCH[3]}"
+      if (( 10#$offset_hours > 14 || 10#$offset_minutes > 59 ||
+            (10#$offset_hours == 14 && 10#$offset_minutes != 0) )); then
+        return 1
+      fi
+    fi
     date -d "$value" '+%s' 2>/dev/null || {
       local normalized="$value"
       normalized="$(printf '%s\n' "$normalized" | sed -E \
