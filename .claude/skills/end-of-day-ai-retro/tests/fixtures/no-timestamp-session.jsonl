@@ -1,0 +1,2 @@
+{"type":"message","role":"assistant","content":[{"type":"text","text":"legacy session"}]}
+{"type":"event_msg","payload":{"type":"task_complete"}}

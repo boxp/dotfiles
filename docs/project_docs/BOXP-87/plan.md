@@ -50,14 +50,14 @@ Codex manual helperはレスポンスの `x-content-sha256` 不足で取得で�
 
 | source | 当日抽出 | 欠損時 |
 |---|---|---|
-| Codex | `${AI_RETRO_CODEX_ROOT:-~/.codex/sessions}/**/*.jsonl` のmtime | `directory not found` / `no files for target date` |
-| Claude Code | `${AI_RETRO_CLAUDE_ROOT:-~/.claude/projects}/**/*.jsonl` のmtime | 同上 |
-| Pi agent | `${AI_RETRO_PI_ROOT:-~/.pi/agent/sessions}/**/*.jsonl` のmtime | 同上 |
-| Cursor（補助） | `${AI_RETRO_CURSOR_ROOT:-~/.cursor/projects}/**/agent-transcripts/*.jsonl` のmtime | 同上 |
+| Codex | `${AI_RETRO_CODEX_ROOT:-~/.codex/sessions}/**/*.jsonl` の各record timestampを指定timezoneの対象期間で抽出。timestampを持たない形式だけmtimeへ縮退 | `directory not found` / `no files for target date` / timestamp解析不能 |
+| Claude Code | `${AI_RETRO_CLAUDE_ROOT:-~/.claude/projects}/**/*.jsonl` を同じrecord timestamp規則で抽出 | 同上 |
+| Pi agent | `${AI_RETRO_PI_ROOT:-~/.pi/agent/sessions}/**/*.jsonl` を同じrecord timestamp規則で抽出 | 同上 |
+| Cursor（補助） | `${AI_RETRO_CURSOR_ROOT:-~/.cursor/projects}/**/agent-transcripts/*.jsonl` を同じrecord timestamp規則で抽出 | 同上 |
 | Task Board | `~/.codex-task-board/workspaces/*/<YYYYMMDD>T*` | 当日runなし / rootなし |
 | Langfuse | 実行可能adapterへ対象期間epochを渡し、JSONLのtimestampを再検証して当日traceだけを件数化 | credentialなし、adapterなし・実行失敗・不正recordを明記 |
 
-1 sourceの欠損・壊れたJSONLはrun全体を失敗させない。`input-inventory.tsv` と `missing-sources.tsv` にsource・秘匿済みidentifier・理由を残す。
+timestampを持つJSONLは対象日のrecordだけを成功・失敗・metricsの集計へ渡し、長時間継続したsessionの別日recordや後日touch/復元されたfileを混入させない。timestamp fieldが存在するが解析不能なrecordはmtimeへ縮退せず、欠損理由を明示する。1 sourceの欠損・壊れたJSONLはrun全体を失敗させない。`input-inventory.tsv` と `missing-sources.tsv` にsource・秘匿済みidentifier・理由を残す。
 
 ## Public / private境界
 
@@ -71,7 +71,7 @@ Codex manual helperはレスポンスの `x-content-sha256` 不足で取得で�
 
 ## Artifact・冪等性・安全境界
 
-対象日keyは `--time-zone` で指定し、hostのzoneinfoに存在確認できたIANA timezoneでの `YYYY-MM-DD`。無効なzoneはUTC等へ暗黙fallbackせず失敗させる。mtimeのday境界も同じtimezoneで計算する。同日再実行は `<root>/<date>` を一度だけ置換し、追記しない。
+対象日keyは `--time-zone` で指定し、hostのzoneinfoに存在確認できたIANA timezoneでの `YYYY-MM-DD`。無効なzoneはUTC等へ暗黙fallbackせず失敗させる。record timestampと、timestampを持たない形式に限るmtime縮退のday境界は同じtimezoneで計算する。同日再実行は `<root>/<date>` を一度だけ置換し、追記しない。
 
 ```text
 <private-root>/<YYYY-MM-DD>/
@@ -87,7 +87,7 @@ Codex manual helperはレスポンスの `x-content-sha256` 不足で取得で�
 
 ## 検証計画と完了条件
 
-- fixture: 成功、同分類失敗2件、履歴なし、壊れたJSONL、secret様文字列、同日再実行。
+- fixture: 成功、同分類失敗2件、履歴なし、壊れたJSONL、secret様文字列、同日再実行、複数日にまたがるsession、後日touch/復元、timestampなし形式へのmtime縮退、timestamp解析不能。
 - `bash tests/run-tests.sh`、`bash -n`、利用可能なら`ShellCheck`、既存dotfiles setup検証。
 - live jobを指定timezoneの1日1回で登録し、`bypass-approvals=false` を確認。
 - 実環境の1日をmanual validation runし、artifact、最大3件、秘匿、縮退、非自動変更を確認。

@@ -125,5 +125,66 @@ AI_RETRO_TASK_BOARD_ROOT="$incomplete_home/missing-task-board" \
 assert "assistant progress and turn_completed are not counted as task completion" \
   grep -q ':completed-sessions 0' "$incomplete_home/output/2026-07-10/run-summary.edn"
 
+timestamp_home="$temp_home/timestamp-filter"
+mkdir -p "$timestamp_home/codex"
+cp "$FIXTURES_DIR/cross-day-session.jsonl" "$timestamp_home/codex/cross-day.jsonl"
+# Its mtime is deliberately inside the target day; timestamped records must win.
+touch -d '2026-07-10 12:00:00 UTC' "$timestamp_home/codex/cross-day.jsonl"
+cp "$FIXTURES_DIR/success-session.jsonl" "$timestamp_home/codex/restored-later.jsonl"
+# A restored file with an out-of-day mtime must still be selected by event time.
+touch -d '2026-07-12 12:00:00 UTC' "$timestamp_home/codex/restored-later.jsonl"
+HOME="$timestamp_home" \
+AI_RETRO_CODEX_ROOT="$timestamp_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$timestamp_home/missing-claude" \
+AI_RETRO_PI_ROOT="$timestamp_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$timestamp_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$timestamp_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$timestamp_home/output" >/dev/null
+timestamp_artifact="$timestamp_home/output/2026-07-10"
+assert "ISO offsets, fractional seconds, and numeric epoch milliseconds are included" \
+  grep -q ':metrics {:files 2 :token-total 175 :duration-ms-total 375}' "$timestamp_artifact/run-summary.edn"
+assert "records outside the target day do not contribute completion state" \
+  grep -q ':completed-sessions 1' "$timestamp_artifact/run-summary.edn"
+assert "event time includes a target-day session restored on a later day" \
+  grep -q ':session-count {:codex 2 ' "$timestamp_artifact/run-summary.edn"
+assert "unparseable timestamps and outside-day failures are not counted through mtime" \
+  grep -q '構造化されたerror / failed status / tool errorを持つセッションが 1 件' "$timestamp_artifact/report.md"
+assert "unparseable timestamp records have an explicit sanitized missing reason" \
+  grep -Eq $'^codex\tcodex:[0-9a-f]{12} has 1 records with unparseable timestamps$' "$timestamp_artifact/missing-sources.tsv"
+
+legacy_home="$temp_home/legacy-mtime"
+mkdir -p "$legacy_home/codex"
+cp "$FIXTURES_DIR/no-timestamp-session.jsonl" "$legacy_home/codex/legacy.jsonl"
+touch -d '2026-07-10 12:00:00 UTC' "$legacy_home/codex/legacy.jsonl"
+HOME="$legacy_home" \
+AI_RETRO_CODEX_ROOT="$legacy_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$legacy_home/missing-claude" \
+AI_RETRO_PI_ROOT="$legacy_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$legacy_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$legacy_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$legacy_home/output" >/dev/null
+assert "formats without timestamp fields fall back to file mtime" \
+  grep -q ':completed-sessions 1' "$legacy_home/output/2026-07-10/run-summary.edn"
+
+wrong_day_home="$temp_home/wrong-day-mtime"
+mkdir -p "$wrong_day_home/codex"
+cp "$FIXTURES_DIR/success-session.jsonl" "$wrong_day_home/codex/touched-later.jsonl"
+touch -d '2026-07-11 12:00:00 UTC' "$wrong_day_home/codex/touched-later.jsonl"
+cp "$FIXTURES_DIR/invalid-timestamp-session.jsonl" "$wrong_day_home/codex/invalid-timestamp.jsonl"
+touch -d '2026-07-11 12:00:00 UTC' "$wrong_day_home/codex/invalid-timestamp.jsonl"
+HOME="$wrong_day_home" \
+AI_RETRO_CODEX_ROOT="$wrong_day_home/codex" \
+AI_RETRO_CLAUDE_ROOT="$wrong_day_home/missing-claude" \
+AI_RETRO_PI_ROOT="$wrong_day_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$wrong_day_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$wrong_day_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-11 --time-zone Asia/Tokyo --output-root "$wrong_day_home/output" >/dev/null
+assert "mtime cannot pull another day's timestamped session into the report" \
+  grep -q ':session-count {:codex 0 ' "$wrong_day_home/output/2026-07-11/run-summary.edn"
+assert "invalid-timestamp-only sessions retain a sanitized inventory entry" \
+  grep -Eq $'^codex\tcodex:[0-9a-f]{12}\tinvalid-timestamp$' "$wrong_day_home/output/2026-07-11/input-inventory.tsv"
+assert "calendar-invalid dates and out-of-range offsets are reported as invalid" \
+  grep -Eq $'^codex\tcodex:[0-9a-f]{12} has 3 records with unparseable timestamps$' "$wrong_day_home/output/2026-07-11/missing-sources.tsv"
+
 if [ "$failed" -eq 0 ]; then echo "All tests passed"; else echo "$failed tests failed"; fi
 exit "$failed"

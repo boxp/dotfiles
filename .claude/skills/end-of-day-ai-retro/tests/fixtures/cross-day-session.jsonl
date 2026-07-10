@@ -1,0 +1,6 @@
+{"type":"error","content":"operation timed out","timestamp":"2026-07-09T14:59:59Z"}
+{"type":"event_msg","payload":{"type":"token_count","duration_ms":125,"info":{"total_token_usage":{"total_tokens":75}}},"createdAt":"2026-07-10T00:00:00.250+09:00"}
+{"type":"error","content":"tool call failed: permission denied","payload":{"timestamp":1783652400000}}
+{"type":"event_msg","payload":{"type":"task_complete"},"timestamp":"2026-07-10T15:00:00Z"}
+{"type":"error","content":"operation timed out","timestamp":"not-a-timestamp"}
+{"type":"event_msg","payload":{"type":"task_complete"}}

@@ -76,11 +76,69 @@ identifier_for_value() {
 }
 timestamp_epoch() {
   local value="$1"
-  if [[ "$value" =~ ^[0-9]+$ ]]; then
-    printf '%s\n' "$value"
+  if [[ "$value" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+    awk -v value="$value" 'BEGIN {
+      # Session writers use both Unix seconds and Unix milliseconds.
+      if (value >= 100000000000) value = value / 1000
+      printf "%.0f\n", int(value)
+    }'
   else
-    date -d "$value" '+%s' 2>/dev/null || date -j -f '%Y-%m-%dT%H:%M:%SZ' "$value" '+%s' 2>/dev/null
+    date -d "$value" '+%s' 2>/dev/null || {
+      local normalized="$value"
+      normalized="$(printf '%s\n' "$normalized" | sed -E \
+        -e 's/\.[0-9]+(Z|[+-][0-9]{2}:?[0-9]{2})$/\1/' \
+        -e 's/Z$/+0000/' \
+        -e 's/([+-][0-9]{2}):([0-9]{2})$/\1\2/')"
+      date -j -f '%Y-%m-%dT%H:%M:%S%z' "$normalized" '+%s' 2>/dev/null
+    }
   fi
+}
+
+classify_jsonl_for_period() {
+  local file="$1" destination="$2"
+  jq -c --argjson start "$start" --argjson end "$end" '
+    def timestamp_field:
+      if has("timestamp") then {present: true, value: .timestamp}
+      elif ((.payload? | type) == "object" and (.payload | has("timestamp"))) then {present: true, value: .payload.timestamp}
+      elif ((.message? | type) == "object" and (.message | has("timestamp"))) then {present: true, value: .message.timestamp}
+      elif has("created_at") then {present: true, value: .created_at}
+      elif has("createdAt") then {present: true, value: .createdAt}
+      elif has("startTime") then {present: true, value: .startTime}
+      elif has("time") then {present: true, value: .time}
+      else {present: false, value: null}
+      end;
+    def timestamp_epoch:
+      if type == "number" then (if . >= 100000000000 then . / 1000 else . end | floor)
+      elif type == "string" and test("^[0-9]+(?:\\.[0-9]+)?$") then
+        (tonumber | if . >= 100000000000 then . / 1000 else . end | floor)
+      elif type == "string" and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:?[0-9]{2})$") then
+        try (
+          capture("^(?<base>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\\.[0-9]+)?(?<zone>Z|[+-][0-9]{2}:?[0-9]{2})$") as $parts |
+          ($parts.base | strptime("%Y-%m-%dT%H:%M:%S") | mktime) as $local_epoch |
+          if ($local_epoch | strftime("%Y-%m-%dT%H:%M:%S")) != $parts.base then null
+          elif $parts.zone == "Z" then $local_epoch
+          else
+            ($parts.zone | capture("^(?<sign>[+-])(?<hours>[0-9]{2}):?(?<minutes>[0-9]{2})$")) as $zone |
+            ($zone.hours | tonumber) as $hours |
+            ($zone.minutes | tonumber) as $minutes |
+            if $hours > 14 or $minutes > 59 or ($hours == 14 and $minutes != 0) then null
+            else $local_epoch - (($hours * 3600 + $minutes * 60) *
+              (if $zone.sign == "+" then 1 else -1 end))
+            end
+          end
+        ) catch null
+      else null
+      end;
+    select(type == "object") as $record |
+    timestamp_field as $timestamp |
+    if ($timestamp.present | not) then {kind: "absent"}
+    else ($timestamp.value | timestamp_epoch) as $epoch |
+      if $epoch == null then {kind: "invalid"}
+      elif $epoch >= $start and $epoch < $end then {kind: "selected", record: $record}
+      else {kind: "outside"}
+      end
+    end
+  ' "$file" > "$destination"
 }
 
 start="$(day_start_epoch "$target_date")"
@@ -148,26 +206,55 @@ add_sessions() {
     return
   fi
   local found=0 file mtime identifier status file_tokens file_duration file_failure_categories category
+  local analysis_file classified_file filtered_file timestamp_records invalid_timestamps
   while IFS= read -r file; do
-    mtime="$(mtime_epoch "$file")"
-    [ "$mtime" -ge "$start" ] && [ "$mtime" -lt "$end" ] || continue
-    found=1
-    increment_count "$source"
     identifier="$(identifier_for_file "$source" "$file")"
-    evidence_ids+=("$identifier")
     status="ok"
     if ! jq -s empty "$file" >/dev/null 2>&1; then
+      mtime="$(mtime_epoch "$file")"
+      [ "$mtime" -ge "$start" ] && [ "$mtime" -lt "$end" ] || continue
+      found=1
+      increment_count "$source"
       status="invalid-jsonl"
       invalid_json=$((invalid_json + 1))
     else
-      file_tokens="$(jq -sr '([.[] | .payload.info.total_token_usage.total_tokens? // empty] | max // 0) | floor' "$file")"
-      file_duration="$(jq -sr '([.[] | .payload.duration_ms? // empty] | add // 0) | floor' "$file")"
+      classified_file="$work_dir/session-$(printf '%s' "$identifier" | tr ':' '-').classified.jsonl"
+      filtered_file="$work_dir/session-$(printf '%s' "$identifier" | tr ':' '-').jsonl"
+      classify_jsonl_for_period "$file" "$classified_file"
+      timestamp_records="$(jq -sr '[.[] | select(.kind != "absent")] | length' "$classified_file")"
+      if [ "$timestamp_records" -gt 0 ]; then
+        # Timestamped formats are filtered record-by-record. Missing or invalid
+        # timestamps in such a file must not silently inherit the file mtime.
+        invalid_timestamps="$(jq -sr '[.[] | select(.kind == "invalid")] | length' "$classified_file")"
+        if [ "$invalid_timestamps" -gt 0 ]; then
+          printf '%s\t%s has %s records with unparseable timestamps\n' \
+            "$source" "$identifier" "$invalid_timestamps" >> "$missing"
+          status="${status},invalid-timestamp"
+        fi
+        jq -c 'select(.kind == "selected") | .record' "$classified_file" > "$filtered_file"
+        if [ ! -s "$filtered_file" ]; then
+          if [ "$invalid_timestamps" -gt 0 ]; then
+            printf '%s\t%s\tinvalid-timestamp\n' "$source" "$identifier" >> "$inventory"
+          fi
+          continue
+        fi
+        analysis_file="$filtered_file"
+      else
+        mtime="$(mtime_epoch "$file")"
+        [ "$mtime" -ge "$start" ] && [ "$mtime" -lt "$end" ] || continue
+        analysis_file="$file"
+      fi
+
+      found=1
+      increment_count "$source"
+      file_tokens="$(jq -sr '([.[] | .payload.info.total_token_usage.total_tokens? // empty] | max // 0) | floor' "$analysis_file")"
+      file_duration="$(jq -sr '([.[] | .payload.duration_ms? // empty] | add // 0) | floor' "$analysis_file")"
       if [ "$file_tokens" -gt 0 ] || [ "$file_duration" -gt 0 ]; then
         metric_files=$((metric_files + 1))
         token_total=$((token_total + file_tokens))
         duration_ms_total=$((duration_ms_total + file_duration))
       fi
-      file_failure_categories="$(failure_categories_for_file "$file" | sort -u)"
+      file_failure_categories="$(failure_categories_for_file "$analysis_file" | sort -u)"
       if [ -n "$file_failure_categories" ]; then
         failure_files=$((failure_files + 1))
         status="${status},friction"
@@ -179,10 +266,11 @@ add_sessions() {
       if jq -se 'any(.[];
         ((.type? == "task_complete") or (.payload.type? == "task_complete")) or
         ((.type? == "result") and (((.subtype? // "") == "success") or ((.status? // "") == "success")) and ((.is_error? // false) == false)) or
-        ((.payload.type? == "result") and (((.payload.subtype? // "") == "success") or ((.payload.status? // "") == "success")) and ((.payload.is_error? // false) == false)))' "$file" >/dev/null 2>&1; then
+        ((.payload.type? == "result") and (((.payload.subtype? // "") == "success") or ((.payload.status? // "") == "success")) and ((.payload.is_error? // false) == false)))' "$analysis_file" >/dev/null 2>&1; then
         success_files=$((success_files + 1))
       fi
     fi
+    evidence_ids+=("$identifier")
     printf '%s\t%s\t%s\n' "$source" "$identifier" "$status" >> "$inventory"
   done < <(if [ "$glob_kind" = cursor ]; then find "$root" -path '*/agent-transcripts/*.jsonl' -type f 2>/dev/null | sort; else find "$root" -type f -name '*.jsonl' ! -name '*.langfuse' 2>/dev/null | sort; fi)
   [ "$found" -eq 1 ] || printf '%s\t%s\n' "$source" "no files for target date" >> "$missing"
