@@ -45,6 +45,8 @@ bash "$HOME/.claude/skills/end-of-day-ai-retro/scripts/generate-report.sh" \
 
 同じ対象日は同じdirectoryを置換する。`report.md`、`run-summary.edn`、`missing-sources.tsv`、`input-inventory.tsv` を確認する。欠損・壊れたJSONLがあっても利用可能なsourceを残す。
 
+Langfuseを集計する場合は、実行可能なadapterのpathを `AI_RETRO_LANGFUSE_ADAPTER` に指定する。未指定時はskill同階層の `scripts/langfuse-adapter.sh`、`~/.local/bin/end-of-day-ai-retro-langfuse-adapter`、同名の `PATH` commandを順に探す。adapterには `--start-epoch EPOCH --end-epoch EPOCH` を渡し、標準出力は1行1objectのJSONLとする。各objectには `id`（`traceId` / `trace_id` も可）と `timestamp`（`startTime` / `createdAt` / `created_at` も可）が必要。raw traceはartifactへ保存せず、対象期間内の件数と短縮SHA-256識別子だけを残す。adapterなし・実行失敗・不正recordは他sourceを止めず `missing-sources.tsv` に理由を記録する。
+
 日次自動実行が変更してよいのはprivate artifactだけ。repo、`~/.claude`、`~/.codex`、skill、rules、Task Board、clusterを変更しない。候補の採用は人間承認後に別ticketとPRで行う。
 
 ## セッションファイルを使った観察手順

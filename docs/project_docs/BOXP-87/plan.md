@@ -55,7 +55,7 @@ Codex manual helperはレスポンスの `x-content-sha256` 不足で取得で�
 | Pi agent | `${AI_RETRO_PI_ROOT:-~/.pi/agent/sessions}/**/*.jsonl` のmtime | 同上 |
 | Cursor（補助） | `${AI_RETRO_CURSOR_ROOT:-~/.cursor/projects}/**/agent-transcripts/*.jsonl` のmtime | 同上 |
 | Task Board | `~/.codex-task-board/workspaces/*/<YYYYMMDD>T*` | 当日runなし / rootなし |
-| Langfuse | credential/configと専用adapterが到達可能な場合のみ | credentialなし、adapter到達不能を明記 |
+| Langfuse | 実行可能adapterへ対象期間epochを渡し、JSONLのtimestampを再検証して当日traceだけを件数化 | credentialなし、adapterなし・実行失敗・不正recordを明記 |
 
 1 sourceの欠損・壊れたJSONLはrun全体を失敗させない。`input-inventory.tsv` と `missing-sources.tsv` にsource・秘匿済みidentifier・理由を残す。
 
@@ -67,11 +67,11 @@ Codex manual helperはレスポンスの `x-content-sha256` 不足で取得で�
 | `boxp/lolice` | mount/resource/timeout等のGitOps設定（変更が必要な場合のみ） | raw session、credential値、個人固有prompt |
 | private Obsidian vault | live schedule/prompt、report、run artifact、秘匿済み提案 | secretのreport転載、public PRへのraw evidence転記 |
 
-根拠は `agent:<pathの短縮SHA-256>`、`ticket-run:TICKET/run-id`、`trace-id` と秘匿済み集計に限定する。session path/filename、本文、コマンド全文、user情報は保存しない。
+根拠は `agent:<pathの短縮SHA-256>`、`ticket-run:TICKET/run-id`、`langfuse:<trace IDの短縮SHA-256>` と秘匿済み集計に限定する。session path/filename、trace ID、本文、コマンド全文、user情報は保存しない。
 
 ## Artifact・冪等性・安全境界
 
-対象日keyは `--time-zone` で指定したIANA timezoneでの `YYYY-MM-DD`。mtimeのday境界も同じtimezoneで計算する。同日再実行は `<root>/<date>` を一度だけ置換し、追記しない。
+対象日keyは `--time-zone` で指定し、hostのzoneinfoに存在確認できたIANA timezoneでの `YYYY-MM-DD`。無効なzoneはUTC等へ暗黙fallbackせず失敗させる。mtimeのday境界も同じtimezoneで計算する。同日再実行は `<root>/<date>` を一度だけ置換し、追記しない。
 
 ```text
 <private-root>/<YYYY-MM-DD>/

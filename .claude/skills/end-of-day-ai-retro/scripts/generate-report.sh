@@ -28,6 +28,16 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+zoneinfo_path=""
+for zoneinfo_root in "${TZDIR:-}" /usr/share/zoneinfo /usr/share/lib/zoneinfo /etc/zoneinfo; do
+  [ -n "$zoneinfo_root" ] || continue
+  if [[ "$time_zone" != /* && "$time_zone" != *..* && -f "$zoneinfo_root/$time_zone" ]]; then
+    zoneinfo_path="$zoneinfo_root/$time_zone"
+    break
+  fi
+done
+[ -n "$zoneinfo_path" ] || { echo "Invalid IANA time zone: $time_zone" >&2; exit 1; }
+
 normalized_date="$(TZ="$time_zone" date -d "$target_date" +%F 2>/dev/null || TZ="$time_zone" date -j -f '%Y-%m-%d' "$target_date" +%F 2>/dev/null || true)"
 [ "$normalized_date" = "$target_date" ] || { echo "Invalid date: $target_date" >&2; exit 1; }
 
@@ -58,6 +68,19 @@ identifier_for_file() {
   local source="$1" file="$2" digest
   digest="$(printf '%s' "$file" | { sha256sum 2>/dev/null || shasum -a 256; } | awk '{print substr($1,1,12)}')"
   printf '%s:%s' "$source" "$digest"
+}
+identifier_for_value() {
+  local source="$1" value="$2" digest
+  digest="$(printf '%s' "$value" | { sha256sum 2>/dev/null || shasum -a 256; } | awk '{print substr($1,1,12)}')"
+  printf '%s:%s' "$source" "$digest"
+}
+timestamp_epoch() {
+  local value="$1"
+  if [[ "$value" =~ ^[0-9]+$ ]]; then
+    printf '%s\n' "$value"
+  else
+    date -d "$value" '+%s' 2>/dev/null || date -j -f '%Y-%m-%dT%H:%M:%SZ' "$value" '+%s' 2>/dev/null
+  fi
 }
 
 start="$(day_start_epoch "$target_date")"
@@ -185,10 +208,57 @@ else
 fi
 
 langfuse_config="${LANGFUSE_CONFIG_FILE:-$HOME/.codex/langfuse.json}"
-if [ -f "$langfuse_config" ] || { [ -n "${LANGFUSE_PUBLIC_KEY:-}" ] && [ -n "${LANGFUSE_SECRET_KEY:-}" ]; }; then
-  printf 'langfuse\tautomatic trace adapter is not installed; reviewer may inspect reachable traces\n' >> "$missing"
+langfuse_adapter="${AI_RETRO_LANGFUSE_ADAPTER:-}"
+if [ -z "$langfuse_adapter" ]; then
+  for adapter_candidate in \
+    "$SCRIPT_DIR/langfuse-adapter.sh" \
+    "$HOME/.local/bin/end-of-day-ai-retro-langfuse-adapter"; do
+    if [ -x "$adapter_candidate" ]; then
+      langfuse_adapter="$adapter_candidate"
+      break
+    fi
+  done
+fi
+if [ -z "$langfuse_adapter" ] && command -v end-of-day-ai-retro-langfuse-adapter >/dev/null 2>&1; then
+  langfuse_adapter="$(command -v end-of-day-ai-retro-langfuse-adapter)"
+fi
+
+if [ -n "$langfuse_adapter" ] && [ -x "$langfuse_adapter" ]; then
+  langfuse_output="$work_dir/langfuse.jsonl"
+  if AI_RETRO_TARGET_DATE="$target_date" AI_RETRO_TIME_ZONE="$time_zone" \
+    "$langfuse_adapter" --start-epoch "$start" --end-epoch "$end" > "$langfuse_output" 2>/dev/null; then
+    langfuse_invalid=0
+    while IFS= read -r trace; do
+      [ -n "$trace" ] || continue
+      if ! trace_fields="$(printf '%s\n' "$trace" | jq -er '[
+          (.id // .traceId // .trace_id // empty | tostring),
+          (.timestamp // .startTime // .createdAt // .created_at // empty | tostring)
+        ] | select(length == 2 and all(.[]; length > 0)) | @tsv' 2>/dev/null)"; then
+        langfuse_invalid=$((langfuse_invalid + 1))
+        continue
+      fi
+      IFS=$'\t' read -r trace_id trace_timestamp <<< "$trace_fields"
+      if ! trace_epoch="$(timestamp_epoch "$trace_timestamp")"; then
+        langfuse_invalid=$((langfuse_invalid + 1))
+        continue
+      fi
+      [ "$trace_epoch" -ge "$start" ] && [ "$trace_epoch" -lt "$end" ] || continue
+      identifier="$(identifier_for_value langfuse "$trace_id")"
+      langfuse_count=$((langfuse_count + 1))
+      evidence_ids+=("$identifier")
+      printf 'langfuse\t%s\tok\n' "$identifier" >> "$inventory"
+    done < "$langfuse_output"
+    [ "$langfuse_count" -gt 0 ] || printf 'langfuse\tadapter returned no traces for target date\n' >> "$missing"
+    [ "$langfuse_invalid" -eq 0 ] || printf 'langfuse\tadapter returned %s invalid records\n' "$langfuse_invalid" >> "$missing"
+  else
+    printf 'langfuse\tadapter execution failed\n' >> "$missing"
+  fi
+elif [ -n "$langfuse_adapter" ]; then
+  printf 'langfuse\tconfigured adapter is not executable\n' >> "$missing"
+elif [ -f "$langfuse_config" ] || { [ -n "${LANGFUSE_PUBLIC_KEY:-}" ] && [ -n "${LANGFUSE_SECRET_KEY:-}" ]; }; then
+  printf 'langfuse\tcredentials/config available but adapter not found\n' >> "$missing"
 else
-  printf 'langfuse\tcredentials/config not available\n' >> "$missing"
+  printf 'langfuse\tcredentials/config not available and adapter not found\n' >> "$missing"
 fi
 
 missing_count="$(( $(wc -l < "$missing") - 1 ))"

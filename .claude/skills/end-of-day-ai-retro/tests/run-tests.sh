@@ -52,6 +52,31 @@ assert "report passes public-output sanitizer" "$SCRIPTS_DIR/sanitize-check.sh" 
 assert "proposal count never exceeds three" bash -c "[ \"\$(grep -c '^### 候補' '$artifact/report.md')\" -le 3 ]"
 assert "run records that automatic changes are disabled" grep -q ':automatic-changes false' "$artifact/run-summary.edn"
 
+if HOME="$temp_home" "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Not/A-Real-Zone --dry-run > /dev/null 2>&1; then
+  fail "invalid IANA time zone is rejected"
+else
+  pass "invalid IANA time zone is rejected"
+fi
+
+langfuse_adapter="$temp_home/langfuse-adapter.sh"
+cp "$FIXTURES_DIR/langfuse-adapter.sh" "$langfuse_adapter"
+chmod +x "$langfuse_adapter"
+langfuse_home="$temp_home/langfuse"
+mkdir -p "$langfuse_home"
+HOME="$langfuse_home" \
+AI_RETRO_LANGFUSE_ADAPTER="$langfuse_adapter" \
+AI_RETRO_CODEX_ROOT="$langfuse_home/missing-codex" \
+AI_RETRO_CLAUDE_ROOT="$langfuse_home/missing-claude" \
+AI_RETRO_PI_ROOT="$langfuse_home/missing-pi" \
+AI_RETRO_CURSOR_ROOT="$langfuse_home/missing-cursor" \
+AI_RETRO_TASK_BOARD_ROOT="$langfuse_home/missing-task-board" \
+  "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$langfuse_home/output" >/dev/null
+langfuse_artifact="$langfuse_home/output/2026-07-10"
+assert "available Langfuse adapter is executed and target-day traces are counted" \
+  grep -q ':langfuse-traces 1' "$langfuse_artifact/run-summary.edn"
+assert "Langfuse raw trace identifiers are not persisted" \
+  bash -c "! grep -R -q 'private-trace-id' '$langfuse_artifact'"
+
 before_count="$(grep -c '^### 候補' "$artifact/report.md")"
 assert "same-day rerun succeeds" run_report
 after_count="$(grep -c '^### 候補' "$artifact/report.md")"
