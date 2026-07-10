@@ -184,7 +184,7 @@ AI_RETRO_CURSOR_ROOT="$unknown_home/missing-cursor" \
 AI_RETRO_TASK_BOARD_ROOT="$unknown_home/missing-task-board" \
   "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$unknown_home/output" >/dev/null
 unknown_report="$unknown_home/output/2026-07-10/report.md"
-assert "object-valued error causes normalize JSON-quoted request IDs into one unknown fallback" \
+assert "object-valued error causes normalize JSON-quoted request and call IDs into one unknown fallback" \
   grep -Eq '^- 分類キー: unknown:signature-[0-9a-f]{12} / distinct session件数: 2 ' "$unknown_report"
 assert "unknown fallback output does not expose the raw failure" \
   bash -c "! grep -R -Eq 'opaque subsystem fault|/tmp/unknown' '$unknown_home/output/2026-07-10'"
@@ -199,8 +199,8 @@ AI_RETRO_PI_ROOT="$string_message_home/missing-pi" \
 AI_RETRO_CURSOR_ROOT="$string_message_home/missing-cursor" \
 AI_RETRO_TASK_BOARD_ROOT="$string_message_home/missing-task-board" \
   "$SCRIPTS_DIR/generate-report.sh" --date 2026-07-10 --time-zone Asia/Tokyo --output-root "$string_message_home/output" >/dev/null
-assert "string-valued error messages are classified without breaking tool-result traversal" \
-  grep -Eq '^- 分類キー: unknown:signature-[0-9a-f]{12} / distinct session件数: 1 ' \
+assert "string-valued payloads/messages are safe and numeric string exits are classified" \
+  grep -Eq '^- 分類キー: nonzero-exit:code-17:signature-[0-9a-f]{12} / distinct session件数: 1 ' \
     "$string_message_home/output/2026-07-10/report.md"
 
 ranking_home="$temp_home/ranking"

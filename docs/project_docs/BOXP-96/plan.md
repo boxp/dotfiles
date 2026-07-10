@@ -16,7 +16,7 @@ BOXP-87から、同日artifactの置換、欠損sourceと壊れたJSONLの部分
 - `status` または `payload.status` が `failed`
 - recordまたはpayloadの `is_error` が `true`
 - message content内の `tool_result` が `is_error: true`
-- tool output recordが正の `exit_code` を持つ
+- tool output recordがJSON numberまたは10進数文字列の正の `exit_code` を持つ
 
 user/assistantの通常message、完了event、raw prompt/responseは分類入力にしない。失敗recordから `error`、`message`、`content`、`output`、`stderr`、`reason`、`detail(s)` の既知fieldだけを原因本文として抽出し、record全体や同sessionの別messageをfingerprintへ混ぜない。
 
@@ -43,7 +43,7 @@ user/assistantの通常message、完了event、raw prompt/responseは分類入�
 
 - ISO 8601 timestamp
 - UUID、長いhex値、memory address
-- `request_id` / `record_id` / `session_id` / `trace_id` 等の識別子値
+- `request_id` / `record_id` / `session_id` / `trace_id` / `call_id` 等の識別子値
 - `/tmp/...` とmacOSの `/var/folders/...` 配下の一時path
 - PID等になり得る長い数値、duration値
 
@@ -79,8 +79,8 @@ reportには候補外のsingletonも含む「分類別集計」を同じ決定�
 - 原因の異なる非0終了が各1件なら別signatureになり、候補にならない。
 - 同一session内で同じ失敗recordが複数あってもdistinct件数は1で、候補にならない。
 - timestamp、record ID、一時pathだけ異なる同一原因は同じ分類になる。
-- `error` / `payload.error` がobjectの場合も、JSON化された `request_id` の差を除去できる。
-- `message` が文字列の構造化errorも分類し、objectのtool result探索と型を混同しない。
+- `error` / `payload.error` がobjectの場合も、JSON化された `request_id` / `call_id` の差を除去できる。
+- `payload` / `message` が文字列でもmetrics・tool result探索を停止せず、数値文字列の非0終了を分類する。
 - 既知規則に一致しない失敗はstableな `unknown:signature-*` fallbackになる。
 - 複数分類は件数降順・分類キー昇順、最大3候補になる。
 - 既存permission/timeout、欠損source、壊れたJSONL、秘匿check、時刻filter、同日置換を回帰させない。

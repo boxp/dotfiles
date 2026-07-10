@@ -243,11 +243,24 @@ failure_categories_for_file() {
     def embedded_exit_code:
       ((.payload.output? // .output? // "") | tostring) as $output |
       (try ($output | capture("\\\"exit_code\\\"[[:space:]]*:[[:space:]]*(?<code>[1-9][0-9]*)").code) catch null) // null;
-    def nonzero_exit_code:
-      if ((.exit_code? | type) == "number" and .exit_code > 0) then (.exit_code | floor | tostring)
-      elif ((.payload.exit_code? | type) == "number" and .payload.exit_code > 0) then (.payload.exit_code | floor | tostring)
-      else embedded_exit_code
+    def positive_exit_code:
+      if type == "number" and . > 0 then (floor | tostring)
+      elif type == "string" and test("^[1-9][0-9]*$") then (tonumber | tostring)
+      else null
       end;
+    def nonzero_exit_code:
+      (.exit_code? | positive_exit_code) //
+      (.payload.exit_code? | positive_exit_code) //
+      embedded_exit_code;
+    def message_content:
+      .message? |
+      select(type == "object") |
+      .content? |
+      select(type == "array") |
+      .[];
+    def failed_tool_result:
+      message_content |
+      select(.type? == "tool_result" and .is_error? == true);
     def cause_text:
       . as $record |
       [
@@ -257,12 +270,7 @@ failure_categories_for_file() {
         .payload.error?,
         (if (.payload.message? | type) == "string" then .payload.message else empty end),
         .payload.content?, .payload.output?, .payload.stderr?, .payload.reason?, .payload.detail?, .payload.details?,
-        (.message? |
-          select(type == "object") |
-          .content? |
-          select(type == "array") |
-          .[] |
-          select(.type? == "tool_result" and .is_error? == true) |
+        (failed_tool_result |
           (.content? // .text? // .output? // .message? // empty))
       ] |
       map(select(. != null) | if type == "string" then . else tojson end) |
@@ -276,7 +284,7 @@ failure_categories_for_file() {
       (.type? == "error") or (.payload.type? == "error") or
       (.status? == "failed") or (.payload.status? == "failed") or
       (.is_error? == true) or (.payload.is_error? == true) or
-      any(.message.content[]?; .type? == "tool_result" and .is_error? == true) or
+      any(failed_tool_result; true) or
       ($exit_code != null)) |
     [(if $exit_code != null then "nonzero" else "structured" end), ($exit_code // "-"), cause_text] |
     @tsv
@@ -290,7 +298,7 @@ normalize_failure_text() {
     sed -E \
       -e 's/[0-9]{4}-[0-9]{2}-[0-9]{2}t[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?(z|[+-][0-9]{2}:?[0-9]{2})/<timestamp>/g' \
       -e 's/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/<uuid>/g' \
-      -e "s/(request|record|session|trace|task|run)[_ -]?id[\"']?[[:space:]]*[=:][[:space:]]*[\"']?[-a-z0-9_.]{6,}/\1_id=<id>/g" \
+      -e "s/(request|record|session|trace|task|run|call)[_ -]?id[\"']?[[:space:]]*[=:][[:space:]]*[\"']?[-a-z0-9_.]{6,}/\1_id=<id>/g" \
       -e "s#/var/folders/[^[:space:]\"']+#<tmp-path>#g" \
       -e "s#/tmp/[^[:space:]\"']+#<tmp-path>#g" \
       -e 's/0x[0-9a-f]+/<address>/g' \
@@ -349,8 +357,16 @@ add_sessions() {
 
       found=1
       increment_count "$source"
-      file_tokens="$(jq -sr '([.[] | .payload.info.total_token_usage.total_tokens? // empty] | max // 0) | floor' "$analysis_file")"
-      file_duration="$(jq -sr '([.[] | .payload.duration_ms? // empty] | add // 0) | floor' "$analysis_file")"
+      file_tokens="$(jq -sr '([.[] |
+        .payload? | select(type == "object") |
+        .info? | select(type == "object") |
+        .total_token_usage? | select(type == "object") |
+        .total_tokens? | select(type == "number")
+      ] | max // 0) | floor' "$analysis_file")"
+      file_duration="$(jq -sr '([.[] |
+        .payload? | select(type == "object") |
+        .duration_ms? | select(type == "number")
+      ] | add // 0) | floor' "$analysis_file")"
       if [ "$file_tokens" -gt 0 ] || [ "$file_duration" -gt 0 ]; then
         metric_files=$((metric_files + 1))
         token_total=$((token_total + file_tokens))
