@@ -168,6 +168,33 @@ for extension_name in $ENABLED_PI_AGENT_EXTENSIONS; do
   [ -e "$dst" ] || ln -s "$src" "$dst"
 done
 
+mkdir -p ~/.codex/agents
+for agent_link in "$HOME/.codex/agents"/*.toml; do
+  [ -L "$agent_link" ] || continue
+  agent_name="${agent_link##*/}"
+  agent_target="$(readlink "$agent_link")"
+  case "$agent_target" in
+    "$HOME/ghq/github.com/boxp/dotfiles/.codex/agents/"*)
+      [ -f "$HOME/ghq/github.com/boxp/dotfiles/.codex/agents/$agent_name" ] || rm "$agent_link"
+      ;;
+  esac
+done
+
+for agent_file in "$HOME/ghq/github.com/boxp/dotfiles/.codex/agents/"*.toml; do
+  [ -f "$agent_file" ] || continue
+  agent_name="${agent_file##*/}"
+  dst="$HOME/.codex/agents/$agent_name"
+  if [ -L "$dst" ]; then
+    if [ ! -e "$dst" ] || cmp -s "$agent_file" "$dst"; then
+      rm "$dst"
+    fi
+  fi
+  if [ -f "$dst" ] && [ ! -L "$dst" ] && cmp -s "$agent_file" "$dst"; then
+    rm "$dst"
+  fi
+  [ -e "$dst" ] || ln -s "$agent_file" "$dst"
+done
+
 mkdir -p ~/.codex/skills
 for skill_link in "$HOME/.codex/skills"/*; do
   [ -L "$skill_link" ] || continue
