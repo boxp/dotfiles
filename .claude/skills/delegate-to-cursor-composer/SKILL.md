@@ -5,7 +5,7 @@ description: Cursor Agent CLI の Composer 2 系モデルへ実装作業を委�
 
 # Cursor Composer への委譲
 
-Cursor Agent CLI を tmux 右ペイン（既定）または detached セッション（fallback）で起動し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。
+Cursor Agent CLI を tmux 右ペイン（既定）または detached セッション（fallback）で非対話・一回実行し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。委任元は進捗をポーリングせず、終了通知と状態ファイルで結果を受け取る。
 
 PR 本文は委任元が用意したファイルを Cursor にそのまま使わせる。Cursor に PR 本文の創作や運用判断をさせない。
 
@@ -143,7 +143,7 @@ cursor-agent models
 
 既定は `composer-2.5-fast` を使う。出力に見当たらない場合だけ `composer-2.5` など利用可能モデルへ切り替える。CLI 自体が無い場合は委任元側でインストール状況を整えてから再実行する。
 
-### 5. 委譲先 tmux ターゲットを作り Cursor Agent を起動する
+### 5. 委譲先 tmux ターゲットを作り、共通ランナー経由で Cursor Agent を起動する
 
 #### pane ルート（tmux 内）
 
@@ -152,7 +152,9 @@ cursor-agent models
 ```bash
 PANE_ID="$(tmux split-window -h -d -p 50 -c <target-repo-or-worktree> -P -F '#{pane_id}')"
 TARGET="$PANE_ID"
-tmux send-keys -t "$TARGET" 'cursor-agent --model composer-2.5-fast --workspace "<target-repo-or-worktree>" --force @"<prompt-file>"' Enter
+RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
+COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- cursor-agent --print --force --trust --model composer-2.5-fast --workspace <target-repo-or-worktree> @<prompt-file>)"
+tmux send-keys -t "$TARGET" "$COMMAND" Enter
 ```
 
 #### fallback ルート（tmux 外）
@@ -163,20 +165,26 @@ tmux send-keys -t "$TARGET" 'cursor-agent --model composer-2.5-fast --workspace 
 tmux has-session -t <session-name> 2>/dev/null && exit 1
 tmux new-session -d -s <session-name> -c <target-repo-or-worktree>
 TARGET="<session-name>"
-tmux send-keys -t "$TARGET" 'cursor-agent --model composer-2.5-fast --workspace "<target-repo-or-worktree>" --force @"<prompt-file>"' Enter
+RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
+COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- cursor-agent --print --force --trust --model composer-2.5-fast --workspace <target-repo-or-worktree> @<prompt-file>)"
+tmux send-keys -t "$TARGET" "$COMMAND" Enter
 ```
 
-`cursor-agent` の単発実行より、tmux の対話セッションを既定にする。長時間実装、失敗時の介入、再読の確認を追いやすいため。
+runner は `/tmp/ai-delegate/<session-name>/` に `started_at`、`finished_at`、`exit_code`、`status`（`success` / `failed`）、`output.log` を保存し、pane の `@ai_delegate_session_id`、`@ai_delegate_state_dir`、`@ai_delegate_status` にも設定する。終了時には macOS 通知を試行する。通知権限がない場合も状態ファイルは残る。
 
-### 6. 進捗を監視する
+### 6. 必要時だけ終了状態を確認する
 
 必要に応じて出力を確認する。
 
 ```bash
-tmux capture-pane -t "$TARGET" -p | tail -50
+cat /tmp/ai-delegate/<session-name>/status
+cat /tmp/ai-delegate/<session-name>/exit_code
+tail -80 /tmp/ai-delegate/<session-name>/output.log
+# 最終出力の手動確認が必要な場合だけ
+tmux capture-pane -t "$TARGET" -p | tail -80
 ```
 
-途中で Cursor が禁止事項に触れそうなら停止させ、prompt を修正して再実行する。
+進捗を読むための定期的な `capture-pane` はしない。失敗時は状態・最終ログを確認し、必要なら prompt を修正して新しい session-name で再実行する。
 
 ## 委任時の必須制約
 
@@ -192,7 +200,8 @@ tmux capture-pane -t "$TARGET" -p | tail -50
 委任元は少なくとも次を確認する。
 
 ```bash
-tmux capture-pane -t "$TARGET" -p | tail -80
+cat /tmp/ai-delegate/<session-name>/status
+tail -80 /tmp/ai-delegate/<session-name>/output.log
 git -C <target-repo-or-worktree> status --short --branch
 ```
 
@@ -209,9 +218,7 @@ git -C <target-repo-or-worktree> status --short --branch
 作業完了後、不要なら委譲先を閉じる。
 
 ```bash
-tmux send-keys -t "$TARGET" "/exit" Enter
-sleep 2
-
+# 完了・失敗後も自動では閉じない。最終出力を確認後に実行する。
 # pane ルート
 tmux kill-pane -t "$PANE_ID"
 
