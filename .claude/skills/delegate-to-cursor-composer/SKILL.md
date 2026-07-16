@@ -1,11 +1,11 @@
 ---
 name: delegate-to-cursor-composer
-description: Cursor Agent CLI の Composer 2 系モデルへ実装作業を委譲し、push と Draft PR 作成までを tmux 右ペイン（既定）または detached セッション（fallback）で実行させる skill。Claude Code / Codex / Pi Agent から「Cursor Composer に任せたい」「別ペインで Cursor に実装させたい」「作業 branch で実装して Draft PR だけ作らせたい」ときに使う。PR description は委任元が作成し、Cursor には指定済み PR 本文ファイルを使わせる。merge、close、branch delete、force-push、amend、Jira やチケットへのコメントはさせない。
+description: Cursor Agent CLI の Composer 2 系モデルへ実装作業を委譲し、push と Draft PR 作成までを detached な named tmux セッションで実行させる skill。Claude Code / Codex / Pi Agent から「Cursor Composer に任せたい」「別セッションで Cursor に実装させたい」「作業 branch で実装して Draft PR だけ作らせたい」ときに使う。PR description は委任元が作成し、Cursor には指定済み PR 本文ファイルを使わせる。merge、close、branch delete、force-push、amend、Jira やチケットへのコメントはさせない。
 ---
 
 # Cursor Composer への委譲
 
-Cursor Agent CLI を tmux 右ペイン（既定）または detached セッション（fallback）で非対話・一回実行し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。委任元は進捗をポーリングせず、終了通知と状態ファイルで結果を受け取る。
+Cursor Agent CLI を detached な named tmux セッションで非対話・一回実行し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。呼び出し元が tmux 内でも pane を分割せず、常に新しい detached session を作る。委任元は進捗をポーリングせず、終了通知と状態ファイルで結果を受け取る。
 
 PR 本文は委任元が用意したファイルを Cursor にそのまま使わせる。Cursor に PR 本文の創作や運用判断をさせない。
 
@@ -14,7 +14,7 @@ PR 本文は委任元が用意したファイルを Cursor にそのまま使わ
 ## 入力の基本形
 
 - `$ARGUMENTS`: `<session-name> <target-repo-or-worktree> <task-or-prompt-file>`
-- `session-name`: 委譲先 Cursor の識別名。`/tmp/cursor-composer-delegate/<session-name>/` のディレクトリ名にも使う。fallback ルートでは tmux セッション名にもなる
+- `session-name`: 委譲先 Cursor の識別名。`/tmp/cursor-composer-delegate/<session-name>/` のディレクトリ名と tmux セッション名の両方に使う
 - `target-repo-or-worktree`: 作業対象ディレクトリ
 - `task-or-prompt-file`: 委譲タスク本文。直接テキストでもファイルでもよい
 - 例:
@@ -26,25 +26,6 @@ PR 本文は委任元が用意したファイルを Cursor にそのまま使わ
 1. 対象ディレクトリの `git` 状態から repo、現在 branch、default branch、既存 dirty work を読む
 2. タスク本文から成功条件、検証コマンド、PR title、PR body source を読む
 3. 補完できない要素だけ委任元ユーザーへ確認する
-
-## 実行環境の分岐
-
-委譲先の tmux ターゲットは、呼び出し元の環境で決める。
-
-- **pane ルート**（`$TMUX` と `$TMUX_PANE` が両方ある）: 現在のセッションに右側 50% の背景ペインを作り、その `pane_id` を以降の操作対象にする
-- **fallback ルート**（上記のいずれかが無い）: detached な named session を作り、セッション名を操作対象にする。tmux 環境変数が無いだけで失敗させない
-
-以降の手順では、次の分岐で `TARGET` と終了方法を決める。
-
-```bash
-if [ -n "${TMUX:-}" ] && [ -n "${TMUX_PANE:-}" ]; then
-  # pane ルート
-  ...
-else
-  # fallback ルート
-  ...
-fi
-```
 
 ## 実行手順
 
@@ -143,45 +124,32 @@ cursor-agent models
 
 既定は `composer-2.5-fast` を使う。出力に見当たらない場合だけ `composer-2.5` など利用可能モデルへ切り替える。CLI 自体が無い場合は委任元側でインストール状況を整えてから再実行する。
 
-### 5. 委譲先 tmux ターゲットを作り、共通ランナー経由で Cursor Agent を起動する
+### 5. detached session を作り、共通ランナー経由で Cursor Agent を起動する
 
-#### pane ルート（tmux 内）
-
-右側 50% の背景ペインを作り、元のペインはフォーカスを維持する。出力された `pane_id` を保存する。
-
-```bash
-PANE_ID="$(tmux split-window -h -d -p 50 -c <target-repo-or-worktree> -P -F '#{pane_id}')"
-TARGET="$PANE_ID"
-RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
-COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- cursor-agent --print --force --trust --model composer-2.5-fast --workspace <target-repo-or-worktree> @<prompt-file>)"
-tmux send-keys -t "$TARGET" "$COMMAND" Enter
-```
-
-#### fallback ルート（tmux 外）
-
-同名セッションの衝突を避け、detached session を作る。
+同名セッションの衝突を避け、常に detached session を作る。呼び出し元が tmux 内でも pane を分割しない。
 
 ```bash
 tmux has-session -t <session-name> 2>/dev/null && exit 1
 tmux new-session -d -s <session-name> -c <target-repo-or-worktree>
-TARGET="<session-name>"
 RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
-COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- cursor-agent --print --force --trust --model composer-2.5-fast --workspace <target-repo-or-worktree> @<prompt-file>)"
-tmux send-keys -t "$TARGET" "$COMMAND" Enter
+COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- cursor-agent --print --force --trust --model composer-2.5-fast --workspace <target-repo-or-worktree> @<prompt-file>); tmux kill-session -t <session-name>"
+tmux send-keys -t <session-name> "$COMMAND" Enter
 ```
 
-runner は `/tmp/ai-delegate/<session-name>/` に `started_at`、`finished_at`、`exit_code`、`status`（`success` / `failed`）、`output.log` を保存し、pane の `@ai_delegate_session_id`、`@ai_delegate_state_dir`、`@ai_delegate_status` にも設定する。終了時には macOS 通知を試行する。通知権限がない場合も状態ファイルは残る。
+`COMMAND` は共通ランナーを先に実行し、ランナーが `status`、`exit_code`、`output.log` など最終状態を書き終えてから `tmux kill-session` で委譲先セッションだけを閉じる。`;` でつなぐので成功・失敗どちらでもセッションは閉じる。状態ファイルとログは `/tmp/ai-delegate/<session-name>/` に残る。
+
+ランナーは `/tmp/ai-delegate/<session-name>/` に `started_at`、`finished_at`、`exit_code`、`status`（`success` / `failed`）、`output.log` を保存し、終了時には macOS 通知を試行する。通知権限がない場合も状態ファイルは残る。
 
 ### 6. 必要時だけ終了状態を確認する
 
-必要に応じて出力を確認する。
+必要に応じて出力を確認する。完了後はセッションが閉じているため、状態ファイルとログを主に使う。
 
 ```bash
 cat /tmp/ai-delegate/<session-name>/status
 cat /tmp/ai-delegate/<session-name>/exit_code
 tail -80 /tmp/ai-delegate/<session-name>/output.log
-# 最終出力の手動確認が必要な場合だけ
-tmux capture-pane -t "$TARGET" -p | tail -80
+# 実行中だけ。完了後はセッションが閉じている
+tmux capture-pane -t <session-name> -p | tail -80
 ```
 
 進捗を読むための定期的な `capture-pane` はしない。失敗時は状態・最終ログを確認し、必要なら prompt を修正して新しい session-name で再実行する。
@@ -213,18 +181,17 @@ git -C <target-repo-or-worktree> status --short --branch
 - Draft PR が 1 件作成されている
 - 禁止事項に触れていない
 
-## 委譲先の終了
+## 委譲先セッションの終了
 
-作業完了後、不要なら委譲先を閉じる。
+委譲先 tmux セッションは、共通ランナーが最終状態を書き終えたあと `COMMAND` 内の `tmux kill-session -t <session-name>` で自動的に閉じる。状態ファイルとログは `/tmp/ai-delegate/<session-name>/` に残る。
+
+ランナー完了前にセッションだけ落ちた場合は、状態ファイルと `output.log` を確認する。不要な残留セッションがあれば手動で閉じる。
 
 ```bash
-# 完了・失敗後も自動では閉じない。最終出力を確認後に実行する。
-# pane ルート
-tmux kill-pane -t "$PANE_ID"
-
-# fallback ルート
 tmux kill-session -t <session-name>
 ```
+
+同じ `session-name` を二重起動しない。再実行するときは新しい session-name を使う。
 
 ## 例外対応
 
