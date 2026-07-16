@@ -229,6 +229,10 @@ function dev() {
     fi
 }
 
+function ai_budget_today() {
+    "$HOME/ghq/github.com/boxp/dotfiles/scripts/ai-budget-today.sh"
+}
+
 ### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
 export PATH="/Users/keitaro.takeuchi/.rd/bin:$PATH"
 ### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
