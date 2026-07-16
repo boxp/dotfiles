@@ -23,6 +23,20 @@ write_mock_ccusage() {
   local cost="$1"
   cat >"$mock_ccusage_dir/ccusage" <<EOF
 #!/usr/bin/env bash
+set -euo pipefail
+
+ref_date="\${AI_BUDGET_TEST_DATE:-\$(date +%Y-%m-%d)}"
+year=\${ref_date%%-*}
+month=\${ref_date#*-}
+month=\${month%-*}
+since="\${year}-\${month}-01"
+until="\$ref_date"
+
+if [[ "\$1" != "monthly" || "\$2" != "--json" || "\$3" != "--since" || "\$4" != "\$since" || "\$5" != "--until" || "\$6" != "\$until" ]]; then
+  printf 'unexpected ccusage args: %s (expected monthly --json --since %s --until %s)\n' "\$*" "\$since" "\$until" >&2
+  exit 1
+fi
+
 printf '%s\n' '{"totals":{"totalCost":${cost}}}'
 EOF
   chmod +x "$mock_ccusage_dir/ccusage"

@@ -40,13 +40,21 @@ days_remaining_in_month() {
 }
 
 monthly_total_cost() {
+  local ref_date="$1"
   local ccusage_cmd="${AI_BUDGET_CCUSAGE_CMD:-ccusage}"
+  local year month since until
 
   command -v jq >/dev/null 2>&1 || return 1
   command -v "$ccusage_cmd" >/dev/null 2>&1 || return 1
 
+  year=${ref_date%%-*}
+  month=${ref_date#*-}
+  month=${month%-*}
+  since=$(printf '%s-%s-01' "$year" "$month")
+  until="$ref_date"
+
   local json cost
-  json=$("$ccusage_cmd" monthly --json 2>/dev/null) || return 1
+  json=$("$ccusage_cmd" monthly --json --since "$since" --until "$until" 2>/dev/null) || return 1
   [[ -n "$json" ]] || return 1
 
   cost=$(printf '%s\n' "$json" | jq -er '.totals.totalCost' 2>/dev/null) || return 1
@@ -63,7 +71,7 @@ main() {
   days=$(days_remaining_in_month "$ref_date")
   [[ "$days" -gt 0 ]] || exit 0
 
-  cost=$(monthly_total_cost) || exit 0
+  cost=$(monthly_total_cost "$ref_date") || exit 0
 
   formatted=$(awk -v budget="$budget" -v cost="$cost" -v days="$days" '
     BEGIN {
