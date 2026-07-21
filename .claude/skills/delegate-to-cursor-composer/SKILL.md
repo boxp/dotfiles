@@ -1,13 +1,13 @@
 ---
 name: delegate-to-cursor-composer
-description: Cursor Agent CLI の Composer 2 系モデルへ実装作業を委譲し、push と Draft PR 作成までを detached な named tmux セッションで実行させる skill。Claude Code / Codex / Pi Agent から「Cursor Composer に任せたい」「別セッションで Cursor に実装させたい」「作業 branch で実装して Draft PR だけ作らせたい」ときに使う。PR description は委任元が作成し、Cursor には指定済み PR 本文ファイルを使わせる。merge、close、branch delete、force-push、amend、Jira やチケットへのコメントはさせない。
+description: Cursor Agent CLI の Composer 2 系モデルへ実装作業を委譲し、push と Draft PR 作成までを detached な named tmux セッションで実行させる skill。Claude Code / Codex / Pi Agent から「Cursor Composer に任せたい」「別セッションで Cursor に実装させたい」「作業 branch で実装して Draft PR だけ作らせたい」ときに使う。委任元は対象リポジトリのPRテンプレートに準拠した本文を作成し、Cursor には指定済み本文を使わせる。merge、close、branch delete、force-push、amend、Jira やチケットへのコメントはさせない。
 ---
 
 # Cursor Composer への委譲
 
 Cursor Agent CLI を detached な named tmux セッションで非対話・一回実行し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。呼び出し元が tmux 内でも pane を分割せず、常に新しい detached session を作る。委任元は進捗をポーリングせず、終了通知と状態ファイルで結果を受け取る。
 
-PR 本文は委任元が用意したファイルを Cursor にそのまま使わせる。Cursor に PR 本文の創作や運用判断をさせない。
+PR 本文は、委任元が対象リポジトリのPRテンプレートを検出して準拠したファイルを用意し、Cursor にそのまま使わせる。Cursor に PR 本文の創作や運用判断をさせない。
 
 既定モデルは `composer-2.5-fast` とし、より高品質側へ寄せたいときだけ `composer-2.5` へ切り替える。
 
@@ -42,7 +42,17 @@ git remote show origin | sed -n '/HEAD branch/s/.*: //p'
 
 既存の dirty work があれば、Cursor にその変更へ触れさせない前提で prompt に明記する。対象が git repo でない、または branch が解決できない場合だけ追加確認する。
 
-### 2. PR 本文ファイルを委任元が用意する
+### 2. PR テンプレートを検出し、本文ファイルを委任元が用意する
+
+PR 本文を作る前に、対象リポジトリのPRテンプレートを必ず確認する。次の候補を確認し、該当するテンプレートを読む。
+
+```bash
+find .github -maxdepth 2 -type f \( -iname 'PULL_REQUEST_TEMPLATE.md' -o -iname 'pull_request_template.md' \) -print
+```
+
+- テンプレートが1件なら、それを本文の基底にする。
+- 複数テンプレートがあり、タスクから対象を一意に決められない場合は、PR作成前に委任元ユーザーへ選択を確認する。
+- テンプレートがない場合だけ、委任元がタスクに応じた本文を作る。
 
 委任前に必ず次のディレクトリを作る。
 
@@ -56,6 +66,13 @@ mkdir -p /tmp/cursor-composer-delegate/<session-name>
 - `pr-body.md`: Draft PR の本文。委任元責任で作る
 
 `task-or-prompt-file` がファイルなら内容を参照し、そこに PR 本文が含まれていなければ別途 `pr-body.md` を作る。直接テキスト入力なら委任元の意図に基づいて `prompt.md` と `pr-body.md` を作る。
+
+テンプレートがある場合の `pr-body.md` は次を満たす。
+
+- テンプレートの全セクションと必須チェック項目を残す。該当しない項目も削除せず、`N/A` と理由を記載する。
+- `<...>`、`[ticket_url]`、`[changes]` などの未置換プレースホルダーを残さない。
+- タスクから確定できる事実だけを記載し、Jira URL・モデル名・検証結果を推測で作らない。
+- 既存テンプレートに追加の必須情報がある場合だけ、テンプレートの見出しを維持したまま補足する。
 
 Cursor には `pr-body.md` を原則そのまま使わせる。事実の穴埋め以外で書き換えさせない。
 
@@ -71,6 +88,8 @@ Cursor には `pr-body.md` を原則そのまま使わせる。事実の穴埋�
 - 実行すべき検証コマンド
 - PR title
 - PR body file path
+- 検出したPRテンプレートのパス、またはテンプレートがないこと
+- PR本文がテンプレートの全セクションを保持し、未置換プレースホルダーを含まないことを確認する指示
 - 作業前後に `git status --short --branch` を確認する指示
 - `gh pr create --draft --title "<title>" --body-file "<pr-body-file>"` を使う指示
 - 禁止事項
@@ -94,6 +113,7 @@ Cursor には `pr-body.md` を原則そのまま使わせる。事実の穴埋�
 # PR
 - Title: ...
 - Body file: /tmp/cursor-composer-delegate/<session>/pr-body.md
+- Template: <detected template path, or none>
 - Create command:
   `gh pr create --draft --title "..." --body-file "/tmp/cursor-composer-delegate/<session>/pr-body.md"`
 
@@ -159,6 +179,7 @@ tmux capture-pane -t <session-name> -p | tail -80
 - Cursor の責務は `実装 -> 検証 -> commit -> push -> Draft PR作成` に限定する
 - Draft ではない PR を作らせない
 - PR description の責任は委任元にある
+- 委任元はPR本文作成前に対象リポジトリのPRテンプレートを検出し、テンプレートがあれば全セクションを保持して本文へ反映する
 - `gh pr merge`、merge button 操作、branch delete、issue close、Jira コメント、チケットコメント、force-push、amend を禁止する
 - 既存 dirty work を見つけたら、その扱いを prompt に明記する
 - 失敗時は勝手に運用判断させず、失敗コマンドと状況を残して止めさせる
@@ -195,6 +216,6 @@ tmux kill-session -t <session-name>
 
 ## 例外対応
 
-- PR 本文テンプレートが無いまま委任依頼されたら、先に委任元が本文を作る
+- PR 本文テンプレートが無い場合だけ、委任元がタスクに基づく本文を作る
 - 対象 repo に unrelated dirty work がある場合は、そのままでも安全に避けられるときだけ続行する
 - `gh` 認証、`cursor-agent` 認証、ネットワーク失敗は Cursor に復旧方針を創作させず、失敗内容を報告させる
