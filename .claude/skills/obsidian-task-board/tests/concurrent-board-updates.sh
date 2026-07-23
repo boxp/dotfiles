@@ -90,8 +90,15 @@ BOARD
   PID1=$!
   "$BIN" update BOXP-2 --vault "$TMP" --lane "In Progress" >/dev/null 2>&1 &
   PID2=$!
-  wait $PID1 || true
-  wait $PID2 || true
+  EXIT1=0; EXIT2=0
+  wait $PID1 || EXIT1=$?
+  wait $PID2 || EXIT2=$?
+
+  if [[ "$EXIT1" -ne 0 || "$EXIT2" -ne 0 ]]; then
+    FAILURES=$((FAILURES + 1))
+    echo "FAIL round $_: child process failed (exit codes: BOXP-1=$EXIT1, BOXP-2=$EXIT2)" >&2
+    continue
+  fi
 
   BOARD_CONTENT=$(cat "$TMP/Boards/Task Board.md")
   FOUND_1=0; FOUND_2=0
