@@ -1,0 +1,43 @@
+name: Lint Task Board
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/obsidian-task-board/**"
+      - ".github/workflows/lint-task-board.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - ".claude/skills/obsidian-task-board/**"
+      - ".github/workflows/lint-task-board.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clj-kondo
+        run: |
+          curl -sLO https://raw.githubusercontent.com/clj-kondo/clj-kondo/master/script/install-clj-kondo
+          chmod +x install-clj-kondo
+          sudo ./install-clj-kondo
+      - name: Lint task-board.bb
+        run: clj-kondo --lint .claude/skills/obsidian-task-board/bin/task-board.bb --config '{:linters {:namespace-name-mismatch {:level :off}}}'
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Babashka
+        run: |
+          curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
+          chmod +x install
+          sudo ./install
+      - name: Run smoke tests
+        run: bash .claude/skills/obsidian-task-board/tests/smoke.sh
+      - name: Run concurrent board update tests
+        run: bash .claude/skills/obsidian-task-board/tests/concurrent-board-updates.sh
