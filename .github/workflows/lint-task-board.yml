@@ -1,0 +1,27 @@
+name: Lint Task Board
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/obsidian-task-board/**"
+  push:
+    branches:
+      - master
+    paths:
+      - ".claude/skills/obsidian-task-board/**"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Babashka
+        run: |
+          curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
+          chmod +x install
+          sudo ./install
+      - name: Check task-board.bb syntax
+        run: bb --check .claude/skills/obsidian-task-board/bin/task-board.bb
