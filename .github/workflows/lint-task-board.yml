@@ -4,11 +4,13 @@ on:
   pull_request:
     paths:
       - ".claude/skills/obsidian-task-board/**"
+      - ".github/workflows/lint-task-board.yml"
   push:
     branches:
       - master
     paths:
       - ".claude/skills/obsidian-task-board/**"
+      - ".github/workflows/lint-task-board.yml"
 
 permissions:
   contents: read

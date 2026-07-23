@@ -443,41 +443,46 @@
 
 (defn cmd-update [opts id]
   (let [vault (vault-path opts)
-        ticket (ticket-data vault id)
-        board-path (board-path vault)
-        board (read-text board-path)
-        old-card (card-for board id)
-        lane (or (:lane opts) (:lane old-card) (status->lane (:status ticket)) "Backlog")
-        status (lanes (require-lane lane))
-        title (or (:title opts) (:title ticket))
-        done-date (or (present (:done-date old-card))
-                      (present (fm-get (:frontmatter-lines ticket) "closed"))
-                      (when (= lane "Done") (now-date)))
-        updates {:title (:title opts)
-                 :summary (:summary opts)
-                 :acceptance (:acceptance opts)
-                 :context (:context opts)
-                 :plan (:plan opts)
-                 :notes (:notes opts)
-                 :status status
-                 :priority (:priority opts)
-                 :assignee (:assignee opts)
-                 :repo (:repo opts)
-                 :closed (if (= lane "Done") done-date "")}
-        new-ticket (apply-ticket-update ticket updates)
-        card {:id id
-              :title title
-              :lane lane
-              :priority (or (:priority opts) (:priority ticket) (:priority old-card))
-              :assignee (or (:assignee opts) (:assignee ticket) (:assignee old-card))
-              :repo (or (:repo opts) (:repo old-card) (:repo ticket))
-              :done-date done-date}
-        new-board (insert-card board id card)
-        result {:action "update" :id id :lane lane :status status :dry-run (boolean (:dry-run opts))}]
-    (when-not (:dry-run opts)
-      (write-text! (ticket-path vault id) new-ticket)
-      (write-text! board-path new-board))
-    (print-result opts result)))
+        path (ticket-path vault id)
+        result-atom (atom nil)]
+    (with-ticket-lock path
+      (fn []
+        (let [ticket (ticket-data vault id)
+              board-path (board-path vault)
+              board (read-text board-path)
+              old-card (card-for board id)
+              lane (or (:lane opts) (:lane old-card) (status->lane (:status ticket)) "Backlog")
+              status (lanes (require-lane lane))
+              title (or (:title opts) (:title ticket))
+              done-date (or (present (:done-date old-card))
+                            (present (fm-get (:frontmatter-lines ticket) "closed"))
+                            (when (= lane "Done") (now-date)))
+              updates {:title (:title opts)
+                       :summary (:summary opts)
+                       :acceptance (:acceptance opts)
+                       :context (:context opts)
+                       :plan (:plan opts)
+                       :notes (:notes opts)
+                       :status status
+                       :priority (:priority opts)
+                       :assignee (:assignee opts)
+                       :repo (:repo opts)
+                       :closed (if (= lane "Done") done-date "")}
+              new-ticket (apply-ticket-update ticket updates)
+              card {:id id
+                    :title title
+                    :lane lane
+                    :priority (or (:priority opts) (:priority ticket) (:priority old-card))
+                    :assignee (or (:assignee opts) (:assignee ticket) (:assignee old-card))
+                    :repo (or (:repo opts) (:repo old-card) (:repo ticket))
+                    :done-date done-date}
+              new-board (insert-card board id card)
+              result {:action "update" :id id :lane lane :status status :dry-run (boolean (:dry-run opts))}]
+          (when-not (:dry-run opts)
+            (write-text! path new-ticket)
+            (write-text! board-path new-board))
+          (reset! result-atom result))))
+    (print-result opts @result-atom)))
 
 (defn cmd-append-note [opts id]
   (let [vault (vault-path opts)
@@ -498,30 +503,35 @@
   (let [vault (vault-path opts)
         lane (require-lane (or (:lane opts) (die "request-codex requires --lane")))
         note (or (:note opts) (die "request-codex requires --note or --note-file"))
-        ticket (ticket-data vault id)
-        board-path (board-path vault)
-        board (read-text board-path)
-        old-card (card-for board id)
-        status (lanes lane)
-        new-ticket (apply-ticket-update ticket {:status status
-                                                :assignee "codex"
-                                                :closed ""
-                                                :append-note note
-                                                :note-source (or (:source opts) "codex request")})
-        card {:id id
-              :title (:title ticket)
-              :lane lane
-              :priority (or (:priority ticket) (:priority old-card) "medium")
-              :assignee "codex"
-              :repo (or (:repo ticket) (:repo old-card))}
-        new-board (insert-card board id card)
-        result {:action "request-codex" :id id :lane lane :status status :assignee "codex" :dry-run (boolean (:dry-run opts))}]
+        path (ticket-path vault id)
+        result-atom (atom nil)]
     (when-not (contains? codex-request-lanes lane)
       (die "request-codex lane must be one of Backlog, Ready, Review, or Blocked"))
-    (when-not (:dry-run opts)
-      (write-text! (ticket-path vault id) new-ticket)
-      (write-text! board-path new-board))
-    (print-result opts result)))
+    (with-ticket-lock path
+      (fn []
+        (let [ticket (ticket-data vault id)
+              board-path (board-path vault)
+              board (read-text board-path)
+              old-card (card-for board id)
+              status (lanes lane)
+              new-ticket (apply-ticket-update ticket {:status status
+                                                      :assignee "codex"
+                                                      :closed ""
+                                                      :append-note note
+                                                      :note-source (or (:source opts) "codex request")})
+              card {:id id
+                    :title (:title ticket)
+                    :lane lane
+                    :priority (or (:priority ticket) (:priority old-card) "medium")
+                    :assignee "codex"
+                    :repo (or (:repo ticket) (:repo old-card))}
+              new-board (insert-card board id card)
+              result {:action "request-codex" :id id :lane lane :status status :assignee "codex" :dry-run (boolean (:dry-run opts))}]
+          (when-not (:dry-run opts)
+            (write-text! path new-ticket)
+            (write-text! board-path new-board))
+          (reset! result-atom result))))
+    (print-result opts @result-atom)))
 
 (defn cmd-delete [opts id]
   (when-not (or (:dry-run opts) (:confirm opts))
