@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Babashka
+      - name: Install clj-kondo
         run: |
-          curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
-          chmod +x install
-          sudo ./install
-      - name: Check task-board.bb syntax
-        run: bb --check .claude/skills/obsidian-task-board/bin/task-board.bb
+          curl -sLO https://raw.githubusercontent.com/clj-kondo/clj-kondo/master/script/install-clj-kondo
+          chmod +x install-clj-kondo
+          sudo ./install-clj-kondo
+      - name: Lint task-board.bb
+        run: clj-kondo --lint .claude/skills/obsidian-task-board/bin/task-board.bb --config '{:linters {:namespace-name-mismatch {:level :off}}}'
