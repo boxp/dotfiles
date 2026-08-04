@@ -2,6 +2,7 @@
 set -euo pipefail
 
 runner="$(cd "$(dirname "$0")" && pwd)/run-delegate.sh"
+formatter="$(cd "$(dirname "$0")" && pwd)/format-stream.sh"
 state_root="$(mktemp -d)"
 mock_bin="$state_root/bin"
 notify_log="$state_root/notifications.log"
@@ -27,3 +28,37 @@ test "$(cat "$state_root/fails/status")" = failed
 test "$(cat "$state_root/fails/exit_code")" = 7
 grep -q failure-output "$state_root/fails/output.log"
 grep -q 'AI delegate failed' "$notify_log"
+
+claude_tool_line='{"type":"stream_event","event":{"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_1","name":"Bash","input":{"command":"echo hi","description":"say hi"}}}}'
+claude_result_line='{"type":"user","message":{"content":[{"type":"tool_result","content":"hi\n","is_error":false}]}}'
+claude_final_line='{"type":"result","result":"done","subtype":"success"}'
+
+formatted="$(
+  {
+    printf '%s\n' "$claude_tool_line"
+    printf '%s\n' "$claude_result_line"
+    printf '%s\n' "$claude_final_line"
+  } | "$formatter" claude
+)"
+grep -q '\[tool\] Bash echo hi' <<< "$formatted"
+grep -q '\[result\] hi' <<< "$formatted"
+grep -q '\[final\] done' <<< "$formatted"
+
+cursor_tool_start='{"type":"tool_call","subtype":"started","tool_call":{"shellToolCall":{"args":{"command":"echo hi","description":"say hi"}}}}'
+cursor_tool_done='{"type":"tool_call","subtype":"completed","tool_call":{"shellToolCall":{"result":{"success":{"stdout":"hi\n"}}}}}'
+cursor_final='{"type":"result","subtype":"success","result":"all good"}'
+
+formatted="$(
+  {
+    printf '%s\n' "$cursor_tool_start"
+    printf '%s\n' "$cursor_tool_done"
+    printf '%s\n' "$cursor_final"
+  } | "$formatter" cursor
+)"
+grep -q '\[tool\] Shell echo hi' <<< "$formatted"
+grep -q '\[result\] hi' <<< "$formatted"
+grep -q '\[final\] all good' <<< "$formatted"
+
+non_json='plain log line'
+formatted="$(printf '%s\n' "$non_json" | "$formatter" claude)"
+test "$formatted" = "$non_json"

@@ -5,7 +5,7 @@ description: Cursor Agent CLI の Composer 2 系モデルへ実装作業を委�
 
 # Cursor Composer への委譲
 
-Cursor Agent CLI を detached な named tmux セッションで非対話・一回実行し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。呼び出し元が tmux 内でも pane を分割せず、常に新しい detached session を作る。委任元は進捗をポーリングせず、終了通知と状態ファイルで結果を受け取る。
+Cursor Agent CLI を detached な named tmux セッションで非対話・一回実行し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。呼び出し元が tmux 内でも pane を分割せず、常に新しい detached session を作る。委任元は進捗をポーリングせず、終了通知と状態ファイルで結果を受け取る。実行中は stream-json を人間可読に整形した進行ログが pane と `output.log` にリアルタイム表示される。
 
 PR 本文は、委任元が対象リポジトリのPRテンプレートを検出して準拠したファイルを用意し、Cursor にそのまま使わせる。Cursor に PR 本文の創作や運用判断をさせない。
 
@@ -152,7 +152,7 @@ cursor-agent models
 tmux has-session -t <session-name> 2>/dev/null && exit 1
 tmux new-session -d -s <session-name> -c <target-repo-or-worktree>
 RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
-COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- cursor-agent --print --force --trust --model composer-2.5-fast --workspace <target-repo-or-worktree> @<prompt-file>); tmux kill-session -t <session-name>"
+COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- cursor-agent --print --output-format stream-json --stream-partial-output --force --trust --model composer-2.5-fast --workspace <target-repo-or-worktree> @<prompt-file>); tmux kill-session -t <session-name>"
 tmux send-keys -t <session-name> "$COMMAND" Enter
 ```
 

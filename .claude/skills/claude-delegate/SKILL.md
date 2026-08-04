@@ -6,7 +6,7 @@ argument-hint: <session-name> <working-directory> <prompt-or-file>
 
 # Claude Code タスク委譲
 
-tmux の背景 pane（tmux 外では detached session）で Claude を非対話・一回実行する。委任元は進捗をポーリングしない。終了時の macOS 通知と状態ファイルで結果を受け取り、pane は最終出力確認のため残す。
+tmux の背景 pane（tmux 外では detached session）で Claude を非対話・一回実行する。委任元は進捗をポーリングしない。終了時の macOS 通知と状態ファイルで結果を受け取り、pane には stream-json を人間可読に整形した進行ログ（tool 呼び出し・thinking・assistant text）がリアルタイム表示される。
 
 ## 引数とプロンプト
 
@@ -31,11 +31,11 @@ fi
 
 ## 共通ランナーで起動する
 
-信頼済みの対象 worktree に限り、確認待ちを作らない `--dangerously-skip-permissions` を明示する。プロンプトをシェル展開せず標準入力で渡す。
+信頼済みの対象 worktree に限り、確認待ちを作らない `--dangerously-skip-permissions` を明示する。進行状況は `--output-format stream-json --verbose --include-partial-messages` で pane と `output.log` に整形表示する。プロンプトをシェル展開せず標準入力で渡す。
 
 ```bash
 RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
-COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <working-directory> -- claude --print --dangerously-skip-permissions) < <(cat <prompt-file>)"
+COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <working-directory> -- claude --print --output-format stream-json --verbose --include-partial-messages --dangerously-skip-permissions) < <(cat <prompt-file>)"
 tmux send-keys -t "$TARGET" "$COMMAND" Enter
 ```
 

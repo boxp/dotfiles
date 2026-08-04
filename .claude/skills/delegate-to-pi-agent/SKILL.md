@@ -142,6 +142,8 @@ test -e ~/.pi/agent/skills/github-gh
 
 ### 5. 委譲先 tmux ターゲットを作り、共通ランナー経由で Pi Agent を起動する
 
+Pi Agent CLI は `--mode json` でも JSON Lines を出すが、tool 呼び出しの進行中イベントは turn 境界でまとめて出ることが多く、claude / cursor-agent のようなリアルタイム tool ストリームには未対応のため、起動コマンドは従来どおり `--print` のみとする。進行状況は最終出力と `output.log`、必要時の `capture-pane` で確認する。
+
 #### pane ルート（tmux 内）
 
 右側 50% の背景ペインを作り、元のペインはフォーカスを維持する。出力された `pane_id` を保存する。
