@@ -142,6 +142,8 @@ test -e ~/.pi/agent/skills/github-gh
 
 ### 5. 委譲先 tmux ターゲットを作り、共通ランナー経由で Pi Agent を起動する
 
+Pi Agent CLI は `--mode json` でも JSON Lines を出すが、tool 呼び出しの進行中イベントは turn 境界でまとめて出ることが多く、claude / cursor-agent のようなリアルタイム tool ストリームには未対応のため、起動コマンドは従来どおり `--print` のみとする。進行状況は最終出力と `output.log`、必要時の `capture-pane` で確認する。
+
 #### pane ルート（tmux 内）
 
 右側 50% の背景ペインを作り、元のペインはフォーカスを維持する。出力された `pane_id` を保存する。
@@ -150,7 +152,7 @@ test -e ~/.pi/agent/skills/github-gh
 PANE_ID="$(tmux split-window -h -d -p 50 -c <target-repo-or-worktree> -P -F '#{pane_id}')"
 TARGET="$PANE_ID"
 RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
-COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- pi --print --approve --name <session-name> --skill ~/.pi/agent/skills/github-gh @<prompt-file>)"
+COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- pi --print --approve --name <session-name> --skill ~/.pi/agent/skills/github-gh @<prompt-file>); tmux wait-for -S ai-delegate-<session-name>"
 tmux send-keys -t "$TARGET" "$COMMAND" Enter
 ```
 
@@ -163,11 +165,21 @@ tmux has-session -t <session-name> 2>/dev/null && exit 1
 tmux new-session -d -s <session-name> -c <target-repo-or-worktree>
 TARGET="<session-name>"
 RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
-COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- pi --print --approve --name <session-name> --skill ~/.pi/agent/skills/github-gh @<prompt-file>)"
+COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- pi --print --approve --name <session-name> --skill ~/.pi/agent/skills/github-gh @<prompt-file>); tmux wait-for -S ai-delegate-<session-name>"
 tmux send-keys -t "$TARGET" "$COMMAND" Enter
 ```
 
 runner は `/tmp/ai-delegate/<session-name>/` に `started_at`、`finished_at`、`exit_code`、`status`（`success` / `failed`）、`output.log` を保存し、pane の `@ai_delegate_session_id`、`@ai_delegate_state_dir`、`@ai_delegate_status` にも設定する。終了時には macOS 通知を試行する。通知権限がない場合も状態ファイルは残る。
+
+### 5a. 完了をブロッキング待機で検知する
+
+起動直後に、チャンネル `ai-delegate-<session-name>` をブロック待機する Bash を **`run_in_background: true`** で1回だけ実行する。シグナルされるまで出力はなく、ハーネスがバックグラウンドコマンドの完了を自動通知する。
+
+```bash
+tmux wait-for ai-delegate-<session-name>
+```
+
+`run-delegate.sh` 完了時、`COMMAND` 末尾の `tmux wait-for -S ai-delegate-<session-name>` が上記待機を解除する。通知を受け取った時点で初めて状態ファイルを1回だけ確認する。
 
 ### 6. 必要時だけ終了状態を確認する
 
@@ -181,7 +193,7 @@ tail -80 /tmp/ai-delegate/<session-name>/output.log
 tmux capture-pane -t "$TARGET" -p | tail -80
 ```
 
-進捗を読むための定期的な `capture-pane` はしない。失敗時は状態・最終ログを確認し、必要なら prompt を修正して新しい session-name で再実行する。
+進捗を読むための定期的な `capture-pane` や状態ファイルの polling はしない。完了確認は `tmux wait-for` のバックグラウンド待機が通知するまで待つ。失敗時は状態・最終ログを確認し、必要なら prompt を修正して新しい session-name で再実行する。
 
 ## 委任時の必須制約
 

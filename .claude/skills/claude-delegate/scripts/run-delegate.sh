@@ -3,19 +3,30 @@
 set -uo pipefail
 
 usage() {
-  echo "Usage: $0 --session-id ID --working-directory DIR [--state-root DIR] -- command [args...]" >&2
+  echo "Usage: $0 --session-id ID --working-directory DIR [--state-root DIR] [--format-stream auto|claude|cursor|pi|off] -- command [args...]" >&2
   exit 2
+}
+
+detect_format_stream() {
+  case "${1:-}" in
+    claude) printf 'claude\n' ;;
+    cursor-agent) printf 'cursor\n' ;;
+    pi) printf 'off\n' ;;
+    *) printf 'off\n' ;;
+  esac
 }
 
 session_id=""
 working_directory=""
 state_root="${AI_DELEGATE_STATE_ROOT:-/tmp/ai-delegate}"
+format_stream="${AI_DELEGATE_FORMAT_STREAM:-auto}"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --session-id) session_id="${2:-}"; shift 2 ;;
     --working-directory) working_directory="${2:-}"; shift 2 ;;
     --state-root) state_root="${2:-}"; shift 2 ;;
+    --format-stream) format_stream="${2:-}"; shift 2 ;;
     --) shift; break ;;
     *) usage ;;
   esac
@@ -62,10 +73,23 @@ set_pane_option @ai_delegate_state_dir "$state_dir"
 set_pane_option @ai_delegate_status running
 printf '[%s] delegate started: %s\n' "$started_at" "$(printf '%q ' "$@")" >> "$log_file"
 
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+format_script="$script_dir/format-stream.sh"
+resolved_format="$format_stream"
+if [ "$resolved_format" = "auto" ]; then
+  resolved_format="$(detect_format_stream "${1:-}")"
+fi
+
 set +e
-(
-  cd "$working_directory" && "$@"
-) 2>&1 | tee -a "$log_file"
+if [ "$resolved_format" != "off" ] && [ -x "$format_script" ]; then
+  (
+    cd "$working_directory" && "$@"
+  ) 2>&1 | stdbuf -oL "$format_script" "$resolved_format" | tee -a "$log_file"
+else
+  (
+    cd "$working_directory" && "$@"
+  ) 2>&1 | tee -a "$log_file"
+fi
 command_status=${PIPESTATUS[0]}
 set -e
 

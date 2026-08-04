@@ -6,7 +6,7 @@ argument-hint: <session-name> <working-directory> <prompt-or-file>
 
 # Claude Code タスク委譲
 
-tmux の背景 pane（tmux 外では detached session）で Claude を非対話・一回実行する。委任元は進捗をポーリングしない。終了時の macOS 通知と状態ファイルで結果を受け取り、pane は最終出力確認のため残す。
+tmux の背景 pane（tmux 外では detached session）で Claude を非対話・一回実行する。委任元は進捗をポーリングしない。終了時の macOS 通知と状態ファイルで結果を受け取り、pane には stream-json を人間可読に整形した進行ログ（tool 呼び出し・thinking・assistant text）がリアルタイム表示される。
 
 ## 引数とプロンプト
 
@@ -31,21 +31,31 @@ fi
 
 ## 共通ランナーで起動する
 
-信頼済みの対象 worktree に限り、確認待ちを作らない `--dangerously-skip-permissions` を明示する。プロンプトをシェル展開せず標準入力で渡す。
+信頼済みの対象 worktree に限り、確認待ちを作らない `--dangerously-skip-permissions` を明示する。進行状況は `--output-format stream-json --verbose --include-partial-messages` で pane と `output.log` に整形表示する。プロンプトをシェル展開せず標準入力で渡す。
 
 ```bash
 RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
-COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <working-directory> -- claude --print --dangerously-skip-permissions) < <(cat <prompt-file>)"
+COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <working-directory> -- claude --print --output-format stream-json --verbose --include-partial-messages --dangerously-skip-permissions) < <(cat <prompt-file>); tmux wait-for -S ai-delegate-<session-name>"
 tmux send-keys -t "$TARGET" "$COMMAND" Enter
 ```
 
 `claude --print "$(cat file)"` は使わない。
 
+## 完了をブロッキング待機で検知する
+
+起動直後に、チャンネル `ai-delegate-<session-name>` をブロック待機する Bash を **`run_in_background: true`** で1回だけ実行する。シグナルされるまで出力はなく、ハーネスがバックグラウンドコマンドの完了を自動通知する。
+
+```bash
+tmux wait-for ai-delegate-<session-name>
+```
+
+`run-delegate.sh` 完了時、`COMMAND` 末尾の `tmux wait-for -S ai-delegate-<session-name>` が上記待機を解除する。通知を受け取った時点で初めて状態ファイルを1回だけ確認する。
+
 ## 終了通知と必要時の確認
 
 ランナーは `/tmp/ai-delegate/<session-name>/` に `started_at`、`finished_at`、`exit_code`、`status`（`success` / `failed`）、`output.log` を保存し、pane の `@ai_delegate_session_id`、`@ai_delegate_state_dir`、`@ai_delegate_status` にも設定する。終了時には macOS 通知を試行する。通知権限がない場合でも状態ファイルは残る。
 
-進捗目的の定期的な `capture-pane` は行わない。必要時だけ次を使う。
+進捗目的の定期的な `capture-pane` や状態ファイルの polling は行わない。完了確認は `tmux wait-for` のバックグラウンド待機が通知するまで待つ。必要時だけ次を使う。
 
 ```bash
 cat /tmp/ai-delegate/<session-name>/status

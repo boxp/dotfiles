@@ -5,7 +5,7 @@ description: Cursor Agent CLI の Composer 2 系モデルへ実装作業を委�
 
 # Cursor Composer への委譲
 
-Cursor Agent CLI を detached な named tmux セッションで非対話・一回実行し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。呼び出し元が tmux 内でも pane を分割せず、常に新しい detached session を作る。委任元は進捗をポーリングせず、終了通知と状態ファイルで結果を受け取る。
+Cursor Agent CLI を detached な named tmux セッションで非対話・一回実行し、対象リポジトリまたは worktree で実装、検証、commit、push、Draft PR 作成だけを実行させる。呼び出し元が tmux 内でも pane を分割せず、常に新しい detached session を作る。委任元は進捗をポーリングせず、終了通知と状態ファイルで結果を受け取る。実行中は stream-json を人間可読に整形した進行ログが pane と `output.log` にリアルタイム表示される。
 
 PR 本文は、委任元が対象リポジトリのPRテンプレートを検出して準拠したファイルを用意し、Cursor にそのまま使わせる。Cursor に PR 本文の創作や運用判断をさせない。
 
@@ -152,11 +152,21 @@ cursor-agent models
 tmux has-session -t <session-name> 2>/dev/null && exit 1
 tmux new-session -d -s <session-name> -c <target-repo-or-worktree>
 RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
-COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- cursor-agent --print --force --trust --model composer-2.5-fast --workspace <target-repo-or-worktree> @<prompt-file>); tmux kill-session -t <session-name>"
+COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <target-repo-or-worktree> -- cursor-agent --print --output-format stream-json --stream-partial-output --force --trust --model composer-2.5-fast --workspace <target-repo-or-worktree> @<prompt-file>); tmux wait-for -S ai-delegate-<session-name>; tmux kill-session -t <session-name>"
 tmux send-keys -t <session-name> "$COMMAND" Enter
 ```
 
-`COMMAND` は共通ランナーを先に実行し、ランナーが `status`、`exit_code`、`output.log` など最終状態を書き終えてから `tmux kill-session` で委譲先セッションだけを閉じる。`;` でつなぐので成功・失敗どちらでもセッションは閉じる。状態ファイルとログは `/tmp/ai-delegate/<session-name>/` に残る。
+`COMMAND` は共通ランナーを先に実行し、ランナーが `status`、`exit_code`、`output.log` など最終状態を書き終えてから `tmux wait-for -S` で完了シグナルを送り、`tmux kill-session` で委譲先セッションだけを閉じる。`;` でつなぐので成功・失敗どちらでもシグナル送信とセッション終了が行われる。状態ファイルとログは `/tmp/ai-delegate/<session-name>/` に残る。
+
+### 5a. 完了をブロッキング待機で検知する
+
+起動直後に、チャンネル `ai-delegate-<session-name>` をブロック待機する Bash を **`run_in_background: true`** で1回だけ実行する。シグナルされるまで出力はなく、ハーネスがバックグラウンドコマンドの完了を自動通知する。
+
+```bash
+tmux wait-for ai-delegate-<session-name>
+```
+
+`run-delegate.sh` 完了時、`COMMAND` 内の `tmux wait-for -S ai-delegate-<session-name>` が上記待機を解除する。通知を受け取った時点で初めて状態ファイルを1回だけ確認する。
 
 ランナーは `/tmp/ai-delegate/<session-name>/` に `started_at`、`finished_at`、`exit_code`、`status`（`success` / `failed`）、`output.log` を保存し、終了時には macOS 通知を試行する。通知権限がない場合も状態ファイルは残る。
 
@@ -172,7 +182,7 @@ tail -80 /tmp/ai-delegate/<session-name>/output.log
 tmux capture-pane -t <session-name> -p | tail -80
 ```
 
-進捗を読むための定期的な `capture-pane` はしない。失敗時は状態・最終ログを確認し、必要なら prompt を修正して新しい session-name で再実行する。
+進捗を読むための定期的な `capture-pane` や状態ファイルの polling はしない。完了確認は `tmux wait-for` のバックグラウンド待機が通知するまで待つ。失敗時は状態・最終ログを確認し、必要なら prompt を修正して新しい session-name で再実行する。
 
 ## 委任時の必須制約
 
