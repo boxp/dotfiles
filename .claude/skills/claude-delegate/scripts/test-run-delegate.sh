@@ -62,3 +62,21 @@ grep -q '\[final\] all good' <<< "$formatted"
 non_json='plain log line'
 formatted="$(printf '%s\n' "$non_json" | "$formatter" claude)"
 test "$formatted" = "$non_json"
+
+if command -v tmux >/dev/null 2>&1 && tmux info >/dev/null 2>&1; then
+  channel="ai-delegate-test-$$-$(date +%s%N)"
+  (
+    tmux wait-for "$channel"
+    printf done > "$state_root/wait-for.done"
+  ) &
+  waiter_pid=$!
+  sleep 0.5
+  if [ -f "$state_root/wait-for.done" ]; then
+    echo 'tmux wait-for waiter unblocked before signal' >&2
+    kill "$waiter_pid" 2>/dev/null || true
+    exit 1
+  fi
+  tmux wait-for -S "$channel"
+  wait "$waiter_pid"
+  test "$(cat "$state_root/wait-for.done")" = done
+fi

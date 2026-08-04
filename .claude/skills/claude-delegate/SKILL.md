@@ -35,17 +35,27 @@ fi
 
 ```bash
 RUNNER="<dotfiles>/.claude/skills/claude-delegate/scripts/run-delegate.sh"
-COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <working-directory> -- claude --print --output-format stream-json --verbose --include-partial-messages --dangerously-skip-permissions) < <(cat <prompt-file>)"
+COMMAND="$(printf '%q ' "$RUNNER" --session-id <session-name> --working-directory <working-directory> -- claude --print --output-format stream-json --verbose --include-partial-messages --dangerously-skip-permissions) < <(cat <prompt-file>); tmux wait-for -S ai-delegate-<session-name>"
 tmux send-keys -t "$TARGET" "$COMMAND" Enter
 ```
 
 `claude --print "$(cat file)"` は使わない。
 
+## 完了をブロッキング待機で検知する
+
+起動直後に、チャンネル `ai-delegate-<session-name>` をブロック待機する Bash を **`run_in_background: true`** で1回だけ実行する。シグナルされるまで出力はなく、ハーネスがバックグラウンドコマンドの完了を自動通知する。
+
+```bash
+tmux wait-for ai-delegate-<session-name>
+```
+
+`run-delegate.sh` 完了時、`COMMAND` 末尾の `tmux wait-for -S ai-delegate-<session-name>` が上記待機を解除する。通知を受け取った時点で初めて状態ファイルを1回だけ確認する。
+
 ## 終了通知と必要時の確認
 
 ランナーは `/tmp/ai-delegate/<session-name>/` に `started_at`、`finished_at`、`exit_code`、`status`（`success` / `failed`）、`output.log` を保存し、pane の `@ai_delegate_session_id`、`@ai_delegate_state_dir`、`@ai_delegate_status` にも設定する。終了時には macOS 通知を試行する。通知権限がない場合でも状態ファイルは残る。
 
-進捗目的の定期的な `capture-pane` は行わない。必要時だけ次を使う。
+進捗目的の定期的な `capture-pane` や状態ファイルの polling は行わない。完了確認は `tmux wait-for` のバックグラウンド待機が通知するまで待つ。必要時だけ次を使う。
 
 ```bash
 cat /tmp/ai-delegate/<session-name>/status
