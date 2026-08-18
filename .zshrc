@@ -28,7 +28,7 @@ function codex() {
     esac
   done
 
-  command codex --model gpt-5.6-terra "$@"
+  command codex --model gpt-5.6-luna "$@"
 }
 
 function lg() {
