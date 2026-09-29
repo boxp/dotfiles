@@ -1,0 +1,13 @@
+# 内容検査（grep -E -i）。base/head 両方の全文に照合し、1件でも当たれば送信候補から外す。
+-----BEGIN [A-Z ]*PRIVATE KEY-----
+AKIA[0-9A-Z]{16}
+gh[pousr]_[A-Za-z0-9]{30,}
+github_pat_[A-Za-z0-9_]{20,}
+xox[baprs]-[A-Za-z0-9-]{10,}
+sk-[A-Za-z0-9_-]{20,}
+AIza[0-9A-Za-z_-]{30,}
+eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.
+^[[:space:]]*kind:[[:space:]]*(Secret|ExternalSecret|ClusterExternalSecret|SealedSecret|SecretStore|ClusterSecretStore)[[:space:]]*$
+(api[_-]?key|token|passwd|password|secret)["']?[[:space:]]*[:=][[:space:]]*["']?[A-Za-z0-9/+_-]{20,}
+\b(10\.[0-9]{1,3}|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\.[0-9]{1,3}\.[0-9]{1,3}\b
+[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}
