@@ -1,8 +1,6 @@
 # BOXP-193: dotfiles advisory pilot の設定案（未導入・dry-run 評価専用）。
-# files は内容を人間が確認した正確な path のみ。glob での一括許可はしない。
-files:
-  - setup.sh
-  - AGENTS.md
+# files はここに書かない。dry-run-eval.sh が allowlist.txt のうち gate を通った
+# path だけを files として生成する（許可リストは allowlist.txt の1箇所だけ）。
 # gate (dry-run-eval.sh) が一次防御。ここは jev-lint 側の二重の除外。
 exclude:
   - "**/.env*"

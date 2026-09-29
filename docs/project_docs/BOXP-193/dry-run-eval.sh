@@ -56,6 +56,30 @@ load_lists() {
   CONTENT_PATTERNS="$work/content-deny.re"
   printf '%s\n' "$list" >"$CONTENT_PATTERNS"
   BLOB_TMP="$work/blob"
+
+  # 設定の files は gate を通った path から生成する。雛形が独自の files を
+  # 持つと allowlist と食い違い、評価されない target が出るので受け付けない。
+  [ -f "$CONFIG" ] && [ -r "$CONFIG" ] || die "config unusable: $CONFIG"
+  rc=0
+  grep -q -E '^[[:space:]]*"?files"?[[:space:]]*:' "$CONFIG" || rc=$?
+  case "$rc" in
+    0) die "config must not define files (generated from the allowlist): $CONFIG" ;;
+    1) ;;
+    *) die "config unusable: $CONFIG" ;;
+  esac
+}
+
+# 信頼済みの雛形に、gate を通った path だけを files として足した設定を書く。
+write_config() {
+  local out="$1" path
+  shift
+  {
+    echo "files:"
+    for path in "$@"; do
+      printf '  - %s\n' "$(jq -n --arg p "$path" '$p')"
+    done
+    cat "$CONFIG"
+  } >"$out"
 }
 
 denied_path() {
@@ -207,7 +231,8 @@ evaluate() {
 
   build_staging "$repo" "$merge_base" "$head" "$work/staging" "${targets[@]}"
   mkdir -p "$work/home" "$work/trusted"
-  cp "$CONFIG" "$work/trusted/jev-lint.yaml"
+  write_config "$work/trusted/jev-lint.yaml" "${targets[@]}"
+  echo "config_files=${#targets[@]}"
 
   started="$(date +%s%N)"
   state=planned
@@ -326,9 +351,7 @@ gate	unchanged.sh	untouched	not-in-diff
 EOF
   )"
 
-  # 設定の files も第二の allowlist なので、fixture 用に path だけ差し替える。
-  sed -e "s/^  - setup.sh$/  - ok.sh/" "$CONFIG" >"$root/jev-lint.yaml"
-  out="$(CONFIG="$root/jev-lint.yaml" ALLOWLIST="$root/allowlist.txt" evaluate "$repo" HEAD~1 HEAD)"
+  out="$(ALLOWLIST="$root/allowlist.txt" evaluate "$repo" HEAD~1 HEAD)"
   echo "$out"
   actual="$(grep '^gate' <<<"$out")"
   if [ "$actual" != "$expected" ]; then
@@ -337,6 +360,8 @@ EOF
     failed=1
   fi
   grep -q '^state=dry-run-ok$' <<<"$out" || { echo "FAIL expected state=dry-run-ok"; failed=1; }
+  grep -q '^config_files=2$' <<<"$out" || { echo "FAIL config files differ from gate targets"; failed=1; }
+  grep -q -P "^batch\tAGENTS\.md\t" <<<"$out" || { echo "FAIL AGENTS.md was not evaluated"; failed=1; }
   grep -q -P "^subject\tdestroys-beyond-its-scope\tok\.sh:" <<<"$out" || { echo "FAIL ok.sh produced no shell subject"; failed=1; }
   if grep '^batch' <<<"$out" | grep -v -P '^batch\t(ok\.sh|AGENTS\.md)\t' | grep -q .; then
     echo "FAIL a skipped file reached the plan"
@@ -388,6 +413,9 @@ EOF
   ALLOWLIST="$root/allowlist.txt" DENYLIST="$root/missing.txt" expect_refusal "denylist missing"
   ALLOWLIST="$root/allowlist.txt" DENYLIST="$root/empty.txt" expect_refusal "denylist empty"
   ALLOWLIST="$root/missing.txt" expect_refusal "allowlist missing"
+  { printf 'files:\n  - ok.sh\n'; cat "$CONFIG"; } >"$root/own-files.yaml"
+  ALLOWLIST="$root/allowlist.txt" CONFIG="$root/own-files.yaml" expect_refusal "config defines its own files"
+  ALLOWLIST="$root/allowlist.txt" CONFIG="$root/missing.yaml" expect_refusal "config missing"
 
   if [ "$failed" -ne 0 ]; then
     echo "fixtures: FAILED"
