@@ -3,6 +3,7 @@
 #
 #   dry-run-eval.sh run --repo <git dir> --base <sha> --head <sha>
 #   dry-run-eval.sh fixtures
+#   dry-run-eval.sh check      （リストと設定の検証だけ。jev-lint は起動しない）
 #
 # 前提: JEV_TOOL_DIR に tool/package-lock.json から
 #   npm ci --ignore-scripts
@@ -39,8 +40,15 @@ read_list() {
 load_lists() {
   local work="$1" list pattern rc
   list="$(read_list "$ALLOWLIST")" || die "allowlist unusable: $ALLOWLIST"
-  ALLOW_PATHS=()
-  [ -z "$list" ] || mapfile -t ALLOW_PATHS <<<"$list"
+  [ -n "$list" ] || die "allowlist is empty: $ALLOWLIST"
+  mapfile -t ALLOW_PATHS <<<"$list"
+  # 正確な相対 path だけを受け付ける。glob や repo の外を指す行は誤記として止める。
+  for pattern in "${ALLOW_PATHS[@]}"; do
+    case "/$pattern/" in
+      //* | */../* | */./* | *//* | *[\*\?\[\]\\]* | *[[:space:]]*)
+        die "allowlist has an invalid path: $ALLOWLIST" ;;
+    esac
+  done
 
   list="$(read_list "$DENYLIST")" || die "denylist unusable: $DENYLIST"
   [ -n "$list" ] || die "denylist is empty: $DENYLIST"
@@ -423,6 +431,12 @@ EOF
   ALLOWLIST="$root/allowlist.txt" DENYLIST="$root/missing.txt" expect_refusal "denylist missing"
   ALLOWLIST="$root/allowlist.txt" DENYLIST="$root/empty.txt" expect_refusal "denylist empty"
   ALLOWLIST="$root/missing.txt" expect_refusal "allowlist missing"
+  ALLOWLIST="$root/empty.txt" expect_refusal "allowlist empty"
+  ALLOWLIST="$root/comment-only.txt" expect_refusal "allowlist comment only"
+  printf 'ok.sh\n*.sh\n' >"$root/glob-allowlist.txt"
+  ALLOWLIST="$root/glob-allowlist.txt" expect_refusal "allowlist has a glob"
+  printf 'ok.sh\n../ok.sh\n' >"$root/outside-allowlist.txt"
+  ALLOWLIST="$root/outside-allowlist.txt" expect_refusal "allowlist leaves the repo"
   { printf 'files:\n  - ok.sh\n'; cat "$CONFIG"; } >"$root/own-files.yaml"
   ALLOWLIST="$root/allowlist.txt" CONFIG="$root/own-files.yaml" expect_refusal "config defines its own files"
   ALLOWLIST="$root/allowlist.txt" CONFIG="$root/missing.yaml" expect_refusal "config missing"
@@ -451,5 +465,11 @@ case "$cmd" in
     evaluate "$repo" "$base" "$head"
     ;;
   fixtures) fixtures ;;
-  *) die "usage: $0 run --repo <dir> --base <sha> --head <sha> | fixtures" ;;
+  check)
+    work="$(mktemp -d)"
+    trap 'rm -rf "$work"' EXIT
+    load_lists "$work"
+    echo "lists: ok allowlist=${#ALLOW_PATHS[@]} denylist=${#DENY_GLOBS[@]}"
+    ;;
+  *) die "usage: $0 run --repo <dir> --base <sha> --head <sha> | fixtures | check" ;;
 esac

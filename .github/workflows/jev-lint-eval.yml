@@ -35,6 +35,8 @@ jobs:
           node-version: "24"
       - name: Check shell syntax
         run: bash -n docs/project_docs/BOXP-193/dry-run-eval.sh
+      - name: Check lists and config
+        run: docs/project_docs/BOXP-193/dry-run-eval.sh check
       - name: Install pinned jev-lint
         working-directory: docs/project_docs/BOXP-193/tool
         run: npm ci --ignore-scripts
