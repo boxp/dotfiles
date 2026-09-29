@@ -112,7 +112,8 @@ build_staging() {
 # node が /usr/bin の外にある環境のため、PATH には node の場所だけを足す。
 jev_offline() {
   local home="$1" node_dir
-  node_dir="$(dirname "$(command -v node)")" || die "node not found"
+  node_dir="$(command -v node)" || die "node not found"
+  node_dir="$(dirname "$node_dir")"
   shift
   unshare -rn env -i PATH="$node_dir:/usr/bin:/bin" HOME="$home" \
     "$JEV_TOOL_DIR/node_modules/.bin/jev-lint" "$@"
