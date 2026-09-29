@@ -1,0 +1,27 @@
+# BOXP-193: dotfiles advisory pilot の設定案（未導入・dry-run 評価専用）。
+# files は内容を人間が確認した正確な path のみ。glob での一括許可はしない。
+files:
+  - setup.sh
+  - AGENTS.md
+# gate (dry-run-eval.sh) が一次防御。ここは jev-lint 側の二重の除外。
+exclude:
+  - "**/.env*"
+  - "**/.ssh"
+  - "**/*.pem"
+  - "**/*.key"
+  - "**/*kubeconfig*"
+  - "**/*.tfvars*"
+  - "**/*.tfstate*"
+  - "**/*.tfplan"
+  - "**/.terraform"
+  - "**/inventories"
+  - "**/group_vars"
+  - "**/fixtures"
+  - "**/*.log"
+  - "**/*.jsonl"
+# 明示した rule だけが動く（rules: があると既定 pack は動かない）。
+rules:
+  shell/destroys-beyond-its-scope: on
+  markdown/agent-instruction-is-unclear: on
+  markdown/agent-instructions-conflict: on
+cache: none

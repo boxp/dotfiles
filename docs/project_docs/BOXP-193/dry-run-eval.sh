@@ -1,0 +1,344 @@
+#!/usr/bin/env bash
+# BOXP-193: jev-lint を API キーなし・外向き通信なしで dry-run 評価する。
+#
+#   dry-run-eval.sh run --repo <git dir> --base <sha> --head <sha>
+#   dry-run-eval.sh fixtures
+#
+# 前提: JEV_TOOL_DIR に tool/package-lock.json から
+#   npm ci --ignore-scripts
+# 済みの node_modules があること（取得だけは network が要るので事前に済ませる）。
+# このスクリプト自身は API を呼ばない。jev-lint は必ず --dry-run で、
+# network namespace を切り離し、環境変数を空にして起動する。
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+JEV_TOOL_DIR="${JEV_TOOL_DIR:-$HERE/tool}"
+CONFIG="${JEV_EVAL_CONFIG:-$HERE/jev-lint.pilot.yaml}"
+ALLOWLIST="${JEV_EVAL_ALLOWLIST:-$HERE/allowlist.txt}"
+DENYLIST="${JEV_EVAL_DENYLIST:-$HERE/denylist.txt}"
+CONTENT_DENY="${JEV_EVAL_CONTENT_DENY:-$HERE/content-deny.txt}"
+
+MAX_FILES="${JEV_EVAL_MAX_FILES:-10}"
+MAX_BYTES="${JEV_EVAL_MAX_BYTES:-65536}"
+MAX_TOKENS="${JEV_EVAL_MAX_TOKENS:-100000}"
+MAX_USD="${JEV_EVAL_MAX_USD:-0.01}"
+
+die() { echo "error: $*" >&2; exit 2; }
+
+read_list() { grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$1" || true; }
+
+denied_path() {
+  local path="$1" glob
+  while IFS= read -r glob; do
+    # shellcheck disable=SC2053
+    if [[ "$path" == $glob || "${path##*/}" == $glob ]]; then
+      echo "$glob"
+      return 0
+    fi
+  done < <(read_list "$DENYLIST")
+  return 1
+}
+
+# blob の内容が content-deny のどれかに当たれば 0。当たった行は出力しない。
+denied_content() {
+  local repo="$1" rev="$2" path="$3"
+  git -C "$repo" cat-file -e "$rev:$path" 2>/dev/null || return 1
+  git -C "$repo" show "$rev:$path" | grep -E -i -q -f <(read_list "$CONTENT_DENY")
+}
+
+blob_mode() { git -C "$1" ls-tree "$2" -- "$3" | awk '{print $1}'; }
+
+# 1 path の送信可否を決める。出力: "<decision>\t<reason>"
+gate_path() {
+  local repo="$1" base="$2" head="$3" path="$4" changes="$5"
+  local status mode glob size
+
+  if grep -q -P "^R[0-9]*\t(\Q$path\E\t|[^\t]*\t\Q$path\E$)" <<<"$changes"; then
+    printf 'skip\trename\n'; return
+  fi
+  status="$(awk -F'\t' -v p="$path" '$2 == p {print substr($1, 1, 1)}' <<<"$changes")"
+  case "$status" in
+    "") printf 'untouched\tnot-in-diff\n'; return ;;
+    D) printf 'skip\tdeleted\n'; return ;;
+    A | M) ;;
+    *) printf 'skip\tstatus-%s\n' "$status"; return ;;
+  esac
+  if glob="$(denied_path "$path")"; then
+    printf 'skip\tdenylist\n'; return
+  fi
+  for rev in "$base" "$head"; do
+    mode="$(blob_mode "$repo" "$rev" "$path")"
+    case "$mode" in
+      "" | 100644 | 100755) ;;
+      120000) printf 'skip\tsymlink\n'; return ;;
+      *) printf 'skip\tmode-%s\n' "$mode"; return ;;
+    esac
+  done
+  size="$(git -C "$repo" cat-file -s "$head:$path")"
+  if [ "$size" -gt "$MAX_BYTES" ]; then
+    printf 'skip\ttoo-large\n'; return
+  fi
+  # 削除行も旧版全文に含まれるので、base/head の両方を検査する。
+  for rev in "$base" "$head"; do
+    if denied_content "$repo" "$rev" "$path"; then
+      printf 'skip\tcontent\n'; return
+    fi
+  done
+  printf 'send\tok\n'
+}
+
+# 対象だけを 2 commit の使い捨て repo へ抽出する。履歴・hook・config は持ち込まない。
+build_staging() {
+  local repo="$1" base="$2" head="$3" staging="$4"
+  shift 4
+  local path rev
+  git init -q "$staging"
+  for rev in "$base" "$head"; do
+    for path in "$@"; do
+      mkdir -p "$staging/$(dirname "$path")"
+      if git -C "$repo" cat-file -e "$rev:$path" 2>/dev/null; then
+        git -C "$repo" show "$rev:$path" >"$staging/$path"
+      else
+        rm -f "$staging/$path"
+      fi
+    done
+    git -C "$staging" add -A
+    git -C "$staging" -c user.name=eval -c user.email=eval@invalid \
+      commit -q --allow-empty -m "snapshot"
+  done
+}
+
+# network namespace を分離し、環境変数を持ち込まずに jev-lint を起動する。
+jev_offline() {
+  local home="$1"
+  shift
+  unshare -rn env -i PATH=/usr/bin:/bin HOME="$home" \
+    "$JEV_TOOL_DIR/node_modules/.bin/jev-lint" "$@"
+}
+
+evaluate() {
+  local repo="$1" base="$2" head="$3"
+  local work merge_base changes path decision reason state started elapsed
+  local -a targets=()
+  local considered=0 skipped=0 untouched=0
+
+  [ -x "$JEV_TOOL_DIR/node_modules/.bin/jev-lint" ] || die "jev-lint not installed under $JEV_TOOL_DIR"
+  base="$(git -C "$repo" rev-parse --verify "$base^{commit}")"
+  head="$(git -C "$repo" rev-parse --verify "$head^{commit}")"
+  merge_base="$(git -C "$repo" merge-base "$base" "$head")"
+  changes="$(git -C "$repo" diff --name-status -M "$merge_base" "$head")"
+  work="$(mktemp -d)"
+  # shellcheck disable=SC2064
+  trap "rm -rf '$work'" RETURN
+
+  echo "base=$base"
+  echo "merge_base=$merge_base"
+  echo "head=$head"
+  echo "changed_files=$(grep -c . <<<"$changes" || true)"
+
+  while IFS= read -r path; do
+    considered=$((considered + 1))
+    IFS=$'\t' read -r decision reason < <(gate_path "$repo" "$merge_base" "$head" "$path" "$changes")
+    echo "gate	$path	$decision	$reason"
+    case "$decision" in
+      send) targets+=("$path") ;;
+      skip) skipped=$((skipped + 1)) ;;
+      *) untouched=$((untouched + 1)) ;;
+    esac
+  done < <(read_list "$ALLOWLIST")
+  echo "allowlisted=$considered targets=${#targets[@]} skipped=$skipped untouched=$untouched"
+
+  if [ "${#targets[@]}" -eq 0 ]; then
+    echo "state=skipped-no-target"
+    return 0
+  fi
+  if [ "${#targets[@]}" -gt "$MAX_FILES" ]; then
+    echo "state=over-budget reason=files>${MAX_FILES}"
+    return 0
+  fi
+
+  build_staging "$repo" "$merge_base" "$head" "$work/staging" "${targets[@]}"
+  mkdir -p "$work/home" "$work/trusted"
+  cp "$CONFIG" "$work/trusted/jev-lint.yaml"
+
+  started="$(date +%s%N)"
+  state=planned
+  if ! (cd "$work/staging" && jev_offline "$work/home" review --base HEAD~1 \
+    --dry-run --cache none --config "$work/trusted/jev-lint.yaml" \
+    --json --show-subjects) >"$work/plan.json" 2>"$work/plan.err"; then
+    state=unavailable
+  fi
+  elapsed=$((($(date +%s%N) - started) / 1000000))
+  echo "elapsed_ms=$elapsed"
+  if [ "$state" = unavailable ]; then
+    echo "state=unavailable reason=dry-run-failed"
+    sed 's/^/stderr: /' "$work/plan.err"
+    return 0
+  fi
+
+  jq -r '"subjects=\(.subjects) requests=\(.requests) tokens=\(.tokens) usd=\(.usd)"' "$work/plan.json"
+  jq -r '.batches[] | "batch\t\(.file)\tarm=\(.arm)\tsubjects=\(.subjects)\ttokens=\(.tokens)\tdegraded=\(.degraded)"' "$work/plan.json"
+  jq -r '.byRule[] | "rule\t\(.rule)\tsubjects=\(.subjects)\trequests=\(.requests)\ttokens=\(.tokens)\tusd=\(.usd)"' "$work/plan.json"
+  jq -r '.subjectList[]? | "subject\t\(.rule)\t\(.file):\(.line)-\(.endLine)"' "$work/plan.json"
+  jq -r '"idle=\([.idleLanguages[]? | "\(.language)(\(.rules))"] | join(","))"' "$work/plan.json"
+  for path in "${targets[@]}"; do
+    echo "target_bytes	$path	$(wc -c <"$work/staging/$path")"
+  done
+
+  # 計画された送信が gate を通った path の外に出ていないこと。
+  if jq -e '[.batches[].file] - $ARGS.positional | length > 0' \
+    "$work/plan.json" --args "${targets[@]}" >/dev/null; then
+    echo "state=unavailable reason=plan-outside-targets"
+    return 0
+  fi
+  if jq -e --argjson t "$MAX_TOKENS" --argjson u "$MAX_USD" \
+    '.tokens > $t or .usd > $u' "$work/plan.json" >/dev/null; then
+    echo "state=over-budget reason=tokens-or-usd"
+    return 0
+  fi
+  if [ -n "$(find "$work/staging" -path "$work/staging/.git" -prune -o -name '.jev-lint*' -print)" ]; then
+    echo "state=unavailable reason=cache-written"
+    return 0
+  fi
+  echo "state=dry-run-ok"
+}
+
+# 負例 fixtures を実行時に生成する。偽の credential は commit しない。
+fixtures() {
+  local root repo fake expected actual failed=0 out
+  root="$(mktemp -d)"
+  # shellcheck disable=SC2064
+  trap "rm -rf '$root'" RETURN
+  repo="$root/src"
+  fake="AKIA$(printf 'EXAMPLE%.0s' 1 2)12"
+  git init -q "$repo"
+  commit() { git -C "$repo" add -A && git -C "$repo" -c user.name=f -c user.email=f@invalid commit -q -m "$1"; }
+
+  (
+    cd "$repo"
+    mkdir -p env
+    printf '#!/bin/sh\necho ok\n' >ok.sh
+    printf '# Agents\n\n- reply in Japanese\n' >AGENTS.md
+    printf '#!/bin/sh\necho clean\n' >leaks-now.sh
+    printf '#!/bin/sh\nKEY=%s\n' "$fake" >leaked-before.sh
+    printf '#!/bin/sh\necho target\n' >real.sh
+    ln -s real.sh link.sh
+    printf '#!/bin/sh\necho gone\n' >gone.sh
+    printf '#!/bin/sh\necho moved one\necho moved two\necho moved three\n' >old-name.sh
+    printf 'region = "x"\n' >env/prod.tfvars
+    printf '# Notes\n\nplain\n' >manifest.md
+    printf '#!/bin/sh\necho big\n' >big.sh
+    printf '#!/bin/sh\necho same\n' >unchanged.sh
+    printf '#!/bin/sh\necho other\n' >unlisted.sh
+  )
+  commit base
+  (
+    cd "$repo"
+    printf 'rm -rf "$DEST/"\n' >>ok.sh
+    printf '\n## Commits\n\n- commit when appropriate\n' >>AGENTS.md
+    printf 'KEY=%s\n' "$fake" >>leaks-now.sh
+    printf '#!/bin/sh\necho cleaned\n' >leaked-before.sh
+    printf 'echo more\n' >>real.sh
+    rm link.sh && ln -s ok.sh link.sh
+    git rm -q gone.sh
+    git mv old-name.sh new-name.sh
+    printf 'region = "y"\n' >env/prod.tfvars
+    printf '\n```yaml\nkind: ExternalSecret\n```\n' >>manifest.md
+    head -c 70000 /dev/zero | tr '\0' '#' >>big.sh
+    printf 'echo changed\n' >>unlisted.sh
+  )
+  commit head
+
+  cat >"$root/allowlist.txt" <<'EOF'
+ok.sh
+AGENTS.md
+leaks-now.sh
+leaked-before.sh
+link.sh
+gone.sh
+new-name.sh
+env/prod.tfvars
+manifest.md
+big.sh
+unchanged.sh
+EOF
+  expected="$(
+    cat <<'EOF'
+gate	ok.sh	send	ok
+gate	AGENTS.md	send	ok
+gate	leaks-now.sh	skip	content
+gate	leaked-before.sh	skip	content
+gate	link.sh	skip	symlink
+gate	gone.sh	skip	deleted
+gate	new-name.sh	skip	rename
+gate	env/prod.tfvars	skip	denylist
+gate	manifest.md	skip	content
+gate	big.sh	skip	too-large
+gate	unchanged.sh	untouched	not-in-diff
+EOF
+  )"
+
+  # 設定の files も第二の allowlist なので、fixture 用に path だけ差し替える。
+  sed -e "s/^  - setup.sh$/  - ok.sh/" "$CONFIG" >"$root/jev-lint.yaml"
+  out="$(CONFIG="$root/jev-lint.yaml" ALLOWLIST="$root/allowlist.txt" evaluate "$repo" HEAD~1 HEAD)"
+  echo "$out"
+  actual="$(grep '^gate' <<<"$out")"
+  if [ "$actual" != "$expected" ]; then
+    echo "FAIL gate decisions"
+    diff <(echo "$expected") <(echo "$actual") || true
+    failed=1
+  fi
+  grep -q '^state=dry-run-ok$' <<<"$out" || { echo "FAIL expected state=dry-run-ok"; failed=1; }
+  grep -q -P "^subject\tdestroys-beyond-its-scope\tok\.sh:" <<<"$out" || { echo "FAIL ok.sh produced no shell subject"; failed=1; }
+  if grep '^batch' <<<"$out" | grep -v -P '^batch\t(ok\.sh|AGENTS\.md)\t' | grep -q .; then
+    echo "FAIL a skipped file reached the plan"
+    failed=1
+  fi
+  if grep -q "$fake" <<<"$out"; then
+    echo "FAIL fake credential echoed"
+    failed=1
+  fi
+
+  echo "--- case: no target"
+  printf 'unchanged.sh\ngone.sh\n' >"$root/allowlist.txt"
+  out="$(ALLOWLIST="$root/allowlist.txt" evaluate "$repo" HEAD~1 HEAD)"
+  echo "$out"
+  grep -q '^state=skipped-no-target$' <<<"$out" || { echo "FAIL expected skipped-no-target"; failed=1; }
+
+  echo "--- case: huge diff"
+  (
+    cd "$repo"
+    for i in $(seq 1 11); do printf '#!/bin/sh\necho %s\n' "$i" >"many-$i.sh"; done
+  )
+  commit many
+  for i in $(seq 1 11); do echo "many-$i.sh"; done >"$root/allowlist.txt"
+  out="$(ALLOWLIST="$root/allowlist.txt" evaluate "$repo" HEAD~1 HEAD)"
+  echo "$out" | grep -v '^gate'
+  grep -q '^state=over-budget ' <<<"$out" || { echo "FAIL expected over-budget"; failed=1; }
+
+  if [ "$failed" -ne 0 ]; then
+    echo "fixtures: FAILED"
+    return 1
+  fi
+  echo "fixtures: ok"
+}
+
+cmd="${1:-}"
+[ $# -gt 0 ] && shift
+case "$cmd" in
+  run)
+    repo="" base="" head=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --repo) repo="$2"; shift 2 ;;
+        --base) base="$2"; shift 2 ;;
+        --head) head="$2"; shift 2 ;;
+        *) die "unknown option $1" ;;
+      esac
+    done
+    [ -n "$repo" ] && [ -n "$base" ] && [ -n "$head" ] || die "run needs --repo, --base and --head"
+    evaluate "$repo" "$base" "$head"
+    ;;
+  fixtures) fixtures ;;
+  *) die "usage: $0 run --repo <dir> --base <sha> --head <sha> | fixtures" ;;
+esac
