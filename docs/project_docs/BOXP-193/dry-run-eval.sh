@@ -4,10 +4,14 @@
 #   dry-run-eval.sh run --repo <git dir> --base <sha> --head <sha>
 #   dry-run-eval.sh fixtures
 #   dry-run-eval.sh check      （リストと設定の検証だけ。jev-lint は起動しない）
+#   dry-run-eval.sh check-tool （固定版の jev-lint / ast-grep が使えるかの検証だけ）
 #
 # 前提: JEV_TOOL_DIR に tool/package-lock.json から
 #   npm ci --ignore-scripts
 # 済みの node_modules があること（取得だけは network が要るので事前に済ませる）。
+# --ignore-scripts では @ast-grep/cli の postinstall が走らないが、同梱の shim が
+# platform 別 package の native binary を実行時に解決する。この前提が崩れたら
+# check_tool が exit 2 で止める（unavailable や clean と混同させない）。
 # このスクリプト自身は API を呼ばない。jev-lint は必ず --dry-run で、
 # network namespace を切り離し、環境変数を空にして起動する。
 set -euo pipefail
@@ -199,13 +203,30 @@ jev_offline() {
     "$JEV_TOOL_DIR/node_modules/.bin/jev-lint" "$@"
 }
 
+# install script を走らせていない node_modules で、lockfile の固定版どおりの
+# ast-grep が offline で起動できることを確かめる。
+check_tool() {
+  local lock="$JEV_TOOL_DIR/package-lock.json" bin="$JEV_TOOL_DIR/node_modules/.bin"
+  local want got node_dir
+  [ -x "$bin/jev-lint" ] || die "jev-lint not installed under $JEV_TOOL_DIR"
+  [ -x "$bin/ast-grep" ] || die "ast-grep not installed under $JEV_TOOL_DIR"
+  want="$(jq -er '.packages["node_modules/@ast-grep/cli"].version' "$lock")" \
+    || die "ast-grep version not pinned in $lock"
+  node_dir="$(command -v node)" || die "node not found"
+  node_dir="$(dirname "$node_dir")"
+  got="$(unshare -rn env -i PATH="$node_dir:/usr/bin:/bin" "$bin/ast-grep" --version 2>/dev/null)" \
+    || die "ast-grep native binary not usable under $JEV_TOOL_DIR"
+  [ "$got" = "ast-grep $want" ] || die "ast-grep version mismatch: want $want, got $got"
+  echo "tool: ok ast-grep=$want"
+}
+
 evaluate() {
   local repo="$1" base="$2" head="$3"
   local work merge_base changes path decision reason state started elapsed
   local -a targets=()
   local considered=0 skipped=0 untouched=0
 
-  [ -x "$JEV_TOOL_DIR/node_modules/.bin/jev-lint" ] || die "jev-lint not installed under $JEV_TOOL_DIR"
+  check_tool >/dev/null
   base="$(git -C "$repo" rev-parse --verify "$base^{commit}")"
   head="$(git -C "$repo" rev-parse --verify "$head^{commit}")"
   merge_base="$(git -C "$repo" merge-base "$base" "$head")"
@@ -465,11 +486,12 @@ case "$cmd" in
     evaluate "$repo" "$base" "$head"
     ;;
   fixtures) fixtures ;;
+  check-tool) check_tool ;;
   check)
     work="$(mktemp -d)"
     trap 'rm -rf "$work"' EXIT
     load_lists "$work"
     echo "lists: ok allowlist=${#ALLOW_PATHS[@]} denylist=${#DENY_GLOBS[@]}"
     ;;
-  *) die "usage: $0 run --repo <dir> --base <sha> --head <sha> | fixtures | check" ;;
+  *) die "usage: $0 run --repo <dir> --base <sha> --head <sha> | fixtures | check | check-tool" ;;
 esac

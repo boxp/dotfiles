@@ -39,6 +39,8 @@ jobs:
         run: docs/project_docs/BOXP-193/dry-run-eval.sh check
       - name: Install pinned jev-lint
         working-directory: docs/project_docs/BOXP-193/tool
+        # postinstall は走らせない。@ast-grep/cli の shim が native binary を
+        # 実行時に解決することを、下の Verify pinned tool で確かめる。
         run: npm ci --ignore-scripts
       - name: Allow unprivileged network namespaces
         run: |
@@ -46,5 +48,7 @@ jobs:
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           fi
           unshare -rn true
+      - name: Verify pinned tool
+        run: docs/project_docs/BOXP-193/dry-run-eval.sh check-tool
       - name: Run negative fixtures
         run: docs/project_docs/BOXP-193/dry-run-eval.sh fixtures
