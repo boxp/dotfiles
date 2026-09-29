@@ -171,12 +171,25 @@ gate_path() {
   printf 'send\tok\n'
 }
 
+# staging 用の git。呼び出し元の system/global 設定、template、core.hooksPath、
+# GIT_* 環境変数を継承すると、network 分離より前に hook や filter が動き得る。
+# 環境を空にし、設定と template を無効にして起動する。
+staging_git() {
+  local git_bin
+  git_bin="$(command -v git)" || die "git not found"
+  env -i PATH="$(dirname "$git_bin"):/usr/bin:/bin" HOME=/nonexistent \
+    GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null \
+    GIT_TERMINAL_PROMPT=0 \
+    "$git_bin" -c core.hooksPath=/dev/null -c core.fsmonitor=false \
+    -c commit.gpgSign=false -c user.name=eval -c user.email=eval@invalid "$@"
+}
+
 # 対象だけを 2 commit の使い捨て repo へ抽出する。履歴・hook・config は持ち込まない。
 build_staging() {
   local repo="$1" base="$2" head="$3" staging="$4"
   shift 4
   local path rev
-  git init -q "$staging"
+  staging_git init -q --template= "$staging"
   for rev in "$base" "$head"; do
     for path in "$@"; do
       mkdir -p "$staging/$(dirname "$path")"
@@ -186,9 +199,8 @@ build_staging() {
         rm -f "$staging/$path"
       fi
     done
-    git -C "$staging" add -A
-    git -C "$staging" -c user.name=eval -c user.email=eval@invalid \
-      commit -q --allow-empty -m "snapshot"
+    staging_git -C "$staging" add -A
+    staging_git -C "$staging" commit -q --no-verify --allow-empty -m "snapshot"
   done
 }
 
@@ -200,6 +212,7 @@ jev_offline() {
   node_dir="$(dirname "$node_dir")"
   shift
   unshare -rn env -i PATH="$node_dir:/usr/bin:/bin" HOME="$home" \
+    GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_SYSTEM=/dev/null GIT_CONFIG_GLOBAL=/dev/null \
     "$JEV_TOOL_DIR/node_modules/.bin/jev-lint" "$@"
 }
 
@@ -408,6 +421,27 @@ EOF
   fi
   if grep -q "$fake" <<<"$out"; then
     echo "FAIL fake credential echoed"
+    failed=1
+  fi
+
+  # 呼び出し元の Git 設定・template・GIT_* が staging の git に届かないこと。
+  echo "--- case: hostile git environment"
+  mkdir -p "$root/hostile/hooks" "$root/hostile/template/hooks"
+  for out in "$root/hostile/hooks" "$root/hostile/template/hooks"; do
+    printf '#!/bin/sh\ntouch "%s/hook-ran"\n' "$root" >"$out/pre-commit"
+    cp "$out/pre-commit" "$out/post-commit"
+    chmod +x "$out/pre-commit" "$out/post-commit"
+  done
+  printf '[core]\n\thooksPath = %s\n[init]\n\ttemplateDir = %s\n' \
+    "$root/hostile/hooks" "$root/hostile/template" >"$root/hostile/gitconfig"
+  out="$(ALLOWLIST="$root/allowlist.txt" HOME="$root/hostile" \
+    GIT_CONFIG_GLOBAL="$root/hostile/gitconfig" GIT_TEMPLATE_DIR="$root/hostile/template" \
+    GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0="$root/hostile/hooks" \
+    evaluate "$repo" HEAD~1 HEAD)"
+  grep -e '^allowlisted=' -e '^state=' <<<"$out"
+  grep -q '^state=dry-run-ok$' <<<"$out" || { echo "FAIL expected state=dry-run-ok"; failed=1; }
+  if [ -e "$root/hook-ran" ]; then
+    echo "FAIL a git hook from the caller's environment ran"
     failed=1
   fi
 
