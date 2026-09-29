@@ -132,12 +132,18 @@ gate_path() {
       *) printf 'skip\tmode-%s\n' "$mode"; return ;;
     esac
   done
-  size="$(git -C "$repo" cat-file -s "$head:$path" 2>/dev/null)" || {
-    printf 'skip\tunreadable\n'; return
-  }
-  if [ "$size" -gt "$MAX_BYTES" ]; then
-    printf 'skip\ttoo-large\n'; return
-  fi
+  # 旧版も全文を読み込み・複製するので、上限は base/head の両方に掛ける。
+  for rev in "$base" "$head"; do
+    if [ "$rev" = "$base" ] && [ -z "$(blob_mode "$repo" "$rev" "$path")" ]; then
+      continue
+    fi
+    size="$(git -C "$repo" cat-file -s "$rev:$path" 2>/dev/null)" || {
+      printf 'skip\tunreadable\n'; return
+    }
+    if [ "$size" -gt "$MAX_BYTES" ]; then
+      printf 'skip\ttoo-large\n'; return
+    fi
+  done
   # 削除行も旧版全文に含まれるので、base/head の両方を検査する。
   for rev in "$base" "$head"; do
     # 追加されたファイルは base に blob がない。head にないものは上で弾いている。
@@ -301,6 +307,7 @@ fixtures() {
     printf 'region = "x"\n' >env/prod.tfvars
     printf '# Notes\n\nplain\n' >manifest.md
     printf '#!/bin/sh\necho big\n' >big.sh
+    head -c 70000 /dev/zero | tr '\0' '#' >was-big.sh
     printf '#!/bin/sh\necho same\n' >unchanged.sh
     printf '#!/bin/sh\necho other\n' >unlisted.sh
   )
@@ -318,6 +325,7 @@ fixtures() {
     printf 'region = "y"\n' >env/prod.tfvars
     printf '\n```yaml\nkind: ExternalSecret\n```\n' >>manifest.md
     head -c 70000 /dev/zero | tr '\0' '#' >>big.sh
+    printf '#!/bin/sh\necho small\n' >was-big.sh
     printf 'echo changed\n' >>unlisted.sh
   )
   commit head
@@ -333,6 +341,7 @@ new-name.sh
 env/prod.tfvars
 manifest.md
 big.sh
+was-big.sh
 unchanged.sh
 EOF
   expected="$(
@@ -347,6 +356,7 @@ gate	new-name.sh	skip	rename
 gate	env/prod.tfvars	skip	denylist
 gate	manifest.md	skip	content
 gate	big.sh	skip	too-large
+gate	was-big.sh	skip	too-large
 gate	unchanged.sh	untouched	not-in-diff
 EOF
   )"
