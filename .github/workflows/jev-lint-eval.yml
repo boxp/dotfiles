@@ -1,0 +1,48 @@
+name: jev-lint dry-run evaluation
+
+# BOXP-193 の評価用ファイルだけを検証する。API key も secret も使わず、
+# jev-lint は network を切り離した --dry-run でしか起動しない。
+# PR への advisory ではなく、branch protection の必須 check にもしない。
+on:
+  pull_request:
+    paths:
+      - "docs/project_docs/BOXP-193/**"
+      - ".github/workflows/jev-lint-eval.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - "docs/project_docs/BOXP-193/**"
+      - ".github/workflows/jev-lint-eval.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jev-lint-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+      - name: Check shell syntax
+        run: bash -n docs/project_docs/BOXP-193/dry-run-eval.sh
+      - name: Install pinned jev-lint
+        working-directory: docs/project_docs/BOXP-193/tool
+        run: npm ci --ignore-scripts
+      - name: Allow unprivileged network namespaces
+        run: |
+          if ! unshare -rn true 2>/dev/null; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          unshare -rn true
+      - name: Run negative fixtures
+        run: docs/project_docs/BOXP-193/dry-run-eval.sh fixtures

@@ -2,7 +2,7 @@
 
 [mizchi/jev-lint](https://github.com/mizchi/jev-lint) を dotfiles の PR で非ブロッキング advisory として試せるかを、API を呼ばずに評価するためのファイル群。設計と評価記録の本体は Vault の `Projects/jev-lint-adoption/design.md` にある。
 
-ここにあるものは評価専用で、workflow・API key・CI secret は導入していない。
+ここにあるものは評価専用で、advisory workflow・API key・CI secret は導入していない。`.github/workflows/jev-lint-eval.yml` はこの評価用ファイルの構文と負例 fixtures を検証するだけで、secret を使わず、送信もしない。
 
 ## ファイル
 
