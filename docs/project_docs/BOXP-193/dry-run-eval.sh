@@ -25,25 +25,59 @@ MAX_USD="${JEV_EVAL_MAX_USD:-0.01}"
 
 die() { echo "error: $*" >&2; exit 2; }
 
-read_list() { grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$1" || true; }
+# リストを読めなければ fail-closed。grep の 1（該当行なし）だけを空として扱う。
+# command substitution では set -e が効かないので、呼び出し側で必ず || die する。
+read_list() {
+  local rc=0
+  [ -f "$1" ] && [ -r "$1" ] || { echo "error: list not readable: $1" >&2; return 2; }
+  grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$1" || rc=$?
+  [ "$rc" -le 1 ] || { echo "error: cannot read list: $1" >&2; return 2; }
+}
+
+# 送信可否を決める前にリストを検証して読み込む。欠落・読取不能・空・不正な
+# 正規表現はどれも gate を素通しにするので、判定を始めずに止める。
+load_lists() {
+  local work="$1" list pattern rc
+  list="$(read_list "$ALLOWLIST")" || die "allowlist unusable: $ALLOWLIST"
+  ALLOW_PATHS=()
+  [ -z "$list" ] || mapfile -t ALLOW_PATHS <<<"$list"
+
+  list="$(read_list "$DENYLIST")" || die "denylist unusable: $DENYLIST"
+  [ -n "$list" ] || die "denylist is empty: $DENYLIST"
+  mapfile -t DENY_GLOBS <<<"$list"
+
+  list="$(read_list "$CONTENT_DENY")" || die "content-deny unusable: $CONTENT_DENY"
+  [ -n "$list" ] || die "content-deny is empty: $CONTENT_DENY"
+  while IFS= read -r pattern; do
+    rc=0
+    grep -E -i -q -e "$pattern" </dev/null 2>/dev/null || rc=$?
+    [ "$rc" -le 1 ] || die "content-deny has an invalid regex: $CONTENT_DENY"
+  done <<<"$list"
+  CONTENT_PATTERNS="$work/content-deny.re"
+  printf '%s\n' "$list" >"$CONTENT_PATTERNS"
+  BLOB_TMP="$work/blob"
+}
 
 denied_path() {
   local path="$1" glob
-  while IFS= read -r glob; do
+  for glob in "${DENY_GLOBS[@]}"; do
     # shellcheck disable=SC2053
     if [[ "$path" == $glob || "${path##*/}" == $glob ]]; then
       echo "$glob"
       return 0
     fi
-  done < <(read_list "$DENYLIST")
+  done
   return 1
 }
 
-# blob の内容が content-deny のどれかに当たれば 0。当たった行は出力しない。
+# blob の内容が content-deny のどれかに当たれば 0、当たらなければ 1、
+# 検査できなければ 2。当たった行は出力しない。
 denied_content() {
-  local repo="$1" rev="$2" path="$3"
-  git -C "$repo" cat-file -e "$rev:$path" 2>/dev/null || return 1
-  git -C "$repo" show "$rev:$path" | grep -E -i -q -f <(read_list "$CONTENT_DENY")
+  local repo="$1" rev="$2" path="$3" rc=0
+  git -C "$repo" show "$rev:$path" >"$BLOB_TMP" 2>/dev/null || return 2
+  grep -a -E -i -q -f "$CONTENT_PATTERNS" "$BLOB_TMP" || rc=$?
+  [ "$rc" -le 1 ] || return 2
+  return "$rc"
 }
 
 blob_mode() { git -C "$1" ls-tree "$2" -- "$3" | awk '{print $1}'; }
@@ -51,7 +85,7 @@ blob_mode() { git -C "$1" ls-tree "$2" -- "$3" | awk '{print $1}'; }
 # 1 path の送信可否を決める。出力: "<decision>\t<reason>"
 gate_path() {
   local repo="$1" base="$2" head="$3" path="$4" changes="$5"
-  local status mode glob size
+  local status mode glob size rc
 
   if grep -q -P "^R[0-9]*\t(\Q$path\E\t|[^\t]*\t\Q$path\E$)" <<<"$changes"; then
     printf 'skip\trename\n'; return
@@ -74,15 +108,23 @@ gate_path() {
       *) printf 'skip\tmode-%s\n' "$mode"; return ;;
     esac
   done
-  size="$(git -C "$repo" cat-file -s "$head:$path")"
+  size="$(git -C "$repo" cat-file -s "$head:$path" 2>/dev/null)" || {
+    printf 'skip\tunreadable\n'; return
+  }
   if [ "$size" -gt "$MAX_BYTES" ]; then
     printf 'skip\ttoo-large\n'; return
   fi
   # 削除行も旧版全文に含まれるので、base/head の両方を検査する。
   for rev in "$base" "$head"; do
-    if denied_content "$repo" "$rev" "$path"; then
-      printf 'skip\tcontent\n'; return
-    fi
+    # 追加されたファイルは base に blob がない。head にないものは上で弾いている。
+    [ -n "$(blob_mode "$repo" "$rev" "$path")" ] || continue
+    rc=0
+    denied_content "$repo" "$rev" "$path" || rc=$?
+    case "$rc" in
+      0) printf 'skip\tcontent\n'; return ;;
+      1) ;;
+      *) printf 'skip\tcontent-check-failed\n'; return ;;
+    esac
   done
   printf 'send\tok\n'
 }
@@ -133,22 +175,25 @@ evaluate() {
   work="$(mktemp -d)"
   # shellcheck disable=SC2064
   trap "rm -rf '$work'" RETURN
+  load_lists "$work"
 
   echo "base=$base"
   echo "merge_base=$merge_base"
   echo "head=$head"
   echo "changed_files=$(grep -c . <<<"$changes" || true)"
 
-  while IFS= read -r path; do
+  for path in "${ALLOW_PATHS[@]}"; do
     considered=$((considered + 1))
-    IFS=$'\t' read -r decision reason < <(gate_path "$repo" "$merge_base" "$head" "$path" "$changes")
+    decision="" reason=""
+    IFS=$'\t' read -r decision reason < <(gate_path "$repo" "$merge_base" "$head" "$path" "$changes") || true
     echo "gate	$path	$decision	$reason"
     case "$decision" in
       send) targets+=("$path") ;;
       skip) skipped=$((skipped + 1)) ;;
-      *) untouched=$((untouched + 1)) ;;
+      untouched) untouched=$((untouched + 1)) ;;
+      *) die "gate gave no decision for $path" ;;
     esac
-  done < <(read_list "$ALLOWLIST")
+  done
   echo "allowlisted=$considered targets=${#targets[@]} skipped=$skipped untouched=$untouched"
 
   if [ "${#targets[@]}" -eq 0 ]; then
@@ -318,6 +363,31 @@ EOF
   out="$(ALLOWLIST="$root/allowlist.txt" evaluate "$repo" HEAD~1 HEAD)"
   echo "$out" | grep -v '^gate'
   grep -q '^state=over-budget ' <<<"$out" || { echo "FAIL expected over-budget"; failed=1; }
+
+  # リストが使えないときは、判定を1件も出さずに失敗すること（fail-closed）。
+  expect_refusal() {
+    local label="$1" rc=0
+    echo "--- case: $label"
+    out="$(evaluate "$repo" HEAD~2 HEAD~1 2>&1)" || rc=$?
+    echo "$out"
+    if [ "$rc" -eq 0 ] || grep -q -e '^gate' -e '^state=' <<<"$out"; then
+      echo "FAIL $label did not stop the gate"
+      failed=1
+    fi
+  }
+  printf 'ok.sh\nleaks-now.sh\n' >"$root/allowlist.txt"
+  : >"$root/empty.txt"
+  printf '# comment only\n\n' >"$root/comment-only.txt"
+  printf 'AKIA[0-9A-Z]{16}\nbroken(\n' >"$root/bad-regex.txt"
+  mkdir "$root/a-directory"
+  ALLOWLIST="$root/allowlist.txt" CONTENT_DENY="$root/missing.txt" expect_refusal "content-deny missing"
+  ALLOWLIST="$root/allowlist.txt" CONTENT_DENY="$root/a-directory" expect_refusal "content-deny not a file"
+  ALLOWLIST="$root/allowlist.txt" CONTENT_DENY="$root/empty.txt" expect_refusal "content-deny empty"
+  ALLOWLIST="$root/allowlist.txt" CONTENT_DENY="$root/comment-only.txt" expect_refusal "content-deny comment only"
+  ALLOWLIST="$root/allowlist.txt" CONTENT_DENY="$root/bad-regex.txt" expect_refusal "content-deny invalid regex"
+  ALLOWLIST="$root/allowlist.txt" DENYLIST="$root/missing.txt" expect_refusal "denylist missing"
+  ALLOWLIST="$root/allowlist.txt" DENYLIST="$root/empty.txt" expect_refusal "denylist empty"
+  ALLOWLIST="$root/missing.txt" expect_refusal "allowlist missing"
 
   if [ "$failed" -ne 0 ]; then
     echo "fixtures: FAILED"
