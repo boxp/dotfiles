@@ -9,6 +9,14 @@ Cursor Agent CLI を detached な named tmux セッションで非対話・一�
 
 PR 本文は、委任元が対象リポジトリのPRテンプレートを検出して準拠したファイルを用意し、Cursor にそのまま使わせる。Cursor に PR 本文の創作や運用判断をさせない。
 
+## 文書の執筆責任
+
+PR本文に加え、ガイド、README、設計文書、ディレクトリマップなど、コード以外の文書は委任元が執筆・確認する。既存文書の修正も委任元が行い、Cursorには文書の起草や文章の書き直しを依頼しない。
+
+委任元は既存の文書とレビューコメントを確認し、文書の目的に合う内容を書く。ガイドには構成・設定・設計理由などの継続して参照する情報を残し、PR固有の導入手順や作業状況はPR本文で扱う。文書だけの依頼は委譲せず、委任元が直接対応する。
+
+実装に伴う文書変更が必要な場合、委任元が対象ファイルを編集するか、完成した文書ファイル・パッチを用意する。Cursorには指定した内容の反映とリンク先・実装との整合性確認を任せる。実装から得られた事実はCursorに報告させ、文章への反映は委任元が判断する。
+
 既定モデルは `composer-2.5-fast` とし、より高品質側へ寄せたいときだけ `composer-2.5` へ切り替える。
 
 ## 入力の基本形
@@ -90,6 +98,7 @@ Cursor には `pr-body.md` を原則そのまま使わせる。事実の穴埋�
 - PR body file path
 - 検出したPRテンプレートのパス、またはテンプレートがないこと
 - PR本文がテンプレートの全セクションを保持し、未置換プレースホルダーを含まないことを確認する指示
+- 文書の執筆・修正は委任元が行うことと、文書変更を含む場合は完成原稿・パッチのパスおよび変更範囲
 - 作業前後に `git status --short --branch` を確認する指示
 - `gh pr create --draft --title "<title>" --body-file "<pr-body-file>"` を使う指示
 - 禁止事項
@@ -129,6 +138,7 @@ Cursor には `pr-body.md` を原則そのまま使わせる。事実の穴埋�
 - Do not delete any branch.
 - Do not post Jira or ticket comments.
 - Do not rewrite the PR body except factual placeholder replacement explicitly allowed by the delegator.
+- Do not author or rewrite non-code documentation. Apply only the completed documents or patches supplied by the delegator; report implementation facts that require documentation updates.
 ```
 
 禁止事項は曖昧にせず、毎回 prompt に明記する。
@@ -189,6 +199,7 @@ tmux capture-pane -t <session-name> -p | tail -80
 - Cursor の責務は `実装 -> 検証 -> commit -> push -> Draft PR作成` に限定する
 - Draft ではない PR を作らせない
 - PR description の責任は委任元にある
+- コード以外の文書の執筆・修正・内容確認は委任元が担当し、Cursorには完成原稿の反映と整合性確認を任せる
 - 委任元はPR本文作成前に対象リポジトリのPRテンプレートを検出し、テンプレートがあれば全セクションを保持して本文へ反映する
 - `gh pr merge`、merge button 操作、branch delete、issue close、Jira コメント、チケットコメント、force-push、amend を禁止する
 - 既存 dirty work を見つけたら、その扱いを prompt に明記する
