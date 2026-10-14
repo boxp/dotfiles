@@ -119,6 +119,12 @@ Cursor には `pr-body.md` を原則そのまま使わせる。事実の穴埋�
 # Validation
 [run the validation commands here]
 
+# Documentation
+- Owner: the delegator authors and reviews all non-code documentation.
+- Completed documents or patches: <paths supplied by the delegator, or none>
+- Allowed documentation changes: <target files and supplied content to apply, or none>
+- Report facts requiring documentation updates; do not draft or rewrite prose.
+
 # PR
 - Title: ...
 - Body file: /tmp/cursor-composer-delegate/<session>/pr-body.md
