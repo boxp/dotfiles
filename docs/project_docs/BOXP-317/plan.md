@@ -48,3 +48,24 @@ BOXP-276 で現行手順により生成した顔グラ（144x144、47 色）と�
 - 比較画像と実測値（色数 / alpha / 寸法 / 孤立 pixel 比率）を Obsidian `Projects/pixel-art-skill-improvement/` に保存
 - PR → CI → merge → codex-workspace の dotfiles-sync（origin/master ff + setup.sh）で導入されたことを readback
 - 美術品質の受入は Owner 判断として残す
+
+## 追加（2026-10-26、Owner 追加要望: 他 AI 方式の比較調査）
+
+### 目的
+
+既存 pipeline の局所改善で方式を固定せず、専用 pixel-art 生成（PixelLab / Retro Diffusion）、汎用 model + 後処理、
+ローカル model / LoRA、hybrid（AI + pixel 単位編集）を一次資料で比較し、承認済み経路で実測できる候補は同一 brief で比較して
+skill に反映する。
+
+### 方針
+
+1. 新規契約・課金・credential 取得・私的資料の新規送信・共有 pod の重い GPU/CPU 実験はしない。実測は Gemini 経路と OSS 後処理のみ
+2. 机上評価は公式 docs / 規約 / 独立した第三者の実例に限り、ベンダー宣伝や affiliate 比較は独立評価と扱わない
+3. 同一参照イラスト・同一 brief・同一論理解像度・各方式 2〜3 sample で比較し、機械検査だけで優劣を決めない
+
+### 成果物（本 PR）
+
+- `generate-image.bb` に `-S/--seed`（`generationConfig.seed`）を追加。flash で近い構図の再現を実測（完全一致ではない）
+- `generate-pixelart/SKILL.md`: gemini-3.1-flash-image の較正表、`-s 512` と格子線参照・AI 自己修正が効かなかった実測、`unfake` との比較、seed の扱い
+- `generate-pixelart/references/method-comparison.md`: 方式比較の要約と推奨・乗り換え条件
+- 詳細（出典 URL・比較画像・検査 JSON）は Obsidian の Projects/pixel-art-skill-improvement/ に置き、公開 PR には載せない

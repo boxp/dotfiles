@@ -42,7 +42,9 @@ PX=~/.claude/skills/generate-pixelart/scripts
 
 - Step 1〜5 の中間ファイルは作業ディレクトリ（例: `/tmp/pixelart-<name>/`）に置き、最終出力だけをユーザー指定先へ出す
 - 各生成について **プロンプト全文・model・サイズ・出力の sha256** を `manifest.txt` に残す。
-  `generate-image` の API 呼び出しは seed を受け付けず出力は非決定的なので、「同じ設定で再生成しても同じ絵は出ない」ことを前提に候補画像そのものを保存する
+  `generate-image` の `-S/--seed` で `generationConfig.seed` を渡せる。同じ seed・同じ入力で **近い構図** は再現できるが pixel 単位の完全一致は保証されない
+  （gemini-3.1-flash-image 512px で実測: 同 seed 2 回の平均 RGB 差 5.6/255、snap 後の格子は同じ 128x128）。
+  候補画像そのものを保存し、manifest に seed も記録する
 - 公開 PR やノートに private の原典画像・原典プロンプトを載せない（生成物と計測値のみ）
 
 ## Step 0: 仕様を先に固定する
@@ -62,7 +64,9 @@ PX=~/.claude/skills/generate-pixelart/scripts
 `generate-image` skill で高品質なイラストを 1 枚作る。これが全候補・全差分の共通参照になる。
 
 - 背景は単色 `#00FF00`、ポーズ・framing・光源を brief どおり明示、「no text」
-- 本票の検証では `-m gemini-3-pro-image -s 1K`（1024x1024）を使った。他 model は未検証であり、使う場合は Step 3 の実測ピッチで判断する
+- 本票の検証では `-m gemini-3-pro-image -s 1K`（1024x1024）を使った。Step 2 は gemini-3.1-flash-image でも較正済み（下表）。
+  他 model は未検証であり、使う場合は Step 3 の実測ピッチで判断する
+- 再現したい場合は `-S <seed>` を付けて manifest に残す（近い構図の再現のみ。完全一致は保証されない）
 - 例: `bb ~/.claude/skills/generate-image/generate-image.bb -m gemini-3-pro-image -s 1K -a 1:1 -o work/step1_base.png "<prompt>"`
 
 ## Step 2: ドット絵風の再生成（候補を 2〜3 枚）
@@ -91,7 +95,20 @@ Same pose, framing, hair and clothing as the reference. Solid flat pure green ba
 | 20x20 | 12.8 | 80 |
 | 16x16 | 10.25 | 100（下限に張り付く） |
 
-つまり 1K 出力ではおおむね **80〜100 格子が下限**。目標 canvas が 64 程度なら、framing を寄せて（顔だけ等）
+gemini-3.1-flash-image（既定サイズ 1K、同一参照）の較正:
+
+| プロンプトで指定した grid | 実測ドット幅 (px) | 実際の格子 | 備考 |
+| --- | --- | --- | --- |
+| 48x48 | 10.25 | 100 | |
+| 20x20 | 10.25 | 100（3 枚中 2 枚）/ 非等方 15.4x10.25（1 枚、候補外） | cell_variance が名目の 1/2.5 と格子が最も均一 |
+| 12x12 | 14.2 | 72 | 髪の内側に不規則な暗線が増え 100 より荒れる |
+| 20x20、`-s 512` | 4.9 | 104 | 出力を 512 にしても格子数は下がらず、ドット幅が小さくなるだけ |
+
+試して **効果が無かった**手法（本票の実測、1 回ずつ）:
+- 20x20 の格子線画像を 2 枚目の参照にして「cell に合わせろ」と指示 → 格子が非等方（90x100）になり悪化
+- 完成品を 10x nearest で再投入し「pixel 単位で整えて」 → 全体を描き直す（同一パレット写像後も 65% の pixel が変化）。AI は pixel-level の cleanup 手段にならない
+
+つまり 1K 出力ではおおむね **80〜100 格子が下限**（pro-image / flash とも）。目標 canvas が 64 程度なら、framing を寄せて（顔だけ等）
 80〜100 格子で生成し、Step 4 で **切り出し**（再サンプルなし）で canvas に収める。
 目標が 128〜200 なら grid 指定 32〜64 で狙う。
 
@@ -110,7 +127,8 @@ uv run $PX/pixel_snap.py work/step2_c1.png -o work/snap_c1.png --grid auto --rep
 - 周期が検出できない（`Error: ドット格子の周期を検出できない`）場合は、まず `--grid WxH`（プロンプトの指定値や目視で数えた格子）か `--pitch` を明示して snap し、`cell_variance` が名目値より明確に下がるかで判断する。単色背景に疎なシルエットだけの絵は境界が少なく自動検出に向かない。明示しても分散が下がらない画像はドット絵風になっていないので候補から外す
 
 旧手順の `uvx --from proper-pixel-art ppa` は格子の位相を合わせられず、`-w` 固定でも出力寸法が目標と一致しない
-（本票の実測: 64 目標で 69x73 / 65x69）ため、使わない。
+（本票の実測: 64 目標で 69x73 / 65x69）ため、使わない。OSS の `unfake`（pip）も **整数 scale 限定** で、
+1024/100 = 10.24 のような非整数ピッチでは 101x101 / 78x78 にずれて孤立率 2.2〜2.8% になる（`references/method-comparison.md`）。
 
 ## Step 4: 透過・パレット・cleanup
 
@@ -204,6 +222,8 @@ uv run $PX/pixel_preview.py -o work/g2_preview.png --g2 face=work/c1_g2.png
 - `references/gba.md`: GBA 向け BG/スプライト（BMP3、パレット index 0、縦長切り出し、一括生成）の手順。
   旧手順の `ppa` 依存部分は Step 3〜4 に置き換えて読むこと
 - `templates/brief.md`: 仕様テンプレ
+- `references/method-comparison.md`: 専用 pixel-art サービス（PixelLab / Retro Diffusion）、ローカル model / LoRA、hybrid、OSS 後処理ツールとの
+  方式比較と、この skill が Gemini 経路を採る根拠・乗り換え条件（2026-10-26 時点）
 
 ## 依存ツール
 
