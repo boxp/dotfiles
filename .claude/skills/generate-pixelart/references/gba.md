@@ -5,14 +5,14 @@
 （格子の位相が合わず出力寸法が目標と一致しないため）。以下では `PX=~/.claude/skills/generate-pixelart/scripts`。
 BMP3 変換には ImageMagick (`convert`) が必要。
 
-GBA 向けの共通パイプライン（1 枚分）:
+GBA 向けの共通パイプライン（1 枚分。`<COLORS>` は BG なら 256、スプライト (4bpp) なら 16）:
 
 ```bash
 uv run $PX/pixel_snap.py step2.png -o snap.png --grid auto --report snap.json      # 実測格子で原寸化
 uv run $PX/pixel_cleanup.py snap.png -o key.png --key '#00FF00' --key-tol 100 --defringe 140 --min-island 3
-uv run $PX/pixel_palette.py key.png -o pal.png --colors 16                        # BG なら 256、スプライトは 16
+uv run $PX/pixel_palette.py key.png -o pal.png --colors <COLORS>                  # BG は 256、スプライトは 16
 uv run $PX/pixel_cleanup.py pal.png -o art.png --despeckle --protect-bright
-uv run $PX/pixel_check.py art.png --max-colors 16 --key '#00FF00' --max-isolated 0.02
+uv run $PX/pixel_check.py art.png --max-colors <COLORS> --key '#00FF00' --max-isolated 0.02
 ```
 
 実測格子が目標（BG 240x160、スプライト 32x32 など）と合わない場合は Step 2 の grid 指定・framing を変えて再生成する。

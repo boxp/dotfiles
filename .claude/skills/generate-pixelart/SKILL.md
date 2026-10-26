@@ -107,7 +107,7 @@ uv run $PX/pixel_snap.py work/step2_c1.png -o work/snap_c1.png --grid auto --rep
   (a) Step 2 の grid 指定を変えて再生成、(b) 実測格子を採用して canvas を見直す、(c) 切り出しで収める、のどれかを選ぶ。
   **目標格子に合わせるためだけに `--grid` で粗い格子を押し付けると、AI が置いた cluster が潰れる（単なる縮小になる）ので不可**
 - 各 cell の色は内側 50% 領域の最頻色（`--method mode`）。縁の blur を拾わない
-- 周期が検出できない（`Error: ドット格子の周期を検出できない`）画像は、ドット絵風になっていない。候補から外す
+- 周期が検出できない（`Error: ドット格子の周期を検出できない`）場合は、まず `--grid WxH`（プロンプトの指定値や目視で数えた格子）か `--pitch` を明示して snap し、`cell_variance` が名目値より明確に下がるかで判断する。単色背景に疎なシルエットだけの絵は境界が少なく自動検出に向かない。明示しても分散が下がらない画像はドット絵風になっていないので候補から外す
 
 旧手順の `uvx --from proper-pixel-art ppa` は格子の位相を合わせられず、`-w` 固定でも出力寸法が目標と一致しない
 （本票の実測: 64 目標で 69x73 / 65x69）ため、使わない。
@@ -214,7 +214,7 @@ uv run $PX/pixel_preview.py -o work/g2_preview.png --g2 face=work/c1_g2.png
 ## エラー時の対応
 
 - 画像が生成されない → プロンプトを変えて再試行。設定ファイルの全文を含めているか確認
-- `pixel_snap.py` が周期を検出できない → その候補はドット絵風になっていない。候補から外すか Step 2 を再生成
+- `pixel_snap.py` が周期を検出できない → `--grid WxH` か `--pitch` を明示して再試行（疎な絵は自動検出できない）。明示しても `cell_variance` が下がらなければ候補から外すか Step 2 を再生成
 - 実測格子が目標から大きく外れる → Step 2 の grid 指定・framing を変える。`--grid` で無理に合わせない
 - `pixel_cleanup.py` で `内容が canvas より大きい` → 縮小はしない。canvas を見直すか、framing を寄せて再生成
 - 検査の fringe 違反 → `--defringe` の値を上げる。前景に緑系の色がある場合は `--key-tol` を下げる

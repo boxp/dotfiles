@@ -172,7 +172,7 @@ def main() -> None:
         dy = detect_pitch(img, 0, lo, hi)
         detected = {"x": dx, "y": dy}
         if dx[0] <= 0 or dy[0] <= 0:
-            die("ドット格子の周期を検出できない。--grid WxH か --pitch を指定する")
+            die("ドット格子の周期を検出できない (境界が少ない疎な絵でも起きる)。--grid WxH か --pitch を明示して再実行する")
         # 整数 lag の周りでサブピクセルのピッチを詰め、格子数を決める
         sx0, px0, _ = search_axis(img, 1, dx[1], args.inner, 0.1)
         sy0, py0, _ = search_axis(img, 0, dy[1], args.inner, 0.1)
