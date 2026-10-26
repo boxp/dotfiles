@@ -1,0 +1,8 @@
+{
+  "name": "boxp-193-jev-lint-eval",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BOXP-193: pinned jev-lint for the offline dry-run evaluation only",
+  "engines": { "node": ">=24" },
+  "dependencies": { "jev-lint": "0.7.0" }
+}
