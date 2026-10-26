@@ -1,232 +1,221 @@
 ---
 name: generate-pixelart
-description: ドット絵・ピクセルアートを生成。「ドット絵を生成」「ピクセルアートを作って」「GBA用の画像を作って」時に使用
+description: ドット絵・ピクセルアートを生成。「ドット絵を生成」「ピクセルアートを作って」「GBA用の画像を作って」「Even G2 用の単色ドット絵」時に使用
 argument-hint: "<プロンプトまたは説明>"
 ---
 
 # ドット絵・ピクセルアート生成スキル
 
-AI画像生成 → ドット絵風再生成 → true pixel art変換の3ステップでドット絵を生成します。
+AI 画像生成 → ドット絵風再生成（候補複数）→ 論理グリッドへの snap → パレット整理 → pixel cleanup →
+機械検査＋目視の品質 gate、でピクセルパーフェクトなドット絵を作る。
 
-**【重要】generate-imageスキルの呼び出し時は、必ず `-m gemini-3-pro-image -s 1K` を指定してNano Banana Proモデルを使用すること。** デフォルトのNano Banana（gemini-2.5-flash-image）は参照画像ベースのスタイル変換（Step 2）が効かないため、ドット絵パイプラインには不向き。
+「ピクセルパーフェクト」は 2 つの意味を両方満たすこと:
+1. **機械的な正しさ**: 1 ドット = 1 px の原寸 PNG、alpha は 0/255、色数はパレット内、整数倍 nearest 拡大で崩れない
+2. **画素配置の美術品質**: clean な pixel cluster、意図した輪郭の step、原寸で顔・視線・シルエットが読める
+
+高解像度イラストの nearest 縮小・減色・モザイク、`ppa` 通過だけでは完成としない。
 
 ## 引数
 - `$ARGUMENTS`: 生成したいドット絵の説明（日本語可）
 
-## 中間ファイルの出力先
+## 支援 script
 
-- **Step 1〜Step 3の中間ファイルはすべて `/tmp` 配下に出力すること**
-- 最終出力（Step 3のproper-pixel-art出力）のみ、ユーザー指定のパスまたはカレントディレクトリに出力する
-
-## 3ステップの手順
-
-### Step 1: イラスト生成
-
-generate-imageスキルを使い、まず高品質なイラストを生成する。
-
-- ユーザーの指示に基づいたプロンプトでイラストを生成
-- **【重要】設定ファイル（キャラ設定等）が指定されている場合は、そのファイルをReadツールで読み込み、プロフィールや設定の全文をそのままプロンプトに含めること。要約や省略は禁止。Geminiにキャラクターの特徴を正確に伝えるために必須。**
-- 参照画像があれば指定
-- アスペクト比はユーザー指定または用途に応じて選択
-- キャラクターやオブジェクトの画像を生成する場合、背景色をグリーン(#00FF00)にすること
-- **この段階ではドット絵ではなく高品質なイラストとして生成すること**
-- **generate-imageスキルに `-m gemini-3-pro-image -s 1K` を必ず指定すること**
-- **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step1.png`）
-- 出力ファイルパスを控えておく（Step 2で使用）
-
-### Step 2: ドット絵風画像の再生成
-
-generate-imageスキルを使い、Step 1の出力を参照画像として、ドット絵スタイルで再度生成する。
-
-- Step 1の出力画像を参照画像として指定
-- プロンプトでピクセルアートスタイルを明確に指定する
-  - **具体的な目標解像度をプロンプトに含めること。ただし、長辺が128pxを超える場合はアスペクト比を維持したまま長辺を128pxに縮小した解像度を指定する**（例: 目標240x160の場合 → 128x85としてプロンプトに含める）。AI画像生成では解像度を小さく伝えた方がよりドット絵らしい粗さの画像が生成される
-  - 例（GBA BG向け、240x160 → 128x85）: `GBA-style pixel art character bust-up for 128x85 screen. True pixel art, crisp 1px edges, no anti-aliasing, no gradients, 256-color palette, optional subtle dithering.`
-  - 例（汎用）: `16-bit pixel art style, limited color palette, no anti-aliasing, clean pixel edges`
-  - 例（日本語）: 「GBA RPG風ピクセルアート、限定パレット、アンチエイリアスなし、ドット絵」
-- 設定ファイルが指定されている場合は、Step 1と同様にその全文をプロンプトに含める
-- **generate-imageスキルに `-m gemini-3-pro-image -s 1K` を必ず指定すること**
-- **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step2.png`）
-- 出力ファイルパスを控えておく（Step 2.5で使用）
-
-### Step 2.5: グリーン背景の単一色統一（ImageMagick）
-
-AI生成画像はグリーン背景を指定してもピクセルごとに微妙な色ブレが生じる。ppa変換前にグリーン系のピクセルを完全な単一色 `#00FF00` に統一しておくことで、変換後の背景色ムラを防ぐ。
+`~/.claude/skills/generate-pixelart/scripts/` 配下。すべて `uv run $PX/<script>` で実行する（PEP 723 で Pillow/numpy を自動解決。ImageMagick 不要）。
+利用者の作業ディレクトリに関係なく動くよう、以下の例は skill ディレクトリ基準の変数を使う:
 
 ```bash
-convert <step2-output> -fuzz 35% -fill '#00FF00' -opaque '#00FF00' <unified-output>
+PX=~/.claude/skills/generate-pixelart/scripts
 ```
 
-- `-fuzz 35%` でグリーンに近い中間色も含めて `#00FF00` に統一する。前景のグリーン系の色まで置換されてしまう場合は値を下げて調整する
-- **出力先は `/tmp` 配下にすること**（例: `/tmp/pixelart_step2_unified.png`）
-- 出力ファイルパスを控えておく（Step 3で使用）
+| script | 役割 |
+| --- | --- |
+| `pixel_snap.py` | AI 生成のドット絵風画像をドット格子に snap して原寸化。`--grid auto` で実際のドット幅を推定 |
+| `pixel_cleanup.py` | キー色透過、縁 fringe 除去、飛び地除去、孤立 pixel 整理（ハイライト保護）、canvas 配置 |
+| `pixel_palette.py` | 色数量子化 / 固定パレット / preset（`g2-green16`）への写像 |
+| `pixel_check.py` | 寸法・色数・alpha・fringe・孤立率・整数倍整合・差分漂流・コントラストの機械検査（違反で exit 1） |
+| `pixel_composite.py` | 表情差分: 目・口の矩形だけを基準画像へ合成し、それ以外の漂流を封じる |
+| `pixel_preview.py` | 原寸と整数倍 nearest の比較シート、G2 画面（576x288 黒）の preview |
 
-### Step 3: true pixel art変換
+テスト: `bash ~/.claude/skills/generate-pixelart/tests/run-tests.sh`（正例と違反 fixture の両方を検査）。
 
-proper-pixel-artでダウンサンプル＋量子化を行い、true pixel artに変換する。
+## 中間ファイルと記録
+
+- Step 1〜5 の中間ファイルは作業ディレクトリ（例: `/tmp/pixelart-<name>/`）に置き、最終出力だけをユーザー指定先へ出す
+- 各生成について **プロンプト全文・model・サイズ・出力の sha256** を `manifest.txt` に残す。
+  `generate-image` の API 呼び出しは seed を受け付けず出力は非決定的なので、「同じ設定で再生成しても同じ絵は出ない」ことを前提に候補画像そのものを保存する
+- 公開 PR やノートに private の原典画像・原典プロンプトを載せない（生成物と計測値のみ）
+
+## Step 0: 仕様を先に固定する
+
+`templates/brief.md` を埋めてから生成を始める。最低限:
+
+- 用途と **実表示サイズ**（例: 64x64 を 1x と 4x で表示。CSS px や device px との一致は保証しない）
+- **論理 pixel grid**（canvas）と anchor（例: 80x80、頭頂を上端基準で中央配置）
+- パレット上限（例: 24 色）と dither の可否
+- 輪郭（外側 1px 暗色、内側は色境界のみ、など）、光源（左上、影 1 段 + ハイライト 1 段）
+- 透過（キー色 `#00FF00` → alpha 0/255）と背景の有無
+- キャラ・ポーズ・framing（頭頂〜どこまで入れるか）。設定ファイルがあれば全文をプロンプトに含める（要約禁止）
+- 差分がある場合: 差分で変えてよい部位（目・眉・口）とそれ以外は固定
+
+## Step 1: 参照イラスト生成
+
+`generate-image` skill で高品質なイラストを 1 枚作る。これが全候補・全差分の共通参照になる。
+
+- 背景は単色 `#00FF00`、ポーズ・framing・光源を brief どおり明示、「no text」
+- 本票の検証では `-m gemini-3-pro-image -s 1K`（1024x1024）を使った。他 model は未検証であり、使う場合は Step 3 の実測ピッチで判断する
+- 例: `bb ~/.claude/skills/generate-image/generate-image.bb -m gemini-3-pro-image -s 1K -a 1:1 -o work/step1_base.png "<prompt>"`
+
+## Step 2: ドット絵風の再生成（候補を 2〜3 枚）
+
+Step 1 を参照画像にして、ドット絵風の画像を **同じプロンプトで 2〜3 枚** 作る（出力は非決定的なので候補比較が必要）。
+
+プロンプトの骨子（英語推奨）:
+
+```
+Redraw this exact character as true low-resolution pixel art on a <N>x<N> pixel grid, shown scaled up so that
+every pixel is a large, crisp, perfectly square block of uniform color (each block is 1/<N> of the image width).
+Hand-placed pixel clusters in the style of 16-bit RPG portrait sprites: flat solid colors, no gradients,
+no dithering, no anti-aliasing, no blur. Palette of at most <C> colors with one shadow tone and one highlight
+tone per material, light from <光源>. Dark 1px outline only around the silhouette and major shape boundaries.
+Keep the face readable: eyes are 2-3 pixel clusters with a single highlight pixel, mouth is a short line.
+Same pose, framing, hair and clothing as the reference. Solid flat pure green background #00FF00, nothing else.
+```
+
+**プロンプトの grid 数 `<N>` は目安でしかない。** 実際のドット幅は Step 3 で必ず実測する。
+本票の較正（gemini-3-pro-image 1K 1:1、同一参照）:
+
+| プロンプトで指定した grid | 実測ドット幅 (px) | 実際の格子 |
+| --- | --- | --- |
+| 64x64 | 5.1〜7.3 | 140〜200 |
+| 32x32 | 10.25 | 100 |
+| 20x20 | 12.8 | 80 |
+| 16x16 | 10.25 | 100（下限に張り付く） |
+
+つまり 1K 出力ではおおむね **80〜100 格子が下限**。目標 canvas が 64 程度なら、framing を寄せて（顔だけ等）
+80〜100 格子で生成し、Step 4 で **切り出し**（再サンプルなし）で canvas に収める。
+目標が 128〜200 なら grid 指定 32〜64 で狙う。
+
+## Step 3: 格子に snap して原寸にする（候補ごと）
 
 ```bash
-uvx --from proper-pixel-art ppa <unified-output> -o <final-output> -c <colors> -w <pixel-width> -u 1
+uv run $PX/pixel_snap.py work/step2_c1.png -o work/snap_c1.png --grid auto --report work/snap_c1.json
 ```
 
-- `-c`: 量子化色数（デフォルト256、GBA BG向けなら256、GBAスプライト向けなら16など用途に応じて調整）
-- `-w`: **入力画像の1ドット幅を手動指定する（必須）**。AI生成のドット絵風画像はクリーンなピクセルグリッドを持たないため、自動検出では正しいドット幅を判定できない。`入力画像の幅 / 目標解像度の幅` で計算する（例: 1K画像(1264px幅)でGBA BG 240px幅を狙う場合、`1264 / 240 ≈ 5` → `-w 5`）
-- `-u 1`: **初期アップスケールを無効化する（必須）**。デフォルトでは入力画像が2倍にアップスケールされてから `-w` が適用されるため、`-u 1` を指定しないと出力サイズが想定の2倍になる
-- 最終出力はユーザー指定のパスまたはカレントディレクトリに出力する
+- `--grid auto` は色変化の自己相関からドット幅を推定し、cell 内の色が最も均一になるピッチと位相を探す。
+  `report` の `grid`（実際の格子数）と `cell_variance`（小さいほど格子が合っている。名目値 `cell_variance_nominal` より明確に小さいこと）を見る
+- 実測格子が目標 canvas と **±15% 以内** なら `--grid WxH` で目標格子に snap してよい。それ以上ずれるなら
+  (a) Step 2 の grid 指定を変えて再生成、(b) 実測格子を採用して canvas を見直す、(c) 切り出しで収める、のどれかを選ぶ。
+  **目標格子に合わせるためだけに `--grid` で粗い格子を押し付けると、AI が置いた cluster が潰れる（単なる縮小になる）ので不可**
+- 各 cell の色は内側 50% 領域の最頻色（`--method mode`）。縁の blur を拾わない
+- 周期が検出できない（`Error: ドット格子の周期を検出できない`）場合は、まず `--grid WxH`（プロンプトの指定値や目視で数えた格子）か `--pitch` を明示して snap し、`cell_variance` が名目値より明確に下がるかで判断する。単色背景に疎なシルエットだけの絵は境界が少なく自動検出に向かない。明示しても分散が下がらない画像はドット絵風になっていないので候補から外す
 
-#### 結果確認
+旧手順の `uvx --from proper-pixel-art ppa` は格子の位相を合わせられず、`-w` 固定でも出力寸法が目標と一致しない
+（本票の実測: 64 目標で 69x73 / 65x69）ため、使わない。
 
-出力画像をReadツールで目視確認し、ユーザーに結果を伝える。
+## Step 4: 透過・パレット・cleanup
 
-## 全体の使用例
+```bash
+# 1) 緑に寄った縁を周囲色で置換してからキー色を透過（輪郭に食い込んだ 1px は復元）、3px 未満の飛び地を除去
+uv run $PX/pixel_cleanup.py work/snap_c1.png -o work/key_c1.png --key '#00FF00' --key-tol 100 --defringe 140 --min-island 3
+# 2) パレット（色数上限）に揃える。dither 無しの median cut
+uv run $PX/pixel_palette.py work/key_c1.png -o work/pal_c1.png --colors 24
+# 3) 孤立 pixel を周囲の最頻色に置換。周囲より明るい点（目のハイライト等）は保護
+uv run $PX/pixel_cleanup.py work/pal_c1.png -o work/c1.png --despeckle --protect-bright
+# 4) 必要なら canvas に配置（縮小はしない。入らなければ error）
+uv run $PX/pixel_cleanup.py work/c1.png -o work/c1_canvas.png --trim --canvas 80x80 --anchor top
+```
 
-### GBA RPG風バストアップの場合
+- 孤立 pixel や AA を無条件で禁止しない。`--protect-bright` と `--protect '#rrggbb'` で光点・表情の 1px を残す。
+  それでも消えた意図的な点は Step 5 の目視で見つけ、`--protect` を足して再実行する
+- 固定パレットで揃えたい場合は `--palette '#..,#..'` またはパレットファイルを使う
 
-1. generate-imageスキルで高品質イラストを `/tmp/pixelart_step1.png` に生成（アスペクト比 3:2）
-2. generate-imageスキルでStep 1の出力を参照し「GBA RPG風ピクセルアート、128x85スクリーン向け、限定パレット、アンチエイリアスなし」で `/tmp/pixelart_step2.png` に再生成（目標240x160だが、プロンプトには長辺128px上限の128x85を指定）
-3. ImageMagickでグリーン背景を単一色に統一:
-   ```bash
-   convert /tmp/pixelart_step2.png -fuzz 35% -fill '#00FF00' -opaque '#00FF00' /tmp/pixelart_step2_unified.png
+## Step 5: 品質 gate（機械検査 ＋ 目視）
+
+```bash
+uv run $PX/pixel_check.py work/c1_canvas.png --expect-size 80x80 --max-colors 24 --key '#00FF00' \
+    --max-isolated 0.02 --json work/check_c1.json
+uv run $PX/pixel_preview.py -o work/compare.png --scales 1,4 --bg '#404040' c1=work/c1_canvas.png c2=work/c2_canvas.png
+```
+
+機械検査（1 つでも違反なら不合格、exit 1）:
+- 寸法が canvas と一致、色数が上限内、alpha が 0/255 のみ（halo 無し）、縁にキー色寄りの fringe 無し
+- 孤立 pixel 比率 ≤ 2%（不透明 pixel に対する）。保護した光点は含まれてよい
+- 配布用に整数倍拡大した PNG は `--scale N` で全ブロックが単色であることを確認する
+
+目視（比較シートを Read で開き、**原寸 1x と 4x の両方**で見る）:
+- 原寸で顔・視線・シルエット・髪/衣装が識別できるか。細部を詰めすぎて潰れていないか
+- 輪郭の step が意図どおりか（ガタつき、不要な AA、1px の細切れ線）
+- banding（近い色の帯）、pillow shading（輪郭に沿った同心の明暗）、不規則な pixel 密度の有無
+- 光源の一貫性（影とハイライトの向き）
+
+判定:
+- 候補のうち機械検査を通り目視で最良のものを採用。全候補が不合格なら Step 2 を **最大 2 回**まで再生成（プロンプトの grid 指定や framing を変える）
+- それでも不合格なら「不合格」として候補画像と検査 JSON を添えて報告する。合成や縮小で合格に見せない
+- PNG の完成（機械検査合格）と、美術品質の受入（人の好み）は分けて報告する
+
+## Step 6: 表情差分
+
+1. 採用した候補の **Step 2 画像**（ドット絵風、1K）を参照に、「表情以外は変えない」指示で差分を生成する
    ```
-4. proper-pixel-artでダウンサンプル＋量子化（1264/240≈5 → `-w 5`、`-u 1`で初期アップスケール無効化）:
-   ```bash
-   uvx --from proper-pixel-art ppa /tmp/pixelart_step2_unified.png -o final.png -c 256 -w 5 -u 1
+   Keep this pixel art portrait exactly as it is: same pixel grid, same palette, same pose, framing, hair,
+   clothing, lighting and outline style. Change ONLY the facial expression to: <表情>. Do not move or redraw
+   anything outside the eyes, eyebrows and mouth.
    ```
-5. Readツールで `final.png` を目視確認
+2. 基準と **同じ格子**で snap する: `uv run $PX/pixel_snap.py var.png -o snap_var.png --like work/snap_c1.json`
+3. 基準のパレットに揃える: `uv run $PX/pixel_palette.py ... --palette <基準の色一覧>`（`pixel_check.py --json` の出力から作るか、
+   `python -c` で基準画像の不透明色を列挙）
+4. **AI は「表情だけ」と頼んでも全体を描き直す**（本票の実測: 変化 pixel 17〜28%、髪や衣装の形も動く）。
+   目・眉・口を含む矩形だけを基準へ合成する:
+   `uv run $PX/pixel_composite.py base.png var.png -o final_var.png --region x0,y0,x1,y1`
+5. 漂流検査: `uv run $PX/pixel_check.py final_var.png --compare base.png --max-drift 0.1` と、差分シートの目視（表情が読めるか、
+   矩形の境目に継ぎ目が出ていないか）
 
-### GBA キャラクターBG（縦長→正方形切り出し）パターン
+## Profile: Even G2 向け green 16 階調（`g2-green16`）
 
-キャラクターのバストアップBGを作る場合、1:1で生成するとキャラが小さくなりドット絵変換時に潰れやすい。
-**9:16の縦長で生成→ppa変換→頭頂部基準で正方形に切り出し** することで、キャラを大きく描画できる。
+G2 は 576x288 px の単色 green 16 階調、image container は ≤288x144、**黒 (level 0) は透過**として扱う。
+カラー絵を無検証で grayscale 化すると、暗い髪や輪郭が level 0 に落ちて背景に溶ける。
 
-1. Step 1: generate-imageスキルで **`-a 9:16`** で縦長イラストを生成（グリーンバック）
-2. Step 2: Step 1を参照画像としてドット絵風に再生成（同じく `-a 9:16`）
-3. Step 2.5: グリーン背景を統一
-4. Step 3: ppa変換。**`-w` は1:1の場合と同じ値を使う**（例: 1:1で `-w 4` なら縦長でも `-w 4`）
-   - 768x1376 の入力に `-w 4` → 192x344 の出力になる
-5. **切り出し**: ImageMagickで頭頂部基準に正方形（256x256）で切り出す。幅が足りない場合はグリーンで拡張する:
-   ```bash
-   convert <step3_full.png> -background '#00FF00' -gravity North -extent 256x256 <step3.png>
-   ```
-   - `-gravity North` で画像上部（頭）を基準に切り出す
-   - 幅が256に満たない場合は左右にグリーンが補填される（キャラは中央配置）
-6. BMP3変換:
-   ```bash
-   convert <step3.png> -type Palette BMP3:<output.bmp>
-   ```
+```bash
+uv run $PX/pixel_palette.py work/c1_canvas.png -o work/c1_g2.png --preset g2-green16 --stretch 2,98 --gamma 0.8 --floor 3
+uv run $PX/pixel_check.py work/c1_g2.png --preset g2-green16 --min-contrast 100
+uv run $PX/pixel_preview.py -o work/g2_preview.png --g2 face=work/c1_g2.png
+```
 
-**このパターンを使うべき場面:**
-- グリーンバック付きキャラクターBG（バストアップ等）
-- 最終出力が正方形（256x256）だがキャラを大きく描きたい場合
+- `--floor N`: 不透明 pixel の最低 level。`--floor 0` は「不透明なのに消える」pixel を生み `pixel_check --preset` が拒否する。
+  意図的に level 0 を使う場合だけ `--allow-opaque-transparent-level` を付け、仕様に明記する
+- `--stretch` で輝度の percentile を 0〜15 に引き伸ばし、`--gamma < 1` で中間調を持ち上げる
+- 目視は **G2 preview（黒背景・原寸）** で、髪の塊と顔、輪郭とシルエットが分離して読めるかを見る。
+  低コントラストなら `--floor` と `--gamma` を調整し、改善しなければカラー側のパレットを見直す
+- 検証では AI に直接「単色 green のドット絵」を描かせると格子が不均一（周期検出不能〜不整合）になった。
+  **カラー版を作ってから preset で変換する**手順を標準とする
+- 実機表示は SDK 送信の成功と一致しない（BOXP-315 の設計前提）。ここでの preview は目安であり実機確認は別
 
-**使わなくてよい場面:**
-- 全画面イラスト → 最初から1:1で生成
-- 背景BG（風景のみ）→ 1:1で生成
-- スプライト → 下記の一括生成パターンを使用
+## 使用例（本票の検証で実行した流れ）
 
-### GBA スプライト一括生成パターン
+1. brief を固定（顔グラ、canvas 80x80 → 64x64 切り出し、24 色、キー色 `#00FF00`）
+2. Step 1 で参照イラスト 1 枚（1K 1:1）
+3. Step 2 で grid 20 指定の候補を生成、`--grid auto` で実測 80x80 を確認
+4. Step 4〜5 で透過・24 色・despeckle → 検査 OK（80x80、23 色、alpha 0/255、孤立率 0.6%）
+5. Step 6 で驚き・笑いの 2 差分を生成、`--like` で同格子 snap、顔矩形 `20,26,62,52` を合成 → 漂流 5〜7%
+6. `g2-green16` preset に変換し、G2 preview で可読性を確認
 
-複数のスプライトを1枚の画像にまとめて生成し、切り出し後に個別にppa変換する。
-デザインの統一感を保つために、関連するスプライトは可能な限り1枚にまとめて生成する。
+## 関連 reference
 
-1. **Step 1**: generate-imageスキルで**全スプライトを1枚の画像に並べて生成**する
-   - プロンプトに各スプライトの内容・配置を明記する（例: 「左から順に: グーカード、チョキカード、パーカード」）
-   - グリーンバック(`#00FF00`)を指定
-   - アスペクト比はスプライトの配置に合わせて選択（横並びなら横長）
-2. **Step 2**: Step 1を参照画像としてドット絵風に再生成（同じアスペクト比）
-3. **Step 2.5**: グリーン背景を単一色に統一
-4. **切り出し**: ImageMagickで各スプライトを個別に切り出す
-   ```bash
-   # 例: 1264x768の画像から3つのスプライトを切り出し
-   convert <step2_unified.png> -crop 420x768+0+0 +repage /tmp/sprite1_cut.png
-   convert <step2_unified.png> -crop 420x768+422+0 +repage /tmp/sprite2_cut.png
-   convert <step2_unified.png> -crop 420x768+844+0 +repage /tmp/sprite3_cut.png
-   ```
-   - 切り出し位置は `identify -verbose` や目視で確認する
-   - 左右反転が必要なスプライトには `-flop` を追加する
-5. **Step 3**: 切り出した各画像に対して個別にppa変換する
-   ```bash
-   uvx --from proper-pixel-art ppa /tmp/sprite1_cut.png -o /tmp/sprite1_ppa.png -c 16 -w <pixel-width> -u 1
-   ```
-   - `-c 16`: GBAスプライトは4bpp（16色）
-   - `-w`: `切り出し画像の幅 / 目標スプライト幅` で計算
-6. **BMP3変換**: 各スプライトをBMP3 4bppに変換
-   ```bash
-   convert <ppa.png> -type Palette -colors 16 BMP3:<output.bmp>
-   ```
-7. **パレットindex 0修正（必須）**: ImageMagickの`-colors 16`量子化ではパレットの並び順が保証されず、index 0が`#00FF00`にならないことが多い。GBAスプライトではindex 0が透過色として扱われるため、**BMP3変換後に必ずパレットindex 0を`#00FF00`に修正すること**。
-
-   ```python
-   import struct
-
-   def fix_sprite_palette_index0(bmp_path):
-       with open(bmp_path, 'rb') as f:
-           data = bytearray(f.read())
-
-       w = struct.unpack_from('<i', data, 18)[0]
-       h = abs(struct.unpack_from('<i', data, 22)[0])
-       bpp = struct.unpack_from('<H', data, 28)[0]
-       data_offset = struct.unpack_from('<I', data, 10)[0]
-       n_colors = 1 << bpp
-
-       # Read palette and find green
-       pal = []
-       for i in range(n_colors):
-           off = 54 + i * 4
-           b, g, r = data[off], data[off+1], data[off+2]
-           pal.append((r, g, b))
-
-       green_idx = next((i for i, c in enumerate(pal) if c == (0, 255, 0)), None)
-       if green_idx is None:
-           # Find closest to green
-           green_idx = min(range(n_colors), key=lambda i: pal[i][0]**2 + (255-pal[i][1])**2 + pal[i][2]**2)
-
-       if green_idx == 0:
-           # Already at 0, ensure exact value
-           data[54], data[55], data[56] = 0, 255, 0
-       else:
-           # Swap palette entries
-           old0 = pal[0]
-           data[54], data[55], data[56], data[57] = 0, 255, 0, 0
-           offg = 54 + green_idx * 4
-           data[offg], data[offg+1], data[offg+2], data[offg+3] = old0[2], old0[1], old0[0], 0
-
-           # Swap pixel indices (4bpp packed: high nibble = even col, low nibble = odd col)
-           row_bytes = (w * bpp + 31) // 32 * 4
-           for row in range(h):
-               row_start = data_offset + row * row_bytes
-               for col in range(w):
-                   byte_off = row_start + col // 2
-                   hi = (data[byte_off] >> 4) & 0x0F
-                   lo = data[byte_off] & 0x0F
-                   if col % 2 == 0:
-                       if hi == 0: hi = green_idx
-                       elif hi == green_idx: hi = 0
-                       data[byte_off] = (hi << 4) | lo
-                   else:
-                       if lo == 0: lo = green_idx
-                       elif lo == green_idx: lo = 0
-                       data[byte_off] = (hi << 4) | lo
-
-       with open(bmp_path, 'wb') as f:
-           f.write(data)
-   ```
-
-   この関数を全スプライトBMPに対して実行する。省略するとGBA上でスプライトの透過が効かず、緑色の矩形が表示される。
-
-**一括生成の判断基準:**
-- 同じカテゴリのスプライト（例: グー・チョキ・パーのカード）→ 必ずまとめる
-- 同じゲーム内で使うスプライト全般 → できるだけまとめる（1枚に7〜8個程度まで）
-- サイズが大きく異なるスプライトが混在しても問題ない（切り出し後に個別リサイズ）
+- `references/gba.md`: GBA 向け BG/スプライト（BMP3、パレット index 0、縦長切り出し、一括生成）の手順。
+  旧手順の `ppa` 依存部分は Step 3〜4 に置き換えて読むこと
+- `templates/brief.md`: 仕様テンプレ
 
 ## 依存ツール
 
-- `convert` (ImageMagick) — 背景色の単一色統一
-- `uvx` (uv) — proper-pixel-artの実行
+- `uv`（`uv run` で Pillow/numpy を自動取得）
+- `bb` と `generate-image` skill（`GEMINI_API_KEY`）
+- ImageMagick は不要（GBA の BMP3 変換を行う場合のみ `convert` を使う）
 
 ## エラー時の対応
 
-- Step 1/2で画像が生成されない → プロンプトを変更して再試行
-- Step 2.5で前景のグリーン系の色まで置換される → `-fuzz` 値を下げて調整
-- Step 2.5で背景色の統一が不要 → ステップをスキップ
-- proper-pixel-artが見つからない → `uvx --from proper-pixel-art ppa --help` で確認
+- 画像が生成されない → プロンプトを変えて再試行。設定ファイルの全文を含めているか確認
+- `pixel_snap.py` が周期を検出できない → `--grid WxH` か `--pitch` を明示して再試行（疎な絵は自動検出できない）。明示しても `cell_variance` が下がらなければ候補から外すか Step 2 を再生成
+- 実測格子が目標から大きく外れる → Step 2 の grid 指定・framing を変える。`--grid` で無理に合わせない
+- `pixel_cleanup.py` で `内容が canvas より大きい` → 縮小はしない。canvas を見直すか、framing を寄せて再生成
+- 検査の fringe 違反 → `--defringe` の値を上げる。前景に緑系の色がある場合は `--key-tol` を下げる
+- 光点や表情の 1px が despeckle で消えた → `--protect '#rrggbb'` を足して再実行
