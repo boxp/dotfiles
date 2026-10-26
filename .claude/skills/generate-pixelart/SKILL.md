@@ -20,7 +20,12 @@ AI 画像生成 → ドット絵風再生成（候補複数）→ 論理グリ�
 
 ## 支援 script
 
-`scripts/` 配下。すべて `uv run <script>` で実行する（PEP 723 で Pillow/numpy を自動解決。ImageMagick 不要）。
+`~/.claude/skills/generate-pixelart/scripts/` 配下。すべて `uv run $PX/<script>` で実行する（PEP 723 で Pillow/numpy を自動解決。ImageMagick 不要）。
+利用者の作業ディレクトリに関係なく動くよう、以下の例は skill ディレクトリ基準の変数を使う:
+
+```bash
+PX=~/.claude/skills/generate-pixelart/scripts
+```
 
 | script | 役割 |
 | --- | --- |
@@ -31,7 +36,7 @@ AI 画像生成 → ドット絵風再生成（候補複数）→ 論理グリ�
 | `pixel_composite.py` | 表情差分: 目・口の矩形だけを基準画像へ合成し、それ以外の漂流を封じる |
 | `pixel_preview.py` | 原寸と整数倍 nearest の比較シート、G2 画面（576x288 黒）の preview |
 
-テスト: `bash tests/run-tests.sh`（正例と違反 fixture の両方を検査）。
+テスト: `bash ~/.claude/skills/generate-pixelart/tests/run-tests.sh`（正例と違反 fixture の両方を検査）。
 
 ## 中間ファイルと記録
 
@@ -93,7 +98,7 @@ Same pose, framing, hair and clothing as the reference. Solid flat pure green ba
 ## Step 3: 格子に snap して原寸にする（候補ごと）
 
 ```bash
-uv run scripts/pixel_snap.py work/step2_c1.png -o work/snap_c1.png --grid auto --report work/snap_c1.json
+uv run $PX/pixel_snap.py work/step2_c1.png -o work/snap_c1.png --grid auto --report work/snap_c1.json
 ```
 
 - `--grid auto` は色変化の自己相関からドット幅を推定し、cell 内の色が最も均一になるピッチと位相を探す。
@@ -110,14 +115,14 @@ uv run scripts/pixel_snap.py work/step2_c1.png -o work/snap_c1.png --grid auto -
 ## Step 4: 透過・パレット・cleanup
 
 ```bash
-# 1) キー色を透過、緑に寄った縁を周囲色で置換、3px 未満の飛び地を除去
-uv run scripts/pixel_cleanup.py work/snap_c1.png -o work/key_c1.png --key '#00FF00' --key-tol 100 --defringe 140 --min-island 3
+# 1) 緑に寄った縁を周囲色で置換してからキー色を透過（輪郭に食い込んだ 1px は復元）、3px 未満の飛び地を除去
+uv run $PX/pixel_cleanup.py work/snap_c1.png -o work/key_c1.png --key '#00FF00' --key-tol 100 --defringe 140 --min-island 3
 # 2) パレット（色数上限）に揃える。dither 無しの median cut
-uv run scripts/pixel_palette.py work/key_c1.png -o work/pal_c1.png --colors 24
+uv run $PX/pixel_palette.py work/key_c1.png -o work/pal_c1.png --colors 24
 # 3) 孤立 pixel を周囲の最頻色に置換。周囲より明るい点（目のハイライト等）は保護
-uv run scripts/pixel_cleanup.py work/pal_c1.png -o work/c1.png --despeckle --protect-bright
+uv run $PX/pixel_cleanup.py work/pal_c1.png -o work/c1.png --despeckle --protect-bright
 # 4) 必要なら canvas に配置（縮小はしない。入らなければ error）
-uv run scripts/pixel_cleanup.py work/c1.png -o work/c1_canvas.png --trim --canvas 80x80 --anchor top
+uv run $PX/pixel_cleanup.py work/c1.png -o work/c1_canvas.png --trim --canvas 80x80 --anchor top
 ```
 
 - 孤立 pixel や AA を無条件で禁止しない。`--protect-bright` と `--protect '#rrggbb'` で光点・表情の 1px を残す。
@@ -127,9 +132,9 @@ uv run scripts/pixel_cleanup.py work/c1.png -o work/c1_canvas.png --trim --canva
 ## Step 5: 品質 gate（機械検査 ＋ 目視）
 
 ```bash
-uv run scripts/pixel_check.py work/c1_canvas.png --expect-size 80x80 --max-colors 24 --key '#00FF00' \
+uv run $PX/pixel_check.py work/c1_canvas.png --expect-size 80x80 --max-colors 24 --key '#00FF00' \
     --max-isolated 0.02 --json work/check_c1.json
-uv run scripts/pixel_preview.py -o work/compare.png --scales 1,4 --bg '#404040' c1=work/c1_canvas.png c2=work/c2_canvas.png
+uv run $PX/pixel_preview.py -o work/compare.png --scales 1,4 --bg '#404040' c1=work/c1_canvas.png c2=work/c2_canvas.png
 ```
 
 機械検査（1 つでも違反なら不合格、exit 1）:
@@ -156,13 +161,13 @@ uv run scripts/pixel_preview.py -o work/compare.png --scales 1,4 --bg '#404040' 
    clothing, lighting and outline style. Change ONLY the facial expression to: <表情>. Do not move or redraw
    anything outside the eyes, eyebrows and mouth.
    ```
-2. 基準と **同じ格子**で snap する: `pixel_snap.py var.png -o snap_var.png --like work/snap_c1.json`
-3. 基準のパレットに揃える: `pixel_palette.py ... --palette <基準の色一覧>`（`pixel_check.py --json` の出力から作るか、
+2. 基準と **同じ格子**で snap する: `uv run $PX/pixel_snap.py var.png -o snap_var.png --like work/snap_c1.json`
+3. 基準のパレットに揃える: `uv run $PX/pixel_palette.py ... --palette <基準の色一覧>`（`pixel_check.py --json` の出力から作るか、
    `python -c` で基準画像の不透明色を列挙）
 4. **AI は「表情だけ」と頼んでも全体を描き直す**（本票の実測: 変化 pixel 17〜28%、髪や衣装の形も動く）。
    目・眉・口を含む矩形だけを基準へ合成する:
-   `pixel_composite.py base.png var.png -o final_var.png --region x0,y0,x1,y1`
-5. 漂流検査: `pixel_check.py final_var.png --compare base.png --max-drift 0.1` と、差分シートの目視（表情が読めるか、
+   `uv run $PX/pixel_composite.py base.png var.png -o final_var.png --region x0,y0,x1,y1`
+5. 漂流検査: `uv run $PX/pixel_check.py final_var.png --compare base.png --max-drift 0.1` と、差分シートの目視（表情が読めるか、
    矩形の境目に継ぎ目が出ていないか）
 
 ## Profile: Even G2 向け green 16 階調（`g2-green16`）
@@ -171,9 +176,9 @@ G2 は 576x288 px の単色 green 16 階調、image container は ≤288x144、*
 カラー絵を無検証で grayscale 化すると、暗い髪や輪郭が level 0 に落ちて背景に溶ける。
 
 ```bash
-uv run scripts/pixel_palette.py work/c1_canvas.png -o work/c1_g2.png --preset g2-green16 --stretch 2,98 --gamma 0.8 --floor 3
-uv run scripts/pixel_check.py work/c1_g2.png --preset g2-green16 --min-contrast 100
-uv run scripts/pixel_preview.py -o work/g2_preview.png --g2 face=work/c1_g2.png
+uv run $PX/pixel_palette.py work/c1_canvas.png -o work/c1_g2.png --preset g2-green16 --stretch 2,98 --gamma 0.8 --floor 3
+uv run $PX/pixel_check.py work/c1_g2.png --preset g2-green16 --min-contrast 100
+uv run $PX/pixel_preview.py -o work/g2_preview.png --g2 face=work/c1_g2.png
 ```
 
 - `--floor N`: 不透明 pixel の最低 level。`--floor 0` は「不透明なのに消える」pixel を生み `pixel_check --preset` が拒否する。

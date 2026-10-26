@@ -10,6 +10,7 @@
   2. alpha を 0/255 に二値化 (常に。--alpha-threshold)
   3. --min-island : 指定 px 未満の不透明な飛び地 (4 連結) を透過にする
   4. --defringe   : 透過に接する不透明 pixel のうちキー色に寄った色を、周囲の不透明色で置き換える
+                    (--key と併用時はキー色透過より先に補正し、前景に接する混色 pixel は透過にせず復元する)
   5. --despeckle  : 8 近傍に同色が無い孤立 pixel を周囲の最頻色で置き換える
                     (--protect-bright で周囲より明るいハイライト点を保護、--protect で色指定保護)
   6. --trim / --canvas / --anchor : 内容を bbox で切り出し、指定 canvas に配置
@@ -73,6 +74,7 @@ def remove_islands(arr: np.ndarray, min_island: int) -> tuple[np.ndarray, int]:
 
 
 def defringe(arr: np.ndarray, key: tuple[int, int, int], tol: float, passes: int = 2) -> tuple[np.ndarray, int]:
+    """透過に接する不透明 pixel のうちキー色に寄った色を、周囲の不透明色で置き換える。"""
     replaced = 0
     for _ in range(passes):
         mask = opaque_mask(arr)
@@ -91,6 +93,53 @@ def defringe(arr: np.ndarray, key: tuple[int, int, int], tol: float, passes: int
             replaced += 1
         arr = new
     return arr, replaced
+
+
+def key_out(arr: np.ndarray, key: tuple[int, int, int], key_tol: float, defringe_tol: float,
+            pure_tol: float) -> tuple[np.ndarray, dict]:
+    """キー色を透過にする。fringe の補正はキー色透過より先に行う。
+
+    1. キー色から key_tol 以内の pixel を「透過候補」とする
+    2. 透過候補に接する不透明 pixel のうち defringe_tol 以内の色を周囲色で置換する (背景との混色)
+    3. 透過候補のうち、キー色そのもの (pure_tol 以内) ではなく、前景に接している pixel は
+       「輪郭と背景の混色」なので透過にせず周囲の前景色で復元する
+    4. 残りの透過候補を透過にする
+    """
+    dist = color_distance(arr, key)
+    cand = (dist <= key_tol) & opaque_mask(arr)
+    info = {"keyed": 0, "fringe_replaced": 0, "restored": 0}
+    if not cand.any():
+        return arr, info
+    keep = opaque_mask(arr) & ~cand
+    if defringe_tol > 0:
+        # 透過候補を一時的に透過扱いにして fringe を補正する
+        tmp = arr.copy()
+        tmp[cand] = 0
+        tmp, replaced = defringe(tmp, key, defringe_tol)
+        arr = arr.copy()
+        arr[keep] = tmp[keep]
+        info["fringe_replaced"] = replaced
+    # 輪郭と背景の混色 (キー色そのものではなく、前景に接する候補) を復元
+    padded = np.pad(keep, 1, mode="constant", constant_values=False)
+    h, w = keep.shape
+    neighbors = np.zeros((h, w), dtype=np.int8)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            if dy or dx:
+                neighbors += padded[1 + dy : 1 + dy + h, 1 + dx : 1 + dx + w]
+    bite = cand & (dist > pure_tol) & (neighbors >= 1)
+    out = arr.copy()
+    ys, xs = np.nonzero(bite)
+    for y, x in zip(ys, xs):
+        color = neighbor_mode(arr, keep, y, x)
+        if color is not None:
+            out[y, x, :3] = color
+            out[y, x, 3] = 255
+            cand[y, x] = False
+            info["restored"] += 1
+    out[cand] = 0
+    info["keyed"] = int(cand.sum())
+    return out, info
 
 
 def despeckle(arr: np.ndarray, protect_bright: bool, protect_colors: list[tuple[int, int, int]],
@@ -159,6 +208,7 @@ def main() -> None:
     ap.add_argument("-o", "--output", required=True)
     ap.add_argument("--key", help="透過にするキー色 (#rrggbb)")
     ap.add_argument("--key-tol", type=float, default=90.0, help="キー色との RGB 距離の許容値")
+    ap.add_argument("--key-pure-tol", type=float, help="この距離以内は「キー色そのもの」。これを超え前景に接する候補は混色として復元 (既定 key-tol/2)")
     ap.add_argument("--alpha-threshold", type=int, default=128)
     ap.add_argument("--min-island", type=int, default=0, help="この px 未満の飛び地を消す")
     ap.add_argument("--defringe", type=float, default=0.0, help="縁 fringe とみなすキー色距離 (0 で無効、--key 必須)")
@@ -176,9 +226,9 @@ def main() -> None:
     log: list[str] = []
     key = parse_hex(args.key) if args.key else None
     if key:
-        keyed = color_distance(arr, key) <= args.key_tol
-        arr[keyed] = 0
-        log.append(f"key {args.key}: {int(keyed.sum())} px -> transparent")
+        pure_tol = args.key_pure_tol if args.key_pure_tol is not None else args.key_tol / 2
+        arr, info = key_out(arr, key, args.key_tol, args.defringe, pure_tol)
+        log.append(f"key {args.key}: {info['keyed']} px -> transparent, fringe replaced: {info['fringe_replaced']}, bites restored: {info['restored']}")
     alpha = arr[..., 3] >= args.alpha_threshold
     partial = int(((arr[..., 3] > 0) & (arr[..., 3] < 255)).sum())
     arr[..., 3] = np.where(alpha, 255, 0).astype(np.uint8)
@@ -190,8 +240,9 @@ def main() -> None:
     if args.defringe > 0:
         if not key:
             die("--defringe には --key が必要")
+        # 既に透過だった pixel (入力の alpha 0) に接する fringe も補正する
         arr, replaced = defringe(arr, key, args.defringe)
-        log.append(f"fringe replaced: {replaced}")
+        log.append(f"fringe replaced (existing alpha edges): {replaced}")
     if args.despeckle:
         protect_colors = [parse_hex(c) for c in args.protect]
         arr, replaced, protected = despeckle(arr, args.protect_bright, protect_colors, args.bright_margin, args.despeckle_passes)

@@ -1,43 +1,50 @@
 # GBA 向け手順（旧 SKILL.md から移設）
 
-旧手順の Step 1〜3（イラスト生成 → ドット絵風再生成 → `ppa` 変換）は、SKILL.md の Step 1〜5
-（候補生成 → `pixel_snap.py --grid auto` → `pixel_cleanup.py` / `pixel_palette.py` → `pixel_check.py`）に置き換えて読む。
-以下の BMP3 変換・パレット index 0 修正・切り出し・一括生成の手順はそのまま有効。
+ドット絵化は SKILL.md の Step 2〜5（候補生成 → `pixel_snap.py --grid auto` → `pixel_cleanup.py` /
+`pixel_palette.py` → `pixel_check.py`）で行う。旧手順の `convert -fuzz` による背景統一と `ppa` 変換は使わない
+（格子の位相が合わず出力寸法が目標と一致しないため）。以下では `PX=~/.claude/skills/generate-pixelart/scripts`。
 BMP3 変換には ImageMagick (`convert`) が必要。
+
+GBA 向けの共通パイプライン（1 枚分）:
+
+```bash
+uv run $PX/pixel_snap.py step2.png -o snap.png --grid auto --report snap.json      # 実測格子で原寸化
+uv run $PX/pixel_cleanup.py snap.png -o key.png --key '#00FF00' --key-tol 100 --defringe 140 --min-island 3
+uv run $PX/pixel_palette.py key.png -o pal.png --colors 16                        # BG なら 256、スプライトは 16
+uv run $PX/pixel_cleanup.py pal.png -o art.png --despeckle --protect-bright
+uv run $PX/pixel_check.py art.png --max-colors 16 --key '#00FF00' --max-isolated 0.02
+```
+
+実測格子が目標（BG 240x160、スプライト 32x32 など）と合わない場合は Step 2 の grid 指定・framing を変えて再生成する。
+`--grid` で無理に目標格子へ押し込まない。BMP3 化の前に `pixel_cleanup.py --trim --canvas WxH --anchor top` で
+目標 canvas に配置し、透過部をキー色 `#00FF00` に戻す（下記）。
 
 ### GBA RPG風バストアップの場合
 
 1. generate-imageスキルで高品質イラストを `/tmp/pixelart_step1.png` に生成（アスペクト比 3:2）
 2. generate-imageスキルでStep 1の出力を参照し「GBA RPG風ピクセルアート、128x85スクリーン向け、限定パレット、アンチエイリアスなし」で `/tmp/pixelart_step2.png` に再生成（目標240x160だが、プロンプトには長辺128px上限の128x85を指定）
-3. ImageMagickでグリーン背景を単一色に統一:
-   ```bash
-   convert /tmp/pixelart_step2.png -fuzz 35% -fill '#00FF00' -opaque '#00FF00' /tmp/pixelart_step2_unified.png
-   ```
-4. proper-pixel-artでダウンサンプル＋量子化（1264/240≈5 → `-w 5`、`-u 1`で初期アップスケール無効化）:
-   ```bash
-   uvx --from proper-pixel-art ppa /tmp/pixelart_step2_unified.png -o final.png -c 256 -w 5 -u 1
-   ```
-5. Readツールで `final.png` を目視確認
+3. 共通パイプライン（上記）で snap → cleanup → `--colors 256` → check。実測格子が 240x160 付近になるまで Step 2 を調整
+4. `pixel_preview.py` の比較シートを Read で原寸と整数倍の両方で目視確認
 
 ### GBA キャラクターBG（縦長→正方形切り出し）パターン
 
 キャラクターのバストアップBGを作る場合、1:1で生成するとキャラが小さくなりドット絵変換時に潰れやすい。
-**9:16の縦長で生成→ppa変換→頭頂部基準で正方形に切り出し** することで、キャラを大きく描画できる。
+**9:16の縦長で生成→snapで原寸化→頭頂部基準で正方形に切り出し** することで、キャラを大きく描画できる。
 
 1. Step 1: generate-imageスキルで **`-a 9:16`** で縦長イラストを生成（グリーンバック）
 2. Step 2: Step 1を参照画像としてドット絵風に再生成（同じく `-a 9:16`）
-3. Step 2.5: グリーン背景を統一
-4. Step 3: ppa変換。**`-w` は1:1の場合と同じ値を使う**（例: 1:1で `-w 4` なら縦長でも `-w 4`）
-   - 768x1376 の入力に `-w 4` → 192x344 の出力になる
-5. **切り出し**: ImageMagickで頭頂部基準に正方形（256x256）で切り出す。幅が足りない場合はグリーンで拡張する:
+3. 共通パイプライン（上記）で snap → cleanup → パレット → check
+4. **切り出し**: 頭頂基準で 256x256 に配置する（縮小はしない。入らなければ Step 2 の grid 指定を見直す）:
    ```bash
-   convert <step3_full.png> -background '#00FF00' -gravity North -extent 256x256 <step3.png>
+   uv run $PX/pixel_cleanup.py art.png -o step3.png --trim --canvas 256x256 --anchor top
    ```
-   - `-gravity North` で画像上部（頭）を基準に切り出す
-   - 幅が256に満たない場合は左右にグリーンが補填される（キャラは中央配置）
+5. 透過部をキー色に戻す（BMP3 はパレット index 0 で透過を表すため）:
+   ```bash
+   convert step3.png -background '#00FF00' -alpha remove -alpha off step3_green.png
+   ```
 6. BMP3変換:
    ```bash
-   convert <step3.png> -type Palette BMP3:<output.bmp>
+   convert step3_green.png -type Palette BMP3:<output.bmp>
    ```
 
 **このパターンを使うべき場面:**
@@ -51,7 +58,7 @@ BMP3 変換には ImageMagick (`convert`) が必要。
 
 ### GBA スプライト一括生成パターン
 
-複数のスプライトを1枚の画像にまとめて生成し、切り出し後に個別にppa変換する。
+複数のスプライトを1枚の画像にまとめて生成し、切り出し後に個別に cleanup・パレット・検査する。
 デザインの統一感を保つために、関連するスプライトは可能な限り1枚にまとめて生成する。
 
 1. **Step 1**: generate-imageスキルで**全スプライトを1枚の画像に並べて生成**する
@@ -59,25 +66,14 @@ BMP3 変換には ImageMagick (`convert`) が必要。
    - グリーンバック(`#00FF00`)を指定
    - アスペクト比はスプライトの配置に合わせて選択（横並びなら横長）
 2. **Step 2**: Step 1を参照画像としてドット絵風に再生成（同じアスペクト比）
-3. **Step 2.5**: グリーン背景を単一色に統一
-4. **切り出し**: ImageMagickで各スプライトを個別に切り出す
-   ```bash
-   # 例: 1264x768の画像から3つのスプライトを切り出し
-   convert <step2_unified.png> -crop 420x768+0+0 +repage /tmp/sprite1_cut.png
-   convert <step2_unified.png> -crop 420x768+422+0 +repage /tmp/sprite2_cut.png
-   convert <step2_unified.png> -crop 420x768+844+0 +repage /tmp/sprite3_cut.png
-   ```
-   - 切り出し位置は `identify -verbose` や目視で確認する
-   - 左右反転が必要なスプライトには `-flop` を追加する
-5. **Step 3**: 切り出した各画像に対して個別にppa変換する
-   ```bash
-   uvx --from proper-pixel-art ppa /tmp/sprite1_cut.png -o /tmp/sprite1_ppa.png -c 16 -w <pixel-width> -u 1
-   ```
-   - `-c 16`: GBAスプライトは4bpp（16色）
-   - `-w`: `切り出し画像の幅 / 目標スプライト幅` で計算
+3. **snap**: 1 枚全体を `pixel_snap.py --grid auto` で原寸化する（スプライト間で格子が共通になる）
+4. **切り出し**: 原寸化した画像から各スプライトを個別に切り出す（ImageMagick `-crop`、または Pillow）。
+   切り出し位置は目視で確認し、左右反転が必要なスプライトには `-flop` を追加する
+5. **cleanup・パレット・検査**: 切り出した各画像に共通パイプラインの cleanup → `--colors 16` → check を個別に適用し、
+   `--trim --canvas WxH` で目標スプライト寸法に配置、透過部をキー色に戻す（上記 `-alpha remove`）
 6. **BMP3変換**: 各スプライトをBMP3 4bppに変換
    ```bash
-   convert <ppa.png> -type Palette -colors 16 BMP3:<output.bmp>
+   convert <sprite_green.png> -type Palette -colors 16 BMP3:<output.bmp>
    ```
 7. **パレットindex 0修正（必須）**: ImageMagickの`-colors 16`量子化ではパレットの並び順が保証されず、index 0が`#00FF00`にならないことが多い。GBAスプライトではindex 0が透過色として扱われるため、**BMP3変換後に必ずパレットindex 0を`#00FF00`に修正すること**。
 

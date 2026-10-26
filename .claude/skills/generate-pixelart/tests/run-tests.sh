@@ -119,6 +119,20 @@ else
   fail "cleanup: highlight kept, noise replaced, island removed"
 fi
 
+# key_out: 輪郭に食い込んだ緑寄り pixel は透過にせず周囲色で復元される
+expect_ok "cleanup: bite fixture runs" run pixel_cleanup.py "$FIX/bite_24.png" -o "$WORK/bite.png" --key '#00FF00' --key-tol 100 --defringe 140
+if py -c "
+import numpy as np; from PIL import Image; import sys
+a=np.array(Image.open('$WORK/bite.png').convert('RGBA')); g=np.array(Image.open('$FIX/good_24.png').convert('RGBA'))
+import json; pts=[tuple(p) for p in json.load(open('$FIX/bite_24_points.json'))]
+ok=all(a[y,x,3]==255 and tuple(a[y,x,:3])!=(40,200,60) for y,x in pts) and np.array_equal(a[...,3], g[...,3])
+sys.exit(0 if ok else 1)"; then
+  pass "cleanup: outline bites restored, silhouette identical to original"
+else
+  fail "cleanup: outline bites restored, silhouette identical to original"
+fi
+expect_ok "cleanup: bite result passes fringe check" run $CHECK "$WORK/bite.png" --key '#00FF00' --fringe-tol 100 --expect-size 24x24
+
 # palette: 色数量子化 / 固定パレット / G2 preset
 expect_ok "palette: quantize to 6 colors" run pixel_palette.py "$FIX/gradient_16x32.png" -o "$WORK/q6.png" --colors 6
 expect_ok "palette: quantized passes max-colors 6 with alpha kept" run $CHECK "$WORK/q6.png" --max-colors 6

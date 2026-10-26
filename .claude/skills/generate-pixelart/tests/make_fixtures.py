@@ -105,6 +105,22 @@ dirty[20, 5, :3] = (123, 45, 67)  # 孤立ノイズ
 dirty[~(dirty[..., 3] > 0)] = (0, 255, 0, 255)
 save(dirty, "dirty_24.png")
 
+# 輪郭に食い込む混色: 輪郭上の pixel を緑との混色 (キー色から距離 <= 100) にし、背景は不透明緑
+bite = good.copy()
+bite[~(bite[..., 3] > 0)] = (0, 255, 0, 255)
+outline = edge_mask(good[..., 3] > 0)
+bite_pts = []
+for row in (5, 13, 20):
+    cols = np.nonzero(outline[row])[0]
+    bite_pts.append((row, int(cols[0])))
+    if row == 13:
+        bite_pts.append((row, int(cols[-1])))
+for y, x in bite_pts:
+    bite[y, x, :3] = (40, 200, 60)  # 緑寄りの混色 (距離 ~80)
+save(bite, "bite_24.png")
+import json
+(OUT / "bite_24_points.json").write_text(json.dumps(bite_pts))
+
 # G2 preset 正例 / 違反例
 g2_good = np.zeros((40, 30, 4), dtype=np.uint8)
 g2_good[5:35, 5:25] = (0, 17 * 8, 0, 255)
