@@ -1,0 +1,32 @@
+name: generate-pixelart tests
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/generate-pixelart/**"
+      - ".github/workflows/generate-pixelart.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - ".claude/skills/generate-pixelart/**"
+      - ".github/workflows/generate-pixelart.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Check shell syntax
+        run: bash -n .claude/skills/generate-pixelart/tests/run-tests.sh
+      - name: Run fixture tests
+        run: bash .claude/skills/generate-pixelart/tests/run-tests.sh
