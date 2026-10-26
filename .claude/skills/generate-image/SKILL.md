@@ -19,7 +19,8 @@ bb /home/boxp/.claude/skills/generate-image/generate-image.bb [options] "プロ�
 $ARGUMENTS
 
 - `-a, --aspect-ratio RATIO` : アスペクト比 (default: 1:1)
-- `-s, --size SIZE` : 画像サイズ 1K/2K/4K（gemini-3-pro-image等で有効。未指定時は省略）
+- `-s, --size SIZE` : 画像サイズ 512/1K/2K/4K（gemini-3-pro-image 等で有効。512 は gemini-3.1-flash-image のみ。未指定時は省略）
+- `-S, --seed SEED` : seed（整数）。`generationConfig.seed` に渡す。同じ seed・同じ入力なら近い構図を再現するが、pixel 単位の完全一致は保証されない（gemini-3.1-flash-image で実測: 平均 RGB 差 5.6/255）
 - `-m, --model MODEL` : モデル名 (default: gemini-3.1-flash-image)
 - `-o, --output PATH` : 出力ファイルパス (default: ./gemini-<timestamp>.<ext>)
 - `-i, --image PATH` : 入力画像パス（複数指定可、画像編集やスタイル参照に使用）

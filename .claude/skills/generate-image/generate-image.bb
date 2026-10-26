@@ -16,6 +16,8 @@
    ["-s" "--size SIZE" "画像サイズ 1K/2K/4K（gemini-3-pro-image等で有効）"]
    ["-m" "--model MODEL" "モデル名"
     :default "gemini-3.1-flash-image"]
+   ["-S" "--seed SEED" "seed（整数、generationConfig.seed。同条件なら近い構図を再現、完全一致は保証されない）"
+    :parse-fn #(Long/parseLong %)]
    ["-o" "--output PATH" "出力ファイルパス"]
    ["-i" "--image PATH" "入力画像パス（複数指定可）"
     :multi true
@@ -66,15 +68,20 @@
         ts  (.format (LocalDateTime/now) (DateTimeFormatter/ofPattern "yyyyMMdd-HHmmss"))]
     (str "./gemini-" ts "." ext)))
 
-(defn build-request-body [prompt images aspect-ratio size]
-  (let [text-part {:text prompt}
-        image-parts (mapv (fn [img-data] {:inlineData img-data}) images)
-        parts (into [text-part] image-parts)
-        image-config (cond-> {:aspectRatio aspect-ratio}
-                       size (assoc :imageSize size))]
-    {:contents [{:parts parts}]
-     :generationConfig {:responseModalities ["TEXT" "IMAGE"]
-                        :imageConfig image-config}}))
+(defn build-request-body
+  ([prompt images aspect-ratio size]
+   (build-request-body prompt images aspect-ratio size nil))
+  ([prompt images aspect-ratio size seed]
+   (let [text-part {:text prompt}
+         image-parts (mapv (fn [img-data] {:inlineData img-data}) images)
+         parts (into [text-part] image-parts)
+         image-config (cond-> {:aspectRatio aspect-ratio}
+                        size (assoc :imageSize size))
+         gen-config (cond-> {:responseModalities ["TEXT" "IMAGE"]
+                             :imageConfig image-config}
+                      seed (assoc :seed seed))]
+     {:contents [{:parts parts}]
+      :generationConfig gen-config})))
 
 (defn call-api [api-key model body]
   (let [url (str "https://generativelanguage.googleapis.com/v1beta/models/" model ":generateContent")
@@ -124,9 +131,10 @@
           images       (mapv load-image (:image options))
           aspect-ratio (:aspect-ratio options)
           size         (:size options)
+          seed         (:seed options)
           model        (:model options)
           output       (:output options)
-          body         (build-request-body prompt images aspect-ratio size)
+          body         (build-request-body prompt images aspect-ratio size seed)
           response     (call-api api-key model body)
           inline-data  (extract-image response)
           saved-path   (decode-and-save inline-data output)]
