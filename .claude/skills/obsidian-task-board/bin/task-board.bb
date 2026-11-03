@@ -97,6 +97,8 @@
           "--source" (recur (nnext xs) (assoc opts :source (first more)))
           "--priority" (recur (nnext xs) (assoc opts :priority (first more)))
           "--assignee" (recur (nnext xs) (assoc opts :assignee (first more)))
+          "--expected-lane" (recur (nnext xs) (assoc opts :expected-lane (first more)))
+          "--expected-ticket-sha256" (recur (nnext xs) (assoc opts :expected-ticket-sha256 (first more)))
           "--repo" (recur (nnext xs) (assoc opts :repo (first more)))
           "--dry-run" (recur more (assoc opts :dry-run true))
           "--confirm" (recur more (assoc opts :confirm true))
@@ -451,6 +453,10 @@
           (reset! result-atom result))))
     (print-result opts @result-atom)))
 
+(defn sha256-hex [^String text]
+  (let [digest (.digest (java.security.MessageDigest/getInstance "SHA-256") (.getBytes text "UTF-8"))]
+    (apply str (map #(format "%02x" %) digest))))
+
 (defn cmd-update [opts id]
   (let [vault (vault-path opts)
         path (ticket-path vault id)
@@ -463,6 +469,14 @@
             (let [ticket (ticket-data vault id)
                   board (read-text bpath)
                   old-card (card-for board id)
+                  ;; Checked under the locks, so a caller acting on what it read
+                  ;; earlier cannot overwrite a newer change (BOXP-395).
+                  _ (when-let [expected (:expected-lane opts)]
+                      (when (not= expected (:lane old-card))
+                        (die (str "expected lane " expected " but found " (:lane old-card)))))
+                  _ (when-let [expected (:expected-ticket-sha256 opts)]
+                      (when (not= expected (sha256-hex (read-text path)))
+                        (die "ticket changed since it was read")))
                   lane (or (:lane opts) (:lane old-card) (status->lane (:status ticket)) "Backlog")
                   status (lanes (require-lane lane))
                   title (or (:title opts) (:title ticket))
