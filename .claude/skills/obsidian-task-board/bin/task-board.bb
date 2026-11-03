@@ -10,13 +10,16 @@
   {"Backlog" "backlog"
    "Ready" "ready"
    "In Progress" "in-progress"
-   "Review" "review"
    "Blocked" "blocked"
    "Done" "done"})
 
+;; BOXP-395: Review is retired and cannot be a destination. A leftover card stays
+;; readable so it can be moved out rather than vanish from the board.
+(def readable-lanes (assoc lanes "Review" "review"))
+
 (def status->lane (into {} (map (fn [[lane status]] [status lane]) lanes)))
 
-(def codex-request-lanes #{"Backlog" "Ready" "Review" "Blocked"})
+(def codex-request-lanes #{"Backlog" "Ready" "Blocked"})
 
 (def section-names
   {"summary" "Summary"
@@ -287,7 +290,7 @@
       cards
       (let [line (first lines)
             heading (second (re-find #"^##\s+(.+?)\s*$" line))
-            lane (if (contains? lanes heading) heading lane)
+            lane (if (contains? readable-lanes heading) heading lane)
             card (and lane (parse-card lane line))]
         (recur (rest lines) lane (cond-> cards card (conj card)))))))
 
@@ -516,7 +519,7 @@
         bpath (board-path vault)
         result-atom (atom nil)]
     (when-not (contains? codex-request-lanes lane)
-      (die "request-codex lane must be one of Backlog, Ready, Review, or Blocked"))
+      (die "request-codex lane must be one of Backlog, Ready, or Blocked"))
     (with-board-lock bpath
       (fn []
         (with-ticket-lock path

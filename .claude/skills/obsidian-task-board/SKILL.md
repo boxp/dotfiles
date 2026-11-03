@@ -89,7 +89,7 @@ Request Codex work while preserving the stop lane:
 ```bash
 "$TASK_BOARD_HELPER" request-codex BOXP-55 \
   --vault /home/boxp/Documents/obsidian-headless/BOXP \
-  --lane Review \
+  --lane Ready \
   --note "レビュー指摘に対応して。CI と codex-review も確認する。" \
   --dry-run
 ```
@@ -106,8 +106,14 @@ Delete dry-run:
 
 - Backlog: requirements grooming request. Keep the card in `Backlog`, set `assignee: codex`, and append the request to Notes.
 - Ready: implementation start request. Keep the card in `Ready`, set `assignee: codex`, and append the request to Notes.
-- Review: review feedback request. Keep the card in `Review`, set `assignee: codex`, and append the feedback to Notes.
 - Blocked: retry or blocker re-check request. Keep the card in `Blocked`, set `assignee: codex`, and append the new condition to Notes.
+
+Lane contract (BOXP-395): there is no Review lane. PR code review and the runner's gates remain.
+
+- Ready: approved and runnable, with an assignee and a next action.
+- In Progress: actual work, including code review, fixes, merge, and approved deployment and verification. A run ending does not end the work.
+- Blocked: cannot continue alone (new Owner decision, owner-only acceptance, missing permission, external dependency, unrecoverable failure or retry limit). Notes must give the reason, required input, who resolves it, and the next action. `PR created`, `reported`, or fixable review findings are not blockers.
+- Done: the original goal is demonstrated. A merge alone is not deployment or acceptance. Work closed as obsolete or moved to a successor says so with the reason and successor.
 
 The Task Board runner specification is the operational source for lane behavior:
 
