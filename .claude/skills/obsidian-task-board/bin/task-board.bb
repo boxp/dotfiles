@@ -10,13 +10,16 @@
   {"Backlog" "backlog"
    "Ready" "ready"
    "In Progress" "in-progress"
-   "Review" "review"
    "Blocked" "blocked"
    "Done" "done"})
 
+;; BOXP-395: Review is retired and cannot be a destination. A leftover card stays
+;; readable so it can be moved out rather than vanish from the board.
+(def readable-lanes (assoc lanes "Review" "review"))
+
 (def status->lane (into {} (map (fn [[lane status]] [status lane]) lanes)))
 
-(def codex-request-lanes #{"Backlog" "Ready" "Review" "Blocked"})
+(def codex-request-lanes #{"Backlog" "Ready" "Blocked"})
 
 (def section-names
   {"summary" "Summary"
@@ -94,6 +97,8 @@
           "--source" (recur (nnext xs) (assoc opts :source (first more)))
           "--priority" (recur (nnext xs) (assoc opts :priority (first more)))
           "--assignee" (recur (nnext xs) (assoc opts :assignee (first more)))
+          "--expected-lane" (recur (nnext xs) (assoc opts :expected-lane (first more)))
+          "--expected-ticket-sha256" (recur (nnext xs) (assoc opts :expected-ticket-sha256 (first more)))
           "--repo" (recur (nnext xs) (assoc opts :repo (first more)))
           "--dry-run" (recur more (assoc opts :dry-run true))
           "--confirm" (recur more (assoc opts :confirm true))
@@ -287,7 +292,7 @@
       cards
       (let [line (first lines)
             heading (second (re-find #"^##\s+(.+?)\s*$" line))
-            lane (if (contains? lanes heading) heading lane)
+            lane (if (contains? readable-lanes heading) heading lane)
             card (and lane (parse-card lane line))]
         (recur (rest lines) lane (cond-> cards card (conj card)))))))
 
@@ -448,6 +453,10 @@
           (reset! result-atom result))))
     (print-result opts @result-atom)))
 
+(defn sha256-hex [^String text]
+  (let [digest (.digest (java.security.MessageDigest/getInstance "SHA-256") (.getBytes text "UTF-8"))]
+    (apply str (map #(format "%02x" %) digest))))
+
 (defn cmd-update [opts id]
   (let [vault (vault-path opts)
         path (ticket-path vault id)
@@ -460,6 +469,14 @@
             (let [ticket (ticket-data vault id)
                   board (read-text bpath)
                   old-card (card-for board id)
+                  ;; Checked under the locks, so a caller acting on what it read
+                  ;; earlier cannot overwrite a newer change (BOXP-395).
+                  _ (when-let [expected (:expected-lane opts)]
+                      (when (not= expected (:lane old-card))
+                        (die (str "expected lane " expected " but found " (:lane old-card)))))
+                  _ (when-let [expected (:expected-ticket-sha256 opts)]
+                      (when (not= expected (sha256-hex (read-text path)))
+                        (die "ticket changed since it was read")))
                   lane (or (:lane opts) (:lane old-card) (status->lane (:status ticket)) "Backlog")
                   status (lanes (require-lane lane))
                   title (or (:title opts) (:title ticket))
@@ -516,7 +533,7 @@
         bpath (board-path vault)
         result-atom (atom nil)]
     (when-not (contains? codex-request-lanes lane)
-      (die "request-codex lane must be one of Backlog, Ready, Review, or Blocked"))
+      (die "request-codex lane must be one of Backlog, Ready, or Blocked"))
     (with-board-lock bpath
       (fn []
         (with-ticket-lock path

@@ -171,12 +171,12 @@ grep -Fxq "closed:" "$TMP/Tickets/BOXP-1.md"
 assert_contains "$TMP/Tickets/BOXP-1.md" "Original note stays."
 assert_contains "$TMP/Tickets/BOXP-1.md" "[hermes-agent]: Appended note."
 
-"$BIN" request-codex BOXP-1 --vault "$TMP" --lane Review --note "Address review feedback." --json >/tmp/task-board-request.json
-assert_contains "$TMP/Tickets/BOXP-1.md" "status: review"
+"$BIN" request-codex BOXP-1 --vault "$TMP" --lane Blocked --note "Address review feedback." --json >/tmp/task-board-request.json
+assert_contains "$TMP/Tickets/BOXP-1.md" "status: blocked"
 assert_contains "$TMP/Tickets/BOXP-1.md" "assignee: codex"
 assert_contains "$TMP/Tickets/BOXP-1.md" "[codex request]: Address review feedback."
-assert_contains "$TMP/Boards/Task Board.md" "## Review"
-assert_contains "$TMP/Boards/Task Board.md" "BOXP-1: Existing backlog]] #ticket status::review priority::high assignee::codex"
+assert_contains "$TMP/Boards/Task Board.md" "## Blocked"
+assert_contains "$TMP/Boards/Task Board.md" "BOXP-1: Existing backlog]] #ticket status::blocked priority::high assignee::codex"
 
 if "$BIN" request-codex BOXP-1 --vault "$TMP" --lane "In Progress" --note "Should fail." --json >/tmp/task-board-request-in-progress.json 2>&1; then
   echo "request-codex accepted In Progress" >&2
@@ -198,7 +198,27 @@ if "$BIN" delete BOXP-1 --vault "$TMP" --dry-run --confirm --json >/tmp/task-boa
   exit 1
 fi
 
-"$BIN" list --vault "$TMP" --lane Review --json >/tmp/task-board-list.json
+"$BIN" list --vault "$TMP" --lane Blocked --json >/tmp/task-board-list.json
 "$BIN" show BOXP-1 --vault "$TMP" --json >/tmp/task-board-show.json
+
+# Expected-state checks refuse a stale update and change nothing.
+if "$BIN" update BOXP-1 --vault "$TMP" --lane Ready --expected-lane Done >/dev/null 2>&1; then
+  echo "update must refuse a wrong --expected-lane" >&2; exit 1
+fi
+if "$BIN" update BOXP-1 --vault "$TMP" --lane Ready --expected-ticket-sha256 0000 >/dev/null 2>&1; then
+  echo "update must refuse a wrong --expected-ticket-sha256" >&2; exit 1
+fi
+assert_contains "$TMP/Tickets/BOXP-1.md" "status: blocked"
+SHA="$(sha256sum "$TMP/Tickets/BOXP-1.md" | cut -d' ' -f1)"
+"$BIN" update BOXP-1 --vault "$TMP" --lane Ready --expected-lane Blocked --expected-ticket-sha256 "$SHA" >/dev/null
+assert_contains "$TMP/Tickets/BOXP-1.md" "status: ready"
+
+# BOXP-395: Review is retired as a lane, but a leftover card can still be moved out.
+if "$BIN" update BOXP-1 --vault "$TMP" --lane Review >/dev/null 2>&1; then
+  echo "update must reject the retired Review lane" >&2; exit 1
+fi
+if "$BIN" request-codex BOXP-1 --vault "$TMP" --lane Review --note "Should fail." >/dev/null 2>&1; then
+  echo "request-codex must reject the retired Review lane" >&2; exit 1
+fi
 
 echo "smoke tests passed"
