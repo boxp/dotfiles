@@ -39,5 +39,7 @@ jobs:
           sudo ./install
       - name: Run smoke tests
         run: bash .claude/skills/obsidian-task-board/tests/smoke.sh
+      - name: Run root guard tests
+        run: bash .claude/skills/obsidian-task-board/tests/root-guard.sh
       - name: Run concurrent board update tests
         run: bash .claude/skills/obsidian-task-board/tests/concurrent-board-updates.sh
