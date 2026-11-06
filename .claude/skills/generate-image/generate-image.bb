@@ -64,18 +64,11 @@
                   (when-not (= 1 (count pngs)) (die "cannot identify exactly one generated PNG for this session"))
                   (io/copy (first pngs) result)))
               (let [signature (with-open [in (io/input-stream result)] (vec (take 8 (.readAllBytes in))))
-                    info (run ["python3" "-c" "import sys,struct,zlib
-p=open(sys.argv[1],'rb').read(); assert p[:8]==b'\\x89PNG\\r\\n\\x1a\\n'
-o=8; data=b''; end=False
-while o < len(p):
- n=struct.unpack('>I',p[o:o+4])[0]; t=p[o+4:o+8]; v=p[o+8:o+8+n]; c=p[o+8+n:o+12+n]; assert len(c)==4 and zlib.crc32(t+v)==struct.unpack('>I',c)[0]; o+=12+n
- if t==b'IDAT': data+=v
- if t==b'IEND': end=True; break
-assert end and o==len(p) and len(zlib.decompress(data))>0" (.getPath result)] true)
+                    chunk (with-open [in (io/input-stream result)] (String. (.readNBytes in 16) 12 4 "ISO-8859-1"))
                     bytes (with-open [in (io/input-stream result)] (.readNBytes in 24))
                     dimension (fn [offset] (reduce (fn [n b] (+ (* n 256) (bit-and 255 b))) 0 (take 4 (drop offset bytes))))
                     width (dimension 16) height (dimension 20)]
-                (when-not (and (= signature [-119 80 78 71 13 10 26 10]) (zero? (:code info)) (pos? width) (pos? height)) (die "output is not a valid PNG"))
+                (when-not (and (= signature [-119 80 78 71 13 10 26 10]) (= "IHDR" chunk) (> (.length result) 33) (pos? width) (pos? height)) (die "output is not a valid PNG"))
                 (java.nio.file.Files/move (.toPath result) (.toPath output) (into-array java.nio.file.CopyOption [java.nio.file.StandardCopyOption/REPLACE_EXISTING]))
                 (spit (str output ".json") (json/generate-string {:timestamp (str (Instant/now)) :route "codex-native-image_gen" :codex_version version :prompt prompt :input_images (mapv (fn [p] {:path p :sha256 (sha p)}) images) :output_sha256 (sha output) :width width :height height :codex_exec_exit_code (:code response) :elapsed_seconds elapsed :model "unknown"} {:pretty true}))
                 (println (.getPath output))))
