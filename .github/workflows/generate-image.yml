@@ -1,0 +1,34 @@
+name: generate-image tests
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/generate-image/**"
+      - ".github/workflows/generate-image.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - ".claude/skills/generate-image/**"
+      - ".github/workflows/generate-image.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Install Babashka
+        run: |
+          curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
+          chmod +x install
+          sudo ./install
+      - name: Check shell syntax
+        run: bash -n .claude/skills/generate-image/tests/run-tests.sh
+      - name: Run stub tests (no real Codex/Gemini calls)
+        run: bash .claude/skills/generate-image/tests/run-tests.sh
