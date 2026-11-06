@@ -1,73 +1,19 @@
 ---
 name: generate-image
-description: Gemini 3.1 Flash Image で画像を生成・編集。「画像を生成」「画像を作って」「イラストを描いて」時に使用。Nano Banana Proを使う場合は -m gemini-3-pro-image を指定
-argument-hint: "[options] [-m model] <prompt>"
+description: Codex native image_gen で画像を生成・編集する。画像生成、イラスト、参照画像の編集に使用。
+argument-hint: "[options] <prompt>"
 ---
 
-# Gemini画像生成スキル
+# Codex native image_gen
 
-Gemini 3.1 Flash Image (`gemini-3.1-flash-image`) を使って画像を生成・編集します。`-m` オプションでモデルを変更可能です。
+ChatGPT subscription でログインした Codex の組込み image_gen を使う。Gemini や別課金 API は使わない。画像生成枠は有限なので必要な枚数を先に決め、無駄な生成や自動再試行をしない。
 
-## 使用方法
+**Codex 内でこの skill を使う場合は `codex exec` を再帰起動せず、自分の組込み image_gen を直接呼ぶ。** 参照画像はツールの画像入力として実際に添付する。Codex 外（Claude / Pi / shell）では次を使う。
 
-```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb [options] "プロンプト"
+```sh
+bb ~/.claude/skills/generate-image/generate-image.bb -i reference.png -o output.png -a 1:1 -s 1K "プロンプト"
 ```
 
-## オプション
+`-i` は複数指定可。`-a` と `-s` はプロンプトによる希望であり寸法を保証しない。`--dry-run` は Codex を起動せずコマンドと指示を表示する。`-m` と `-S` は非対応。`-h` でヘルプを表示する。入力先は存在し、出力先ディレクトリは作成済みであること。Babashka と Python 3（PNG検証用）が必要。
 
-$ARGUMENTS
-
-- `-a, --aspect-ratio RATIO` : アスペクト比 (default: 1:1)
-- `-s, --size SIZE` : 画像サイズ 512/1K/2K/4K（gemini-3-pro-image 等で有効。512 は gemini-3.1-flash-image のみ。未指定時は省略）
-- `-S, --seed SEED` : seed（整数）。`generationConfig.seed` に渡す。同じ seed・同じ入力なら近い構図を再現するが、pixel 単位の完全一致は保証されない（gemini-3.1-flash-image で実測: 平均 RGB 差 5.6/255）
-- `-m, --model MODEL` : モデル名 (default: gemini-3.1-flash-image)
-- `-o, --output PATH` : 出力ファイルパス (default: ./gemini-<timestamp>.<ext>)
-- `-i, --image PATH` : 入力画像パス（複数指定可、画像編集やスタイル参照に使用）
-- `-h, --help` : ヘルプ表示
-
-## 使用例
-
-### テキストから画像生成
-```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb "夕焼けの海辺の風景"
-```
-
-### アスペクト比・サイズ指定
-```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb -a 16:9 -s 4K -o banner.png "ヘッダー画像"
-```
-
-### 入力画像を参照して生成
-```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb -i ref.png "この画像をアニメ風にして"
-```
-
-### 複数の入力画像を融合
-```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb -i ref1.png -i ref2.png "これらの画像を融合して"
-```
-
-### モデルを指定して生成（例: Nano Banana Pro）
-```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb -m gemini-3-pro-image -s 2K "夕焼けの海辺の風景"
-```
-
-### モデルを指定して生成（例: 低コストな旧Flash）
-```bash
-bb /home/boxp/.claude/skills/generate-image/generate-image.bb -m gemini-2.5-flash-image "夕焼けの海辺の風景"
-```
-
-## 必要な環境変数
-
-- `GEMINI_API_KEY` : Gemini APIキー（必須）
-
-## エラー時の対応
-
-- `GEMINI_API_KEY environment variable is not set` → 環境変数 `GEMINI_API_KEY` を設定してください
-- `API returned status 4xx/5xx` → APIキーやリクエスト内容を確認してください
-- `No image data in API response` → プロンプトを変更して再試行してください
-
-## 出力
-
-生成された画像のファイルパスが標準出力に表示されます。ユーザーにはそのパスを伝えてください。
+ChatGPT ログインと `image_generation` feature を確認し、1回だけ生成を試みる。失敗時は非ゼロで終了し他の API にフォールバックしない。成功時は PNG と、プロンプト・入出力ハッシュ・寸法などを含む `<output>.json` を保存する。プロンプトや画像の機密性に応じて保存先を管理する。

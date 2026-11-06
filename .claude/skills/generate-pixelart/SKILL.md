@@ -42,9 +42,7 @@ PX=~/.claude/skills/generate-pixelart/scripts
 
 - Step 1〜5 の中間ファイルは作業ディレクトリ（例: `/tmp/pixelart-<name>/`）に置き、最終出力だけをユーザー指定先へ出す
 - 各生成について **プロンプト全文・model・サイズ・出力の sha256** を `manifest.txt` に残す。
-  `generate-image` の `-S/--seed` で `generationConfig.seed` を渡せる。同じ seed・同じ入力で **近い構図** は再現できるが pixel 単位の完全一致は保証されない
-  （gemini-3.1-flash-image 512px で実測: 同 seed 2 回の平均 RGB 差 5.6/255、snap 後の格子は同じ 128x128）。
-  候補画像そのものを保存し、manifest に seed も記録する
+  seed は新経路では指定できない。候補画像そのものを保存する。
 - 公開 PR やノートに private の原典画像・原典プロンプトを載せない（生成物と計測値のみ）
 
 ## Step 0: 仕様を先に固定する
@@ -64,10 +62,8 @@ PX=~/.claude/skills/generate-pixelart/scripts
 `generate-image` skill で高品質なイラストを 1 枚作る。これが全候補・全差分の共通参照になる。
 
 - 背景は単色 `#00FF00`、ポーズ・framing・光源を brief どおり明示、「no text」
-- 本票の検証では `-m gemini-3-pro-image -s 1K`（1024x1024）を使った。Step 2 は gemini-3.1-flash-image でも較正済み（下表）。
-  他 model は未検証であり、使う場合は Step 3 の実測ピッチで判断する
-- 再現したい場合は `-S <seed>` を付けて manifest に残す（近い構図の再現のみ。完全一致は保証されない）
-- 例: `bb ~/.claude/skills/generate-image/generate-image.bb -m gemini-3-pro-image -s 1K -a 1:1 -o work/step1_base.png "<prompt>"`
+- Codex native image_gen の出力は未較正。Step 3 で実測して判断する。
+- 例: `bb ~/.claude/skills/generate-image/generate-image.bb -s 1K -a 1:1 -o work/step1_base.png "<prompt>"`
 
 ## Step 2: ドット絵風の再生成（候補を 2〜3 枚）
 
@@ -223,12 +219,12 @@ uv run $PX/pixel_preview.py -o work/g2_preview.png --g2 face=work/c1_g2.png
   旧手順の `ppa` 依存部分は Step 3〜4 に置き換えて読むこと
 - `templates/brief.md`: 仕様テンプレ
 - `references/method-comparison.md`: 専用 pixel-art サービス（PixelLab / Retro Diffusion）、ローカル model / LoRA、hybrid、OSS 後処理ツールとの
-  方式比較と、この skill が Gemini 経路を採る根拠・乗り換え条件（2026-10-26 時点）
+  方式比較の過去記録（2026-10-26 時点。新規生成は Codex native）
 
 ## 依存ツール
 
 - `uv`（`uv run` で Pillow/numpy を自動取得）
-- `bb` と `generate-image` skill（`GEMINI_API_KEY`）
+- `bb` と `generate-image` skill（ChatGPT login、image_generation 有効）
 - ImageMagick は不要（GBA の BMP3 変換を行う場合のみ `convert` を使う）
 
 ## エラー時の対応
