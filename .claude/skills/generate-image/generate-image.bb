@@ -48,7 +48,8 @@
           (when-not (and (zero? (:code login)) (re-find #"(?i)logged in using chatgpt" (:output login))) (die "ChatGPT login required (API key login is not supported)")))
         (let [features (run ["codex" "features" "list"] true)]
           (when-not (and (zero? (:code features)) (re-find #"(?m)^image_generation\s+\S+\s+true\s*$" (:output features))) (die "codex image_generation feature is not enabled")))
-        (let [version (str/trim (:output (run ["codex" "--version"] true)))
+        (let [input-metadata (mapv (fn [p] {:path p :sha256 (sha p)}) images)
+              version (str/trim (:output (run ["codex" "--version"] true)))
               temp (.toFile (java.nio.file.Files/createTempDirectory (.toPath dir) ".image-gen-" (make-array java.nio.file.attribute.FileAttribute 0)))
               result (io/file temp "result.png") start (System/nanoTime)]
           (try
@@ -70,7 +71,7 @@
                     width (dimension 16) height (dimension 20)]
                 (when-not (and (= signature [-119 80 78 71 13 10 26 10]) (= "IHDR" chunk) (> (.length result) 33) (pos? width) (pos? height)) (die "output is not a valid PNG"))
                 (java.nio.file.Files/move (.toPath result) (.toPath output) (into-array java.nio.file.CopyOption [java.nio.file.StandardCopyOption/REPLACE_EXISTING]))
-                (spit (str output ".json") (json/generate-string {:timestamp (str (Instant/now)) :route "codex-native-image_gen" :codex_version version :prompt prompt :input_images (mapv (fn [p] {:path p :sha256 (sha p)}) images) :output_sha256 (sha output) :width width :height height :codex_exec_exit_code (:code response) :elapsed_seconds elapsed :model "unknown"} {:pretty true}))
+                (spit (str output ".json") (json/generate-string {:timestamp (str (Instant/now)) :route "codex-native-image_gen" :codex_version version :prompt prompt :input_images input-metadata :output_sha256 (sha output) :width width :height height :codex_exec_exit_code (:code response) :elapsed_seconds elapsed :model "unknown"} {:pretty true}))
                 (println (.getPath output))))
             (finally (doseq [f (reverse (file-seq temp))] (.delete f)))))))))
 (try (main) (catch Exception e (binding [*out* *err*] (println (str "Error: " (.getMessage e)))) (System/exit 1)))

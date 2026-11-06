@@ -34,6 +34,10 @@ printf reference > "$tmp/ref.png"
 bb "$script" -i "$tmp/ref.png" -o "$tmp/out.png" 'test' > /dev/null
 awk -v ref="$tmp/ref.png" 'p=="-i" && $0==ref {found=1} {p=$0} END {exit !found}' "$TEST_LOG"
 test -f "$tmp/out.png.json"
+printf original > "$tmp/same.png"
+original_sha=$(sha256sum "$tmp/same.png" | cut -d' ' -f1)
+bb "$script" -i "$tmp/same.png" -o "$tmp/same.png" test > /dev/null
+bb -e '(let [[path sha] *command-line-args* m (cheshire.core/parse-string (slurp path))] (assert (= sha (get-in m ["input_images" 0 "sha256"]))) (assert (not= sha (get m "output_sha256"))))' "$tmp/same.png.json" "$original_sha"
 export CODEX_HOME="$tmp/codex-home" TEST_MODE=thread
 bb "$script" -o "$tmp/thread.png" test > /dev/null
 test -f "$tmp/thread.png.json"
