@@ -121,6 +121,31 @@ The Task Board runner specification is the operational source for lane behavior:
 Projects/codex-task-board-runner/spec.md
 ```
 
+## Conditions（作業中ずっと有効な条件）
+
+承認の範囲、してはいけないこと、他票との取決め、止める条件など、後の run にも守らせることは Notes に書くだけにせず、票の `## Conditions` 節に項目（`CD-NN`）として登録する（BOXP-588）。Notes は経緯の記録として今までどおり残す。
+
+この節は `task-board.bb` ではなく `task_board_todos.bb` で操作する。codex-workspace では `/opt/codex-workspace/task-board/task_board_todos.bb`、Hermes では skill の `bin/task_board_todos.bb` にある。helper が無い環境では登録せず、Notes に書いて Hermes か runner の担当に登録を頼む。
+
+```bash
+TODOS=/opt/codex-workspace/task-board/task_board_todos.bb
+bb "$TODOS" conditions list BOXP-55 --vault /home/boxp/Documents/obsidian-headless/BOXP
+bb "$TODOS" conditions add BOXP-55 --vault /home/boxp/Documents/obsidian-headless/BOXP \
+  --kind 制約 --text "本番の設定は変えない" --source claude
+bb "$TODOS" conditions cancel BOXP-55 CD-01 --vault /home/boxp/Documents/obsidian-headless/BOXP \
+  --reason "作業が終わった" --source claude
+```
+
+- 種別は `承認`（Owner が許した範囲）、`制約`（してはいけないこと・範囲の限定）、`要確認`（今も有効か分からない。制約として扱う）、`取消`（無効。行は残る）。
+- `承認` の登録と、Owner 由来の項目の取消は Owner の経路（Hermes）が行う。runner が起動した担当の process（`CODEX_TASK_BOARD_RUN_ID` がある）からは命令が拒否するので、blocked を返して Owner に渡す。
+- 項目は新しい権限を与えない。他の節と食い違うときは狭い方に従う。
+- 内容を変えるときは新しい項目を登録してから古い項目を取り消す。`## Conditions` 節の行を手で消したり書き換えたりしない。節には項目行とその子の行だけを書く。
+- 登録と取消は票の TODO の版（rev）を変える。作業中の担当には次のツール境界で届く。
+- 読めない行や、Owner の返答（`reply_id` / `event`）が無い `承認` が節にある間は、runner の担当の done は保留になり、merge・配備は拒否される。
+- 登録しても prompt から Notes が省かれることはない（現時点）。
+
+詳しい規則は boxp/arch の `docker/hermes-agent/skills/obsidian-task-board/SKILL.md` と `docs/project_docs/BOXP-588/plan.md` にある。
+
 ## Failure Handling
 
 If the helper refuses a change, report the exact command and error. Common causes are missing ticket files, malformed frontmatter delimiters, missing board lanes, or multiple board cards for one ticket. Prefer `show` and `list --json` to inspect state before retrying.
